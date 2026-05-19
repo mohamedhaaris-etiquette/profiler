@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ org.name }}{% if org.tagline %} — {{ org.tagline }}{% endif %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────────────────────── */
+:root {
+  --cat-primary:   {{ org.category.color_primary|default:"#1a1a2e" }};
+  --cat-secondary: {{ org.category.color_secondary|default:"#16213e" }};
+  --primary:   #0f172a;
+  --accent:    #f97316;
+  --accent2:   #fbbf24;
+  --surface:   #f8fafc;
+  --border:    #e2e8f0;
+  --muted:     #64748b;
+  --font-head: 'Outfit', sans-serif;
+  --font-serif:'Instrument Serif', serif;
+}
+
+/* ── RESET ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-head); background: #fff; color: #0f172a; overflow-x: hidden; }
+
+/* ── NAV ─────────────────────────────────────────────── */
+.biz-nav {
+  background: #0f172a;
+  padding: 0;
+  position: sticky; top: 0; z-index: 200;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.biz-nav .inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px; padding: 0 24px;
+  max-width: 1200px; margin: 0 auto;
+}
+.biz-nav .brand {
+  font-weight: 800; font-size: 1.15rem; color: #fff;
+  text-decoration: none; letter-spacing: -0.3px;
+}
+.biz-nav .brand span { color: var(--accent); }
+.nav-links { display: flex; gap: 4px; list-style: none; padding: 0; }
+.nav-links a {
+  color: rgba(255,255,255,0.65); font-size: 0.875rem; font-weight: 500;
+  padding: 6px 14px; border-radius: 8px; text-decoration: none;
+  transition: all .2s;
+}
+.nav-links a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.btn-nav-cta {
+  background: var(--accent); color: #fff;
+  padding: 8px 20px; border-radius: 10px; font-weight: 700;
+  font-size: 0.875rem; text-decoration: none; border: none;
+  transition: all .2s; white-space: nowrap;
+}
+.btn-nav-cta:hover { background: #ea6c0a; color: #fff; transform: translateY(-1px); }
+.nav-toggle { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; }
+.nav-mobile { display: none; }   /* ← ADD THIS LINE */
+
+/* ── HERO ────────────────────────────────────────────── */
+.biz-hero {
+  /* Always use a solid dark fallback, overlay with category colors */
+  background-color: #0f172a;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 70% 50%, rgba(249,115,22,0.18) 0%, transparent 65%),
+    linear-gradient(145deg, var(--cat-primary, #0f172a) 0%, var(--cat-secondary, #1e3a5f) 100%);
+  min-height: 88vh;
+  display: flex; align-items: center;
+  padding: 80px 0 60px;
+  position: relative; overflow: hidden;
+}
+/* Guarantee readability: if category colors are too light, darken the overlay */
+.biz-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(10, 12, 20, 0.45);
+  pointer-events: none;
+}
+/* Decorative grid lines */
+.biz-hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+.hero-inner { position: relative; z-index: 1; width: 100%; }
+
+.hero-logo-wrap {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 80px; height: 80px; border-radius: 20px;
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  overflow: hidden; margin-bottom: 24px;
+  backdrop-filter: blur(8px);
+}
+.hero-logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.hero-logo-wrap .icon-fallback { font-size: 2rem; color: rgba(255,255,255,0.85); }
+
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.35);
+  color: #fdba74; font-size: 0.75rem; font-weight: 700;
+  padding: 4px 12px; border-radius: 50px;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+.hero-title {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900; color: #fff;
+  line-height: 1.05; letter-spacing: -1.5px;
+  margin-bottom: 12px;
+}
+.hero-title em { font-family: var(--font-serif); font-style: italic; color: var(--accent); }
+.hero-tagline { color: rgba(255,255,255,0.65); font-size: 1.05rem; font-weight: 400; line-height: 1.6; max-width: 500px; }
+
+.hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.8); font-size: 0.78rem; font-weight: 600;
+  padding: 5px 12px; border-radius: 50px;
+}
+
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+.btn-primary-hero {
+  background: var(--accent); color: #fff;
+  padding: 13px 28px; border-radius: 12px; font-weight: 700;
+  font-size: 0.95rem; text-decoration: none; border: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all .25s;
+}
+.btn-primary-hero:hover { background: #ea6c0a; color: #fff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(249,115,22,0.35); }
+.btn-ghost-hero {
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9);
+  padding: 13px 28px; border-radius: 12px; font-weight: 600;
+  font-size: 0.95rem; text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.18);
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: all .25s;
+}
+.btn-ghost-hero:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+/* Info card (right side of hero) */
+.hero-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px; padding: 28px;
+  backdrop-filter: blur(12px);
+}
+.hero-card-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.hero-card-row:last-child { border-bottom: none; padding-bottom: 0; }
+.hero-card-row:first-child { padding-top: 0; }
+.hero-card-icon {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  background: rgba(249,115,22,0.18); color: var(--accent);
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.hero-card-label { color: rgba(255,255,255,0.45); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+.hero-card-value { color: #fff; font-size: 0.9rem; font-weight: 600; }
+
+.hero-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: rgba(255,255,255,0.1);
+  border-radius: 16px; overflow: hidden; margin-top: 20px;
+}
+.hero-stat {
+  background: rgba(255,255,255,0.06);
+  padding: 16px 12px; text-align: center;
+}
+.hero-stat .num { font-size: 1.7rem; font-weight: 900; color: var(--accent); line-height: 1; }
+.hero-stat .lbl { color: rgba(255,255,255,0.5); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+.btn-whatsapp {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 16px;
+  background: rgba(37,211,102,0.12); color: #25d366;
+  border: 1px solid rgba(37,211,102,0.25);
+  padding: 12px; border-radius: 12px; font-weight: 700;
+  text-decoration: none; transition: all .2s; font-size: 0.9rem;
+}
+.btn-whatsapp:hover { background: rgba(37,211,102,0.22); color: #1fba57; }
+
+/* ── SECTION BASE ────────────────────────────────────── */
+.section { padding: 88px 0; }
+.section-alt { background: var(--surface); }
+.section-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--accent); font-size: 0.72rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 2px;
+}
+.section-tag::before { content: ''; width: 20px; height: 2px; background: var(--accent); border-radius: 2px; }
+.section-title {
+  font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+  font-weight: 800; letter-spacing: -0.8px;
+  margin-top: 10px; line-height: 1.1;
+}
+
+/* ── ABOUT ───────────────────────────────────────────── */
+.about-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.about-item {
+  background: #fff; border: 1.5px solid var(--border); border-radius: 16px;
+  padding: 22px; display: flex; gap: 14px; align-items: flex-start;
+  transition: border-color .2s, box-shadow .2s;
+}
+.about-item:hover { border-color: var(--accent); box-shadow: 0 4px 20px rgba(249,115,22,0.08); }
+.about-item-icon {
+  width: 42px; height: 42px; flex-shrink: 0; border-radius: 12px;
+  background: #fff7ed; color: var(--accent);
+  display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+}
+.about-item-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.about-item-value { font-size: 0.9rem; font-weight: 600; margin-top: 3px; }
+
+/* ── SERVICES ────────────────────────────────────────── */
+.service-card {
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 28px; height: 100%;
+  display: flex; flex-direction: column;
+  transition: all .3s; position: relative; overflow: hidden;
+}
+.service-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 48px rgba(249,115,22,0.1);
+}
+.service-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transform: scaleX(0); transform-origin: left; transition: transform .3s;
+}
+.service-card:hover::after { transform: scaleX(1); }
+.service-icon-wrap {
+  width: 54px; height: 54px; border-radius: 14px;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; margin-bottom: 18px; flex-shrink: 0;
+}
+.service-card h5 { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+.service-card p { color: var(--muted); font-size: 0.875rem; line-height: 1.6; flex: 1; }
+.service-price { color: var(--accent); font-weight: 800; font-size: 1rem; margin-top: 14px; }
+.service-price span { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+.featured-badge {
+  position: absolute; top: 14px; right: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; font-size: 0.68rem; font-weight: 800;
+  padding: 3px 10px; border-radius: 50px; letter-spacing: 0.5px;
+}
+.btn-enquire-card {
+  margin-top: 16px; background: #0f172a; color: #fff;
+  padding: 9px 18px; border-radius: 10px; font-size: 0.82rem;
+  font-weight: 700; text-decoration: none; display: inline-flex;
+  align-items: center; gap: 6px; border: none; transition: all .2s;
+  align-self: flex-start;
+}
+.btn-enquire-card:hover { background: var(--accent); color: #fff; }
+
+/* ── ENQUIRY SECTION ─────────────────────────────────── */
+.enquiry-section {
+  background: #0f172a;
+  position: relative; overflow: hidden;
+}
+.enquiry-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 10% 50%, rgba(249,115,22,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 90% 20%, rgba(30,58,95,0.5) 0%, transparent 60%);
+}
+.enquiry-inner { position: relative; z-index: 1; }
+.enquiry-card {
+  background: #fff; border-radius: 24px; padding: 40px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+}
+.enquiry-card h4 { font-weight: 800; font-size: 1.4rem; margin-bottom: 24px; letter-spacing: -0.3px; }
+.form-label { font-size: 0.8rem; font-weight: 700; color: #374151; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+.form-control, .form-select {
+  border: 1.5px solid #e5e7eb; border-radius: 10px;
+  padding: 10px 14px; font-size: 0.9rem; font-family: var(--font-head);
+  transition: border-color .2s, box-shadow .2s;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+  outline: none;
+}
+.btn-submit {
+  width: 100%; background: #0f172a; color: #fff; border: none;
+  padding: 14px; border-radius: 12px; font-weight: 800; font-size: 0.95rem;
+  font-family: var(--font-head); cursor: pointer; transition: all .25s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-submit:hover { background: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(249,115,22,0.3); }
+
+/* success */
+.enquiry-success { text-align: center; padding: 32px 0; }
+.success-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: #d1fae5; color: #059669;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; margin: 0 auto 20px;
+}
+
+/* ── TESTIMONIALS ────────────────────────────────────── */
+.testimonial-card {
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 28px; height: 100%;
+  transition: all .2s;
+}
+.testimonial-card:hover { border-color: var(--accent); box-shadow: 0 8px 32px rgba(249,115,22,0.08); }
+.stars { color: #f59e0b; font-size: 0.95rem; letter-spacing: 1px; margin-bottom: 14px; }
+.testimonial-card p { color: #374151; line-height: 1.75; font-size: 0.9rem; }
+.client-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, #0f172a, var(--accent));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 1rem; flex-shrink: 0;
+}
+
+/* ── CONTACT ─────────────────────────────────────────── */
+.contact-card {
+  display: flex; align-items: center; gap: 16px;
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 18px 20px;
+  text-decoration: none; color: inherit;
+  transition: all .2s; margin-bottom: 12px;
+}
+.contact-card:hover { border-color: var(--accent); box-shadow: 0 4px 20px rgba(249,115,22,0.08); color: inherit; transform: translateX(4px); }
+.contact-icon {
+  width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+}
+.contact-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.contact-value { font-size: 0.92rem; font-weight: 600; margin-top: 2px; }
+
+/* ── FOOTER ──────────────────────────────────────────── */
+.biz-footer {
+  background: #0a0e1a; color: rgba(255,255,255,0.55);
+  padding: 48px 0 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.footer-brand { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -0.4px; }
+.footer-divider { border-top: 1px solid rgba(255,255,255,0.06); margin: 32px 0 20px; }
+.social-btn {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6); display: inline-flex; align-items: center;
+  justify-content: center; font-size: 1rem; text-decoration: none; transition: all .2s;
+}
+.social-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── REVEAL ANIMATION ────────────────────────────────── */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s ease, transform .65s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .nav-links, .btn-nav-cta { display: none; }
+  .nav-toggle { display: block; }
+  .nav-mobile { display: none; background: #0f172a; padding: 16px; }
+  .nav-mobile.open { display: block; }
+  .nav-mobile a { display: block; color: rgba(255,255,255,0.8); padding: 10px 14px; text-decoration: none; border-radius: 8px; }
+  .nav-mobile a:hover { background: rgba(255,255,255,0.08); }
+  .biz-hero { min-height: auto; padding: 60px 0 40px; }
+  .hero-title { letter-spacing: -1px; }
+  .about-grid { grid-template-columns: 1fr; }
+  .section { padding: 60px 0; }
+  .enquiry-card { padding: 24px; }
+  .hero-card { margin-top: 8px; }
+  .hero-card-value { font-size: 0.85rem; }
+  .hero-stat .num { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAVBAR ──────────────────────────────────────────── -->
+<nav class="biz-nav">
+  <div class="inner">
+    <a class="brand" href="#home">{{ org.name|truncatechars:22 }}</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#services">Services</a></li>
+      {% if testimonials %}<li><a href="#testimonials">Reviews</a></li>{% endif %}
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#enquiry" class="btn-nav-cta d-none d-md-inline-flex align-items-center gap-2">
+      <i class="bi bi-chat-left-text"></i> Get Enquiry
+    </a>
+    <button class="nav-toggle" onclick="document.getElementById('mobileNav').classList.toggle('open')">
+      <i class="bi bi-list"></i>
+    </button>
+  </div>
+  <div class="nav-mobile" id="mobileNav">
+    <a href="#about" onclick="this.closest('.nav-mobile').classList.remove('open')">About</a>
+    <a href="#services" onclick="this.closest('.nav-mobile').classList.remove('open')">Services</a>
+    {% if testimonials %}<a href="#testimonials" onclick="this.closest('.nav-mobile').classList.remove('open')">Reviews</a>{% endif %}
+    <a href="#contact" onclick="this.closest('.nav-mobile').classList.remove('open')">Contact</a>
+    <a href="#enquiry" onclick="this.closest('.nav-mobile').classList.remove('open')" style="color:#f97316;font-weight:700;">Get Enquiry →</a>
+  </div>
+</nav>
+
+<!-- ── HERO ────────────────────────────────────────────── -->
+<section class="biz-hero" id="home">
+  <div class="container hero-inner">
+    <div class="row align-items-center g-5">
+
+      <!-- LEFT -->
+      <div class="col-lg-7">
+        {% if org.category %}
+        <div class="hero-pill">
+          <i class="bi bi-{{ org.category.icon|default:'briefcase' }}"></i>
+          {{ org.category.name }}
+        </div>
+        {% endif %}
+
+        <div class="hero-logo-wrap">
+          {% if org.logo %}
+          <img src="{{ org.logo.url }}" alt="{{ org.name }}">
+          {% else %}
+          <span class="icon-fallback"><i class="bi bi-{{ org.category.icon|default:'building' }}"></i></span>
+          {% endif %}
+        </div>
+
+        <h1 class="hero-title">
+          {{ org.name }}
+          {% if org.tagline %}<br><em style="font-size:0.6em;letter-spacing:0;">{{ org.tagline }}</em>{% endif %}
+        </h1>
+
+        <div class="hero-badges mt-3">
+          {% if org.is_verified %}
+          <span class="hero-badge"><i class="bi bi-patch-check-fill" style="color:#60a5fa;"></i> Verified</span>
+          {% endif %}
+          {% if org.home_service_available %}
+          <span class="hero-badge"><i class="bi bi-house-check"></i> Home Service</span>
+          {% endif %}
+          {% if org.accepts_online_payment %}
+          <span class="hero-badge"><i class="bi bi-credit-card"></i> Online Payment</span>
+          {% endif %}
+          {% if org.is_open_sunday %}
+          <span class="hero-badge"><i class="bi bi-sun"></i> Open Sundays</span>
+          {% endif %}
+          {% if org.established_year %}
+          <span class="hero-badge"><i class="bi bi-calendar-check"></i> Est. {{ org.established_year }}</span>
+          {% endif %}
+        </div>
+
+        <div class="hero-actions">
+          <a href="#enquiry" class="btn-primary-hero">
+            <i class="bi bi-chat-left-text"></i> Send Enquiry
+          </a>
+          {% if org.phone %}
+          <a href="tel:{{ org.phone }}" class="btn-ghost-hero">
+            <i class="bi bi-telephone"></i> Call Now
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col-lg-5">
+        <div class="hero-card">
+          {% if org.working_hours %}
+          <div class="hero-card-row">
+            <div class="hero-card-icon"><i class="bi bi-clock"></i></div>
+            <div>
+              <div class="hero-card-label">Working Hours</div>
+              <div class="hero-card-value">{{ org.working_hours }}</div>
+            </div>
+          </div>
+          {% endif %}
+          {% if org.city %}
+          <div class="hero-card-row">
+            <div class="hero-card-icon"><i class="bi bi-geo-alt"></i></div>
+            <div>
+              <div class="hero-card-label">Location</div>
+              <div class="hero-card-value">{{ org.city }}, {{ org.state }}</div>
+            </div>
+          </div>
+          {% endif %}
+          {% if org.phone %}
+          <div class="hero-card-row">
+            <div class="hero-card-icon"><i class="bi bi-telephone"></i></div>
+            <div>
+              <div class="hero-card-label">Phone</div>
+              <div class="hero-card-value">{{ org.phone }}</div>
+            </div>
+          </div>
+          {% endif %}
+          {% if org.email %}
+          <div class="hero-card-row">
+            <div class="hero-card-icon"><i class="bi bi-envelope"></i></div>
+            <div>
+              <div class="hero-card-label">Email</div>
+              <div class="hero-card-value">{{ org.email }}</div>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="num">{{ services.count }}</div>
+              <div class="lbl">Services</div>
+            </div>
+            <div class="hero-stat">
+              <div class="num">{{ org.enquiries.count }}</div>
+              <div class="lbl">Enquiries</div>
+            </div>
+            <div class="hero-stat">
+              <div class="num">{% if org.established_year %}{{ org.established_year|slice:"-2:" }}+{% else %}∞{% endif %}</div>
+              <div class="lbl">Yrs Exp.</div>
+            </div>
+          </div>
+
+          {% if org.whatsapp %}
+          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-whatsapp">
+            <i class="bi bi-whatsapp"></i> Chat on WhatsApp
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ───────────────────────────────────────────── -->
+<section class="section" id="about">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5 reveal">
+        <div class="section-tag">Who We Are</div>
+        <h2 class="section-title">About<br>{{ org.name }}</h2>
+        <p class="mt-3" style="color:#4b5563;line-height:1.85;font-size:0.95rem;">
+          {% if org.description %}
+            {{ org.description }}
+          {% else %}
+            We are a professional {{ org.category.name|default:"business" }} based in {{ org.city }}, {{ org.state }}.
+            With years of experience, we deliver quality services tailored to our customers' needs.
+          {% endif %}
+        </p>
+        <a href="#enquiry" class="btn-primary-hero mt-4" style="display:inline-flex;">
+          <i class="bi bi-arrow-right-circle"></i> Get in Touch
+        </a>
+      </div>
+      <div class="col-lg-7 reveal">
+        <div class="about-grid">
+          {% if org.email %}
+          <div class="about-item">
+            <div class="about-item-icon"><i class="bi bi-envelope"></i></div>
+            <div><div class="about-item-label">Email</div><div class="about-item-value">{{ org.email }}</div></div>
+          </div>
+          {% endif %}
+          {% if org.phone %}
+          <div class="about-item">
+            <div class="about-item-icon"><i class="bi bi-telephone"></i></div>
+            <div><div class="about-item-label">Phone</div><div class="about-item-value">{{ org.phone }}</div></div>
+          </div>
+          {% endif %}
+          {% if org.address_line1 %}
+          <div class="about-item" style="grid-column: 1 / -1;">
+            <div class="about-item-icon"><i class="bi bi-geo-alt"></i></div>
+            <div><div class="about-item-label">Address</div><div class="about-item-value">{{ org.get_full_address }}</div></div>
+          </div>
+          {% endif %}
+          {% if org.working_hours %}
+          <div class="about-item">
+            <div class="about-item-icon"><i class="bi bi-clock"></i></div>
+            <div><div class="about-item-label">Hours</div><div class="about-item-value">{{ org.working_hours }}</div></div>
+          </div>
+          {% endif %}
+          {% if org.established_year %}
+          <div class="about-item">
+            <div class="about-item-icon"><i class="bi bi-calendar2-check"></i></div>
+            <div><div class="about-item-label">Established</div><div class="about-item-value">Since {{ org.established_year }}</div></div>
+          </div>
+          {% endif %}
+          {% if org.gst_number %}
+          <div class="about-item" style="grid-column: 1 / -1;">
+            <div class="about-item-icon"><i class="bi bi-file-earmark-text"></i></div>
+            <div><div class="about-item-label">GST Number</div><div class="about-item-value">{{ org.gst_number }}</div></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES ────────────────────────────────────────── -->
+{% if services %}
+<section class="section section-alt" id="services">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <div class="section-tag">What We Offer</div>
+      <h2 class="section-title">Our Services</h2>
+      <p style="color:var(--muted);margin-top:12px;max-width:480px;margin-inline:auto;">
+        Professional services tailored to your needs — crafted with expertise and care.
+      </p>
+    </div>
+    <div class="row g-4">
+      {% for svc in services %}
+      <div class="col-sm-6 col-lg-4 reveal">
+        <div class="service-card">
+          {% if svc.is_featured %}<span class="featured-badge">★ Featured</span>{% endif %}
+          <div class="service-icon-wrap">
+            <i class="bi bi-{{ svc.icon|default:'tools' }}"></i>
+          </div>
+          <h5>{{ svc.name }}</h5>
+          {% if svc.description %}
+          <p>{{ svc.description }}</p>
+          {% endif %}
+          {% if svc.price %}
+          <div class="service-price">
+            ₹{{ svc.price }}
+            {% if svc.price_unit %}<span>/ {{ svc.price_unit }}</span>{% endif %}
+          </div>
+          {% endif %}
+          <a href="#enquiry" class="btn-enquire-card">
+            <i class="bi bi-arrow-right"></i> Enquire
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── ENQUIRY ─────────────────────────────────────────── -->
+<section class="section enquiry-section" id="enquiry">
+  <div class="container enquiry-inner">
+    <div class="row align-items-center g-5">
+
+      <div class="col-lg-5 reveal">
+        <div class="section-tag" style="color:rgba(249,115,22,0.85);">Get In Touch</div>
+        <h2 style="font-size:2.4rem;font-weight:900;color:#fff;margin-top:10px;letter-spacing:-0.8px;">
+          Let's Talk<br><span style="color:var(--accent);">Business</span>
+        </h2>
+        <p style="color:rgba(255,255,255,0.6);margin-top:16px;line-height:1.8;font-size:0.95rem;">
+          Fill out the form and our team will get back to you within 24 hours.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-top:32px;">
+          {% if org.phone %}
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:44px;height:44px;background:rgba(255,255,255,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="bi bi-telephone" style="color:var(--accent);"></i>
+            </div>
+            <div>
+              <div style="color:rgba(255,255,255,0.4);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Call Us</div>
+              <div style="color:#fff;font-weight:700;">{{ org.phone }}</div>
+            </div>
+          </div>
+          {% endif %}
+          {% if org.email %}
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="width:44px;height:44px;background:rgba(255,255,255,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="bi bi-envelope" style="color:var(--accent);"></i>
+            </div>
+            <div>
+              <div style="color:rgba(255,255,255,0.4);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Email Us</div>
+              <div style="color:#fff;font-weight:700;">{{ org.email }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-lg-7 reveal">
+        <div class="enquiry-card">
+          {% if enquiry_success %}
+          <div class="enquiry-success">
+            <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+            <h4 style="font-weight:800;">Enquiry Submitted!</h4>
+            <p style="color:var(--muted);">Thank you! We'll get back to you within 24 hours.</p>
+            <a href="#enquiry" class="btn-enquire-card" style="margin:16px auto 0;">Send Another →</a>
+          </div>
+          {% else %}
+          <h4>Request a Callback</h4>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name *</label>
+                {{ enquiry_form.name }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone *</label>
+                {{ enquiry_form.phone }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email *</label>
+                {{ enquiry_form.email }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Service</label>
+                {{ enquiry_form.service }}
+              </div>
+              <div class="col-12">
+                <label class="form-label">Subject *</label>
+                {{ enquiry_form.subject }}
+              </div>
+              <div class="col-12">
+                <label class="form-label">Message *</label>
+                {{ enquiry_form.message }}
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-submit">
+                  <i class="bi bi-send"></i> Send Enquiry
+                </button>
+              </div>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ────────────────────────────────────── -->
+{% if testimonials %}
+<section class="section" id="testimonials">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <div class="section-tag">Client Feedback</div>
+      <h2 class="section-title">What Customers Say</h2>
+    </div>
+    <div class="row g-4">
+      {% for t in testimonials %}
+      <div class="col-md-4 reveal">
+        <div class="testimonial-card">
+          <div class="stars">
+            {% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}
+          </div>
+          <p>"{{ t.message }}"</p>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:20px;">
+            <div class="client-avatar">{{ t.client_name|first|upper }}</div>
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;">{{ t.client_name }}</div>
+              {% if t.client_role %}<div style="color:var(--muted);font-size:0.78rem;">{{ t.client_role }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ── CONTACT ─────────────────────────────────────────── -->
+<section class="section section-alt" id="contact">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <div class="section-tag">Reach Us</div>
+      <h2 class="section-title">Contact Us</h2>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-7 reveal">
+        {% if org.phone %}
+        <a href="tel:{{ org.phone }}" class="contact-card">
+          <div class="contact-icon" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-telephone-fill"></i></div>
+          <div><div class="contact-label">Phone</div><div class="contact-value">{{ org.phone }}</div></div>
+          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
+        </a>
+        {% endif %}
+        {% if org.whatsapp %}
+        <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="contact-card">
+          <div class="contact-icon" style="background:#d1fae5;color:#059669;"><i class="bi bi-whatsapp"></i></div>
+          <div><div class="contact-label">WhatsApp</div><div class="contact-value">{{ org.whatsapp }}</div></div>
+          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
+        </a>
+        {% endif %}
+        {% if org.email %}
+        <a href="mailto:{{ org.email }}" class="contact-card">
+          <div class="contact-icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-envelope-fill"></i></div>
+          <div><div class="contact-label">Email</div><div class="contact-value">{{ org.email }}</div></div>
+          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
+        </a>
+        {% endif %}
+        {% if org.address_line1 %}
+        <div class="contact-card" style="cursor:default;">
+          <div class="contact-icon" style="background:#fce7f3;color:#be185d;"><i class="bi bi-geo-alt-fill"></i></div>
+          <div><div class="contact-label">Address</div><div class="contact-value">{{ org.get_full_address }}</div></div>
+        </div>
+        {% endif %}
+        {% if org.website %}
+        <a href="{{ org.website }}" target="_blank" class="contact-card">
+          <div class="contact-icon" style="background:#ede9fe;color:#7c3aed;"><i class="bi bi-globe2"></i></div>
+          <div><div class="contact-label">Website</div><div class="contact-value">{{ org.website }}</div></div>
+          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ──────────────────────────────────────────── -->
+<footer class="biz-footer">
+  <div class="container">
+    <div class="row align-items-start g-4">
+      <div class="col-md-5">
+        <div class="footer-brand">{{ org.name }}</div>
+        {% if org.tagline %}
+        <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-top:6px;">{{ org.tagline }}</p>
+        {% endif %}
+        {% if org.category %}
+        <span style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:50px;padding:4px 12px;font-size:0.75rem;color:rgba(255,255,255,0.5);">
+          <i class="bi bi-{{ org.category.icon|default:'briefcase' }}"></i> {{ org.category.name }}
+        </span>
+        {% endif %}
+      </div>
+      <div class="col-md-4">
+        <div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Contact</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:0.875rem;">
+          {% if org.phone %}<a href="tel:{{ org.phone }}" style="color:rgba(255,255,255,0.6);text-decoration:none;"><i class="bi bi-telephone me-2"></i>{{ org.phone }}</a>{% endif %}
+          {% if org.email %}<a href="mailto:{{ org.email }}" style="color:rgba(255,255,255,0.6);text-decoration:none;"><i class="bi bi-envelope me-2"></i>{{ org.email }}</a>{% endif %}
+          {% if org.city %}<span style="color:rgba(255,255,255,0.6);"><i class="bi bi-geo-alt me-2"></i>{{ org.city }}, {{ org.state }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">Follow Us</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          {% if org.facebook_url %}<a href="{{ org.facebook_url }}" target="_blank" class="social-btn"><i class="bi bi-facebook"></i></a>{% endif %}
+          {% if org.instagram_url %}<a href="{{ org.instagram_url }}" target="_blank" class="social-btn"><i class="bi bi-instagram"></i></a>{% endif %}
+          {% if org.linkedin_url %}<a href="{{ org.linkedin_url }}" target="_blank" class="social-btn"><i class="bi bi-linkedin"></i></a>{% endif %}
+          {% if org.twitter_url %}<a href="{{ org.twitter_url }}" target="_blank" class="social-btn"><i class="bi bi-twitter-x"></i></a>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="footer-divider"></div>
+    <div style="text-align:center;font-size:0.78rem;color:rgba(255,255,255,0.25);">
+      &copy; {{ org.established_year|default:"2024" }} {{ org.name }}.
+      Powered by <a href="/" style="color:rgba(249,115,22,0.6);text-decoration:none;">Portal</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Scroll reveal
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

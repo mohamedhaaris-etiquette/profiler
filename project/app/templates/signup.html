@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% block title %}Register Your Business — Portal{% endblock %}
+{% block extra_css %}
+<style>
+.signup-page { background: linear-gradient(135deg, #f8fafc 0%, #fff 100%); min-height: calc(100vh - 70px); padding: 40px 0; }
+.signup-card { background: #fff; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden; }
+.signup-sidebar {
+  background: linear-gradient(170deg, #0f172a, #1e293b);
+  padding: 40px 32px; position: sticky; top: 90px;
+}
+.signup-sidebar h3 { color: #fff; font-weight: 800; font-size: 1.6rem; }
+.signup-sidebar p { color: rgba(255,255,255,0.65); font-size: 0.9rem; }
+.step-indicator { margin-top: 32px; }
+.step-item { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.step-dot {
+  width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; flex-shrink: 0; transition: all .3s;
+}
+.step-dot.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.step-dot.done { background: var(--success); border-color: var(--success); color: #fff; }
+.step-label { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
+.step-label.active { color: #fff; font-weight: 600; }
+
+.signup-body { padding: 40px; }
+.form-section { display: none; }
+.form-section.active { display: block; }
+.section-header { margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
+.section-header h4 { font-weight: 800; font-size: 1.4rem; }
+.section-header p { color: var(--muted); margin: 0; font-size: 0.9rem; }
+
+.cat-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.cat-option { border: 2px solid var(--border); border-radius: 14px; padding: 16px 12px; text-align: center; cursor: pointer; transition: all .2s; }
+.cat-option:hover { border-color: var(--accent); }
+.cat-option.selected { border-color: var(--accent); background: rgba(249,115,22,0.06); }
+.cat-option input { display: none; }
+.cat-option i { font-size: 1.6rem; color: var(--muted); display: block; margin-bottom: 8px; }
+.cat-option.selected i { color: var(--accent); }
+.cat-option span { font-size: 0.78rem; font-weight: 600; }
+
+.check-group { display: flex; flex-wrap: wrap; gap: 12px; }
+.check-pill { border: 1.5px solid var(--border); border-radius: 50px; padding: 8px 16px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all .2s; }
+.check-pill input { display: none; }
+.check-pill.checked { border-color: var(--accent); background: rgba(249,115,22,0.08); color: var(--accent); }
+
+.step-nav { display: flex; gap: 12px; margin-top: 32px; }
+.step-nav .btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: 600; }
+
+.progress-bar-custom { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 32px; }
+.progress-bar-custom .fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .4s ease; }
+
+.logo-upload { border: 2px dashed var(--border); border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: all .2s; }
+.logo-upload:hover { border-color: var(--accent); background: rgba(249,115,22,0.03); }
+.logo-upload i { font-size: 2.5rem; color: var(--muted); display: block; margin-bottom: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="signup-page">
+<div class="container">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-lg-3 d-none d-lg-block">
+      <div class="signup-sidebar rounded-4">
+        <div class="hero-badge d-inline-flex align-items-center gap-2 mb-3" style="background:rgba(249,115,22,0.2);border:1px solid rgba(249,115,22,0.4);color:var(--accent);border-radius:50px;padding:5px 14px;font-size:0.8rem;font-weight:600;">
+          <i class="bi bi-rocket-takeoff-fill"></i> Quick Setup
+        </div>
+        <h3>Register Your Business</h3>
+        <p>Get your professional business page live in under 5 minutes.</p>
+        <div class="step-indicator">
+          <div class="step-item">
+            <div class="step-dot active" id="dot-1">1</div>
+            <div class="step-label active" id="lbl-1">Select Category</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot" id="dot-2">2</div>
+            <div class="step-label" id="lbl-2">Business Info</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot" id="dot-3">3</div>
+            <div class="step-label" id="lbl-3">Contact & Address</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot" id="dot-4">4</div>
+            <div class="step-label" id="lbl-4">Admin Account</div>
+          </div>
+        </div>
+        <div class="mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,0.1);">
+          <div class="d-flex gap-2 mb-2"><i class="bi bi-check-circle-fill text-success"></i><span style="color:rgba(255,255,255,0.8);font-size:0.85rem;">Free landing page included</span></div>
+          <div class="d-flex gap-2 mb-2"><i class="bi bi-check-circle-fill text-success"></i><span style="color:rgba(255,255,255,0.8);font-size:0.85rem;">Pre-filled service templates</span></div>
+          <div class="d-flex gap-2"><i class="bi bi-check-circle-fill text-success"></i><span style="color:rgba(255,255,255,0.8);font-size:0.85rem;">Enquiry management dashboard</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="col-lg-9">
+      <div class="signup-card">
+        <div class="signup-body">
+          <div class="progress-bar-custom"><div class="fill" id="progressFill" style="width:25%"></div></div>
+
+          <form method="post" enctype="multipart/form-data" id="signupForm">
+            {% csrf_token %}
+
+            <!-- STEP 1: Category -->
+            <div class="form-section active" id="step-1">
+              <div class="section-header">
+                <h4><i class="bi bi-grid-3x3-gap me-2 text-warning"></i>Select Your Business Category</h4>
+                <p>Choose the type that best describes your business. This sets up a pre-built service template for you.</p>
+              </div>
+              <div class="cat-picker" id="catPicker">
+                {% for cat in categories %}
+                <label class="cat-option">
+                  <input type="radio" name="category" value="{{ cat.id }}" {% if forloop.first %}checked{% endif %}>
+                  <i class="bi bi-{{ cat.icon }}"></i>
+                  <span>{{ cat.name }}</span>
+                </label>
+                {% empty %}
+                {% for name,icon,val in default_cats_list %}
+                <label class="cat-option {% if forloop.first %}selected{% endif %}">
+                  <input type="radio" name="category" value="{{ val }}" {% if forloop.first %}checked{% endif %}>
+                  <i class="bi bi-{{ icon }}"></i>
+                  <span>{{ name }}</span>
+                </label>
+                {% endfor %}
+                {% endfor %}
+              </div>
+              <div class="step-nav">
+                <button type="button" class="btn btn-primary" onclick="goStep(2)">Next: Business Info <i class="bi bi-arrow-right ms-2"></i></button>
+              </div>
+            </div>
+
+            <!-- STEP 2: Business Info -->
+            <div class="form-section" id="step-2">
+              <div class="section-header">
+                <h4><i class="bi bi-building me-2 text-warning"></i>Business Information</h4>
+                <p>Tell customers about your business — this will appear on your public page.</p>
+              </div>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label>Business / Organization Name *</label>
+                  {{ form.name }}
+                </div>
+                <div class="col-md-6">
+                  <label>Tagline</label>
+                  {{ form.tagline }}
+                </div>
+                <div class="col-md-6">
+                  <label>Established Year</label>
+                  {{ form.established_year }}
+                </div>
+                <div class="col-12">
+                  <label>Business Description</label>
+                  {{ form.description }}
+                </div>
+                <div class="col-12">
+                  <label>Logo / Profile Image</label>
+                  <div class="logo-upload" onclick="document.getElementById('id_logo').click()">
+                    <i class="bi bi-cloud-upload"></i>
+                    <strong>Click to upload logo</strong>
+                    <p class="text-muted small mb-0 mt-1">PNG, JPG up to 5MB — displayed on your landing page</p>
+                  </div>
+                  <div style="display:none;">{{ form.logo }}</div>
+                </div>
+                <div class="col-md-6">
+                  <label>Working Hours</label>
+                  {{ form.working_hours }}
+                </div>
+                <div class="col-md-6">
+                  <label>GST Number (Optional)</label>
+                  {{ form.gst_number }}
+                </div>
+                <div class="col-12">
+                  <label class="mb-2">Business Features</label>
+                  <div class="check-group">
+                    <label class="check-pill" id="pill-sunday">
+                      {{ form.is_open_sunday }} Open on Sundays
+                    </label>
+                    <label class="check-pill" id="pill-payment">
+                      {{ form.accepts_online_payment }} Online Payment
+                    </label>
+                    <label class="check-pill" id="pill-home">
+                      {{ form.home_service_available }} Home Service
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="step-nav">
+                <button type="button" class="btn btn-outline-secondary" onclick="goStep(1)"><i class="bi bi-arrow-left me-2"></i>Back</button>
+                <button type="button" class="btn btn-primary" onclick="goStep(3)">Next: Contact <i class="bi bi-arrow-right ms-2"></i></button>
+              </div>
+            </div>
+
+            <!-- STEP 3: Contact & Address -->
+            <div class="form-section" id="step-3">
+              <div class="section-header">
+                <h4><i class="bi bi-geo-alt me-2 text-warning"></i>Contact & Address</h4>
+                <p>Where can customers find and reach you?</p>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label>Business Email *</label>
+                  {{ form.email }}
+                </div>
+                <div class="col-md-6">
+                  <label>Phone Number *</label>
+                  {{ form.phone }}
+                </div>
+                <div class="col-md-6">
+                  <label>WhatsApp Number</label>
+                  {{ form.whatsapp }}
+                </div>
+                <div class="col-md-6">
+                  <label>Website</label>
+                  {{ form.website }}
+                </div>
+                <div class="col-12"><hr class="my-1"></div>
+                <div class="col-12">
+                  <label>Address Line 1 *</label>
+                  {{ form.address_line1 }}
+                </div>
+                <div class="col-12">
+                  <label>Address Line 2</label>
+                  {{ form.address_line2 }}
+                </div>
+                <div class="col-md-4">
+                  <label>City *</label>
+                  {{ form.city }}
+                </div>
+                <div class="col-md-4">
+                  <label>State *</label>
+                  {{ form.state }}
+                </div>
+                <div class="col-md-4">
+                  <label>PIN Code *</label>
+                  {{ form.pincode }}
+                </div>
+              </div>
+              <div class="step-nav">
+                <button type="button" class="btn btn-outline-secondary" onclick="goStep(2)"><i class="bi bi-arrow-left me-2"></i>Back</button>
+                <button type="button" class="btn btn-primary" onclick="goStep(4)">Next: Admin Account <i class="bi bi-arrow-right ms-2"></i></button>
+              </div>
+            </div>
+
+            <!-- STEP 4: Admin Account -->
+            <div class="form-section" id="step-4">
+              <div class="section-header">
+                <h4><i class="bi bi-person-badge me-2 text-warning"></i>Create Admin Account</h4>
+                <p>This account will have full control of your organization's dashboard.</p>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label>First Name *</label>
+                  {{ form.first_name }}
+                </div>
+                <div class="col-md-6">
+                  <label>Last Name *</label>
+                  {{ form.last_name }}
+                </div>
+                <div class="col-md-6">
+                  <label>Username *</label>
+                  {{ form.username }}
+                </div>
+                <div class="col-md-6">
+                  <label>Your Phone</label>
+                  {{ form.user_phone }}
+                </div>
+                <div class="col-12">
+                  <label>Your Email *</label>
+                  {{ form.user_email }}
+                </div>
+                <div class="col-md-6">
+                  <label>Password *</label>
+                  {{ form.password1 }}
+                </div>
+                <div class="col-md-6">
+                  <label>Confirm Password *</label>
+                  {{ form.password2 }}
+                </div>
+              </div>
+
+              {% if form.errors %}
+              <div class="alert alert-danger mt-3">
+                <strong>Please fix these errors:</strong>
+                <ul class="mb-0 mt-2">
+                {% for field in form %}{% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}{% endfor %}
+                {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+
+              <div class="step-nav">
+                <button type="button" class="btn btn-outline-secondary" onclick="goStep(3)"><i class="bi bi-arrow-left me-2"></i>Back</button>
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="bi bi-rocket-takeoff me-2"></i>Launch My Business Page!
+                </button>
+              </div>
+              <p class="text-muted small text-center mt-3">Already registered? <a href="{% url 'login' %}">Login here</a></p>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+function goStep(n) {
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  document.querySelectorAll('[id^="dot-"]').forEach((d, i) => {
+    if (i + 1 < n) { d.className = 'step-dot done'; d.innerHTML = '<i class="bi bi-check2"></i>'; }
+    else if (i + 1 === n) { d.className = 'step-dot active'; d.textContent = i + 1; }
+    else { d.className = 'step-dot'; d.textContent = i + 1; }
+  });
+  document.querySelectorAll('[id^="lbl-"]').forEach((l, i) => {
+    l.className = 'step-label' + (i + 1 === n ? ' active' : '');
+  });
+  document.getElementById('progressFill').style.width = (n / totalSteps * 100) + '%';
+  currentStep = n;
+  document.getElementById('step-' + n).classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Category picker
+document.querySelectorAll('.cat-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+  if (opt.querySelector('input:checked')) opt.classList.add('selected');
+});
+
+// Checkbox pills
+document.querySelectorAll('.check-pill').forEach(pill => {
+  const cb = pill.querySelector('input[type="checkbox"]');
+  if (cb && cb.checked) pill.classList.add('checked');
+  pill.addEventListener('click', () => {
+    setTimeout(() => { pill.classList.toggle('checked', cb.checked); }, 0);
+  });
+});
+
+// Auto-jump to step 4 if there are form errors
+{% if form.errors %}goStep(4);{% endif %}
+</script>
+{% endblock %}

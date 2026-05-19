@@ -1,0 +1,171 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Dashboard — {{ org.name }}{% endblock %}
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <div class="text-muted small">Overview of {{ org.name }}</div>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <div class="org-badge">
+      <div class="dot"></div>
+      {% if org.is_verified %}Verified{% else %}Pending Verification{% endif %}
+    </div>
+    <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-outline-primary btn-sm" style="border-radius:10px;">
+      <i class="bi bi-eye me-1"></i>View Public Page
+    </a>
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-briefcase-fill"></i></div>
+      <div class="value">{{ services.count }}</div>
+      <div class="label">Active Services</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-chat-dots-fill"></i></div>
+      <div class="value">{{ total_enquiries }}</div>
+      <div class="label">Total Enquiries</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#fee2e2;color:#ef4444;"><i class="bi bi-bell-fill"></i></div>
+      <div class="value">{{ new_enquiries }}</div>
+      <div class="label">New / Unread</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#d1fae5;color:#10b981;"><i class="bi bi-star-fill"></i></div>
+      <div class="value">{{ testimonials.count }}</div>
+      <div class="label">Testimonials</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Org Info Card -->
+  <div class="col-lg-4">
+    <div class="card-modern h-100">
+      <div class="card-header"><i class="bi bi-building me-2"></i>Your Organization</div>
+      <div class="p-4">
+        <div class="text-center mb-4">
+          {% if org.logo %}
+          <img src="{{ org.logo.url }}" alt="Logo" style="width:80px;height:80px;border-radius:20px;object-fit:cover;border:3px solid var(--border);">
+          {% else %}
+          <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--accent),#fbbf24);display:inline-flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;">
+            <i class="bi bi-building"></i>
+          </div>
+          {% endif %}
+          <h5 class="mt-3 mb-1">{{ org.name }}</h5>
+          {% if org.category %}
+          <span class="badge" style="background:var(--accent);color:#fff;border-radius:50px;padding:4px 12px;">{{ org.category.name }}</span>
+          {% endif %}
+        </div>
+        <div class="d-flex flex-column gap-2">
+          <div class="d-flex gap-3 align-items-center">
+            <i class="bi bi-telephone text-muted" style="width:18px;"></i>
+            <span class="small">{{ org.phone }}</span>
+          </div>
+          <div class="d-flex gap-3 align-items-center">
+            <i class="bi bi-envelope text-muted" style="width:18px;"></i>
+            <span class="small">{{ org.email }}</span>
+          </div>
+          <div class="d-flex gap-3 align-items-center">
+            <i class="bi bi-geo-alt text-muted" style="width:18px;"></i>
+            <span class="small">{{ org.city }}, {{ org.state }}</span>
+          </div>
+          {% if org.working_hours %}
+          <div class="d-flex gap-3 align-items-center">
+            <i class="bi bi-clock text-muted" style="width:18px;"></i>
+            <span class="small">{{ org.working_hours }}</span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="mt-3 d-flex gap-2 flex-wrap">
+          {% if org.home_service_available %}<span class="badge" style="background:#dbeafe;color:#1d4ed8;"><i class="bi bi-house me-1"></i>Home Service</span>{% endif %}
+          {% if org.accepts_online_payment %}<span class="badge" style="background:#d1fae5;color:#065f46;"><i class="bi bi-credit-card me-1"></i>Online Pay</span>{% endif %}
+          {% if org.is_open_sunday %}<span class="badge" style="background:#fef9c3;color:#92400e;"><i class="bi bi-sun me-1"></i>Open Sunday</span>{% endif %}
+        </div>
+        <a href="{% url 'org_settings' %}" class="btn btn-outline-primary btn-sm mt-3 w-100">
+          <i class="bi bi-pencil me-1"></i>Edit Profile
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Enquiries -->
+  <div class="col-lg-8">
+    <div class="card-modern">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <span><i class="bi bi-chat-left-dots me-2"></i>Recent Enquiries</span>
+        <a href="{% url 'enquiries' %}" class="btn btn-sm btn-outline-light" style="border-radius:8px;font-size:0.78rem;">View All</a>
+      </div>
+      <div class="p-0">
+        {% if enquiries %}
+        <table class="table table-modern mb-0">
+          <thead><tr><th>Name</th><th>Subject</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+          {% for enq in enquiries %}
+          <tr>
+            <td>
+              <div class="fw-600">{{ enq.name }}</div>
+              <div class="text-muted small">{{ enq.phone }}</div>
+            </td>
+            <td><span class="small">{{ enq.subject|truncatechars:40 }}</span></td>
+            <td>
+              <span class="badge badge-{{ enq.status }}" style="padding:5px 10px;border-radius:50px;">{{ enq.get_status_display }}</span>
+            </td>
+            <td class="text-muted small">{{ enq.created_at|date:"d M" }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+          <p>No enquiries yet. Share your public page to start receiving them!</p>
+          <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-primary btn-sm">
+            <i class="bi bi-share me-1"></i>View Your Page
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3 mt-2">
+      <div class="col-md-4">
+        <a href="{% url 'add_service' %}" class="text-decoration-none">
+          <div class="stat-card text-center" style="cursor:pointer;">
+            <i class="bi bi-plus-circle fs-3 text-primary d-block mb-2"></i>
+            <div class="label">Add Service</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a href="{% url 'enquiries' %}" class="text-decoration-none">
+          <div class="stat-card text-center" style="cursor:pointer;">
+            <i class="bi bi-chat-text fs-3 text-warning d-block mb-2"></i>
+            <div class="label">Manage Enquiries</div>
+          </div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a href="{% url 'public_landing' org.slug %}" target="_blank" class="text-decoration-none">
+          <div class="stat-card text-center" style="cursor:pointer;">
+            <i class="bi bi-globe fs-3 text-success d-block mb-2"></i>
+            <div class="label">Public Page</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

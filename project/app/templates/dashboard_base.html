@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block extra_css %}
+<style>
+body { background: #f1f5f9; }
+.page-header {
+  background: #fff; border-bottom: 1px solid var(--border);
+  padding: 20px 30px; margin: -30px -30px 30px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.page-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+.org-badge {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 50px; padding: 6px 14px;
+  font-size: 0.82rem; font-weight: 600; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.org-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+</style>
+{% block dash_css %}{% endblock %}
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+<!-- Sidebar -->
+<div class="sidebar">
+  <div style="padding: 20px 24px 10px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <a href="{% url 'home' %}" style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;color:#fff;text-decoration:none;">
+      Org<span style="color:var(--accent);">Portal</span>
+    </a>
+    {% if user.organization %}
+    <div style="color:rgba(255,255,255,0.5);font-size:0.75rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      {{ user.organization.name }}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="sidebar-section">Main</div>
+  <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <i class="bi bi-grid-1x2"></i> Dashboard
+  </a>
+
+  {% if user.organization %}
+  <div class="sidebar-section">Business</div>
+  <a href="{% url 'manage_services' %}" class="nav-link {% if 'service' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-briefcase"></i> Services
+  </a>
+  <a href="{% url 'enquiries' %}" class="nav-link {% if 'enquir' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-chat-left-dots"></i> Enquiries
+    {% with cnt=user.organization.enquiries.filter %}
+    {% endwith %}
+  </a>
+  <a href="{% url 'org_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'org_settings' %}active{% endif %}">
+    <i class="bi bi-sliders"></i> Settings
+  </a>
+
+  <div class="sidebar-section">Public</div>
+  <a href="{% url 'public_landing' user.organization.slug %}" target="_blank" class="nav-link">
+    <i class="bi bi-box-arrow-up-right"></i> View My Page
+  </a>
+  {% endif %}
+
+  <div class="sidebar-section">Account</div>
+  <a href="{% url 'logout' %}" class="nav-link" style="color:rgba(239,68,68,0.8);">
+    <i class="bi bi-box-arrow-left"></i> Logout
+  </a>
+
+  <div style="padding: 24px; margin-top: auto;">
+    <div style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:14px;">
+      <div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">{{ user.get_full_name|default:user.username }}</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:0.72rem;">{{ user.get_role_display }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+  {% if messages %}
+  {% for msg in messages %}
+  <div class="alert alert-{{ msg.tags }} alert-dismissible fade show">{{ msg }} <button class="btn-close" data-bs-dismiss="alert"></button></div>
+  {% endfor %}
+  {% endif %}
+
+  {% block dash_content %}{% endblock %}
+</div>
+{% endblock %}

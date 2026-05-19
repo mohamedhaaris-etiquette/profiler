@@ -1,0 +1,111 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Enquiries — {{ org.name }}{% endblock %}
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-chat-left-dots me-2"></i>Enquiries</h1>
+    <div class="text-muted small">Manage customer enquiries for {{ org.name }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    {% for status, label in enquiry_statuses %}
+    <a href="?status={{ status }}" class="btn btn-sm {% if status_filter == status %}btn-primary{% else %}btn-outline-secondary{% endif %}" style="border-radius:8px;">{{ label }}</a>
+    {% endfor %}
+    <a href="?" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}" style="border-radius:8px;">All</a>
+  </div>
+</div>
+
+<div class="card-modern">
+  <div class="p-0">
+    {% if enquiries %}
+    <table class="table table-modern mb-0">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Subject / Service</th>
+          <th>Message</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for enq in enquiries %}
+      <tr>
+        <td>
+          <div class="fw-600">{{ enq.name }}</div>
+          <div class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ enq.phone }}</div>
+          <div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ enq.email }}</div>
+        </td>
+        <td>
+          <div class="fw-500">{{ enq.subject }}</div>
+          {% if enq.service %}<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>{{ enq.service.name }}</div>{% endif %}
+        </td>
+        <td style="max-width:200px;">
+          <span class="small text-muted">{{ enq.message|truncatechars:80 }}</span>
+        </td>
+        <td>
+          <span class="badge badge-{{ enq.status }}" style="padding:5px 12px;border-radius:50px;font-size:0.78rem;">{{ enq.get_status_display }}</span>
+        </td>
+        <td class="text-muted small">{{ enq.created_at|date:"d M, Y" }}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" style="border-radius:8px;" data-bs-toggle="modal" data-bs-target="#modal-{{ enq.pk }}">
+            Update
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i>
+      <h5 class="text-muted">No enquiries yet</h5>
+      <p class="text-muted small">Share your public page to start receiving enquiries!</p>
+      <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-primary btn-sm">
+        <i class="bi bi-box-arrow-up-right me-1"></i>View Public Page
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modals -->
+{% for enq in enquiries %}
+<div class="modal fade" id="modal-{{ enq.pk }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:20px;overflow:hidden;">
+      <div class="modal-header" style="background:var(--brand);color:#fff;border:none;">
+        <h5 class="modal-title">Enquiry from {{ enq.name }}</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3 p-3 rounded-3" style="background:#f8fafc;border:1px solid var(--border);">
+          <div class="mb-1"><strong>Message:</strong></div>
+          <p class="mb-0 text-muted">{{ enq.message }}</p>
+        </div>
+        <form method="post" action="{% url 'update_enquiry' enq.pk %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-600">Update Status</label>
+            <select name="status" class="form-select">
+              {% for val, label in enq.STATUS_CHOICES %}
+              <option value="{{ val }}" {% if enq.status == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-600">Internal Notes</label>
+            <textarea name="notes" class="form-control" rows="3" placeholder="Add notes...">{{ enq.notes }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-fill" style="border-radius:10px;">Save Changes</button>
+            {% if enq.phone %}<a href="tel:{{ enq.phone }}" class="btn btn-outline-success" style="border-radius:10px;"><i class="bi bi-telephone"></i></a>{% endif %}
+            {% if enq.email %}<a href="mailto:{{ enq.email }}" class="btn btn-outline-warning" style="border-radius:10px;"><i class="bi bi-envelope"></i></a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

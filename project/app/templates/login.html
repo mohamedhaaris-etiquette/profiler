@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block extra_css %}
+<style>
+.login-page {
+  min-height: calc(100vh - 70px);
+  display: flex; align-items: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  position: relative; overflow: hidden;
+}
+.login-page::before {
+  content: '';
+  position: absolute; width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(249,115,22,0.2) 0%, transparent 70%);
+  top: -200px; right: -100px; border-radius: 50%;
+}
+.login-page::after {
+  content: '';
+  position: absolute; width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 70%);
+  bottom: -100px; left: -100px; border-radius: 50%;
+}
+.login-card {
+  background: rgba(255,255,255,0.97);
+  border-radius: 28px; padding: 48px 40px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+  position: relative; z-index: 2;
+  backdrop-filter: blur(20px);
+}
+.login-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--brand); }
+.login-logo span { color: var(--accent); }
+.login-title { font-size: 1.6rem; font-weight: 800; margin-top: 28px; margin-bottom: 6px; }
+.login-sub { color: var(--muted); font-size: 0.9rem; }
+.input-icon-wrap { position: relative; }
+.input-icon-wrap i {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-size: 1rem; z-index: 2;
+}
+.input-icon-wrap .form-control { padding-left: 40px; }
+.btn-login {
+  width: 100%; padding: 14px; font-size: 1rem; font-weight: 700;
+  border-radius: 14px; background: var(--brand); border: none; color: #fff;
+  transition: all .3s; margin-top: 8px;
+}
+.btn-login:hover { background: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(249,115,22,0.35); }
+.divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--muted); font-size: 0.85rem; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-5">
+        <div class="login-card">
+          <div class="login-logo">Org<span>Portal</span></div>
+          <h2 class="login-title">Welcome back</h2>
+          <p class="login-sub">Sign in to manage your organization's dashboard.</p>
+
+          {% if messages %}
+          {% for msg in messages %}
+          <div class="alert alert-{{ msg.tags }} mt-3">{{ msg }}</div>
+          {% endfor %}
+          {% endif %}
+
+          <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label>Username</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-person"></i>
+                <input type="text" name="username" class="form-control form-control-lg" placeholder="Your username" required>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label>Password</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-lock"></i>
+                <input type="password" name="password" class="form-control form-control-lg" placeholder="Your password" required id="pwField">
+                <i class="bi bi-eye" style="left:auto;right:14px;cursor:pointer;" onclick="togglePw()"></i>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-login">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Sign In to Dashboard
+            </button>
+          </form>
+
+          <div class="divider">or</div>
+
+          <div class="text-center">
+            <p class="text-muted mb-0">New to Portal?</p>
+            <a href="{% url 'signup' %}" class="btn btn-outline-primary mt-2 w-100" style="border-radius:12px;padding:12px;">
+              <i class="bi bi-building-add me-2"></i>Register Your Business
+            </a>
+          </div>
+
+          <div class="mt-4 p-3 rounded-3" style="background:#f8fafc; border:1px solid var(--border);">
+            <p class="text-muted small mb-1"><strong>Demo Credentials</strong></p>
+            <p class="text-muted small mb-0">Super Admin: <code>superadmin</code> / <code>admin123</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw() {
+  const f = document.getElementById('pwField');
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}
