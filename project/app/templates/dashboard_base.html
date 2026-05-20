@@ -45,6 +45,9 @@ body { background: #f1f5f9; }
   <a href="{% url 'manage_services' %}" class="nav-link {% if 'service' in request.resolver_match.url_name %}active{% endif %}">
     <i class="bi bi-briefcase"></i> Services
   </a>
+  <a href="{% url 'manage_products' %}" class="nav-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-box-seam"></i> Products
+  </a>
   <a href="{% url 'enquiries' %}" class="nav-link {% if 'enquir' in request.resolver_match.url_name %}active{% endif %}">
     <i class="bi bi-chat-left-dots"></i> Enquiries
     {% with cnt=user.organization.enquiries.filter %}

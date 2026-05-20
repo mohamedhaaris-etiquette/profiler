@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Organization, BusinessCategory, Service, Enquiry, GalleryImage, Testimonial
+from .models import CustomUser, Organization, BusinessCategory, Service, Enquiry, GalleryImage, Testimonial, Product
 
 
 @admin.register(BusinessCategory)
@@ -65,5 +65,13 @@ class TestimonialAdmin(admin.ModelAdmin):
     list_display = ['client_name', 'organization', 'rating', 'is_active']
 
 
-admin.site.site_header = 'Portal Administration'
-admin.site.site_title = 'Portal'
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['name', 'organization', 'price', 'discount_price', 'stock_quantity', 'in_stock', 'is_featured', 'is_active']
+    list_filter = ['organization', 'is_featured', 'is_active', 'in_stock', 'condition']
+    search_fields = ['name', 'sku', 'brand', 'category']
+    list_editable = ['in_stock', 'is_active', 'is_featured']
+
+
+admin.site.site_header = 'OrgPortal Administration'
+admin.site.site_title = 'OrgPortal'

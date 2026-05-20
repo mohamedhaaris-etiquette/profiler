@@ -23,11 +23,12 @@ class BusinessCategory(models.Model):
 
 
 class Organization(models.Model):
+    """Represents a business/company registered on the platform"""
     YEARS_CHOICES = [(str(y), str(y)) for y in range(1970, timezone.now().year + 1)][::-1]
 
     name = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True)
-    category = models.ForeignKey(BusinessCategory, on_delete=models.SET_NULL, null=True,blank=True)
+    category = models.ForeignKey(BusinessCategory, on_delete=models.SET_NULL, null=True)
     logo = models.ImageField(upload_to='logos/', blank=True, null=True)
     tagline = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
@@ -173,6 +174,51 @@ class GalleryImage(models.Model):
         return f"{self.organization.name} - Image {self.pk}"
 
 
+class Product(models.Model):
+    """Physical or digital products sold by the organization"""
+    CONDITION_CHOICES = [
+        ('new', 'New'),
+        ('used', 'Used'),
+        ('refurbished', 'Refurbished'),
+    ]
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='products')
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    sku = models.CharField(max_length=100, blank=True, help_text='Stock Keeping Unit / Product Code')
+    category = models.CharField(max_length=100, blank=True)
+    brand = models.CharField(max_length=100, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    stock_quantity = models.PositiveIntegerField(default=0)
+    unit = models.CharField(max_length=50, default='piece', help_text='e.g. piece, kg, litre, box')
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='new')
+    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='products/', blank=True, null=True)
+    image3 = models.ImageField(upload_to='products/', blank=True, null=True)
+    icon = models.CharField(max_length=50, default='box-seam')
+    is_featured = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    in_stock = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f"{self.organization.name} — {self.name}"
+
+    @property
+    def discount_percent(self):
+        if self.discount_price and self.price > 0:
+            return int(((self.price - self.discount_price) / self.price) * 100)
+        return 0
+
+    @property
+    def effective_price(self):
+        return self.discount_price if self.discount_price else self.price
+
+
 class Testimonial(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='testimonials')
     client_name = models.CharField(max_length=100)
@@ -184,3 +230,5 @@ class Testimonial(models.Model):
 
     def __str__(self):
         return f"{self.client_name} → {self.organization.name}"
+
+

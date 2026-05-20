@@ -3,10 +3,11 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
-from .models import Organization, CustomUser, BusinessCategory, Service, Enquiry, GalleryImage, Testimonial
+from django.core.paginator import Paginator
+from .models import Organization, CustomUser, BusinessCategory, Service, Enquiry, GalleryImage, Testimonial, Product
 from .forms import (
     OrganizationSignupForm, CustomLoginForm, EnquiryForm,
-    ServiceForm, OrganizationUpdateForm
+    ServiceForm, OrganizationUpdateForm, ProductForm
 )
 
 
@@ -57,7 +58,7 @@ def signup_view(request):
                             )
 
                     login(request, user)
-                    messages.success(request, f'Welcome to Portal, {org.name}! Your profile is ready.')
+                    messages.success(request, f'Welcome to OrgPortal, {org.name}! Your profile is ready.')
                     return redirect('dashboard')
             except Exception as e:
                 messages.error(request, f'Registration failed: {str(e)}')
@@ -99,10 +100,12 @@ def dashboard(request):
         orgs = Organization.objects.all().order_by('-created_at')
         total_enquiries = Enquiry.objects.count()
         new_enquiries = Enquiry.objects.filter(status='new').count()
+        total_products = Product.objects.count()
         return render(request, 'super_admin_dashboard.html', {
             'orgs': orgs,
             'total_enquiries': total_enquiries,
             'new_enquiries': new_enquiries,
+            'total_products': total_products,
         })
 
     org = user.organization
@@ -111,6 +114,7 @@ def dashboard(request):
         return redirect('login')
 
     services = org.get_services()
+    products = org.products.filter(is_active=True)
     enquiries = org.enquiries.all()[:10]
     new_enquiries = org.enquiries.filter(status='new').count()
     testimonials = org.testimonials.filter(is_active=True)[:5]
@@ -118,10 +122,12 @@ def dashboard(request):
     return render(request, 'dashboard.html', {
         'org': org,
         'services': services,
+        'products': products,
         'enquiries': enquiries,
         'new_enquiries': new_enquiries,
         'testimonials': testimonials,
         'total_enquiries': org.enquiries.count(),
+        'total_products': products.count(),
     })
 
 
@@ -130,6 +136,8 @@ def public_landing(request, slug):
     org = get_object_or_404(Organization, slug=slug, is_active=True)
     services = org.get_services()
     featured_services = services.filter(is_featured=True)
+    products = org.products.filter(is_active=True)
+    featured_products = products.filter(is_featured=True)
     gallery = org.gallery.all()[:8]
     testimonials = org.testimonials.filter(is_active=True)
 
@@ -150,6 +158,8 @@ def public_landing(request, slug):
         'org': org,
         'services': services,
         'featured_services': featured_services,
+        'products': products,
+        'featured_products': featured_products,
         'gallery': gallery,
         'testimonials': testimonials,
         'enquiry_form': enquiry_form,
@@ -214,7 +224,10 @@ def enquiries_list(request):
     if status_filter:
         enquiries = enquiries.filter(status=status_filter)
     return render(request, 'enquiries.html', {
-        'enquiries': enquiries, 'org': org, 'status_filter': status_filter
+        'enquiries': enquiries,
+        'org': org,
+        'status_filter': status_filter,
+        'enquiry_statuses': Enquiry.STATUS_CHOICES,
     })
 
 
@@ -228,6 +241,91 @@ def update_enquiry_status(request, pk):
         enq.save()
         messages.success(request, 'Enquiry updated.')
     return redirect('enquiries')
+
+
+# ── PRODUCTS ──────────────────────────────────────────────────────────────────
+
+@login_required
+def manage_products(request):
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+    q = request.GET.get('q', '')
+    cat = request.GET.get('cat', '')
+    products = org.products.all()
+    if q:
+        products = products.filter(name__icontains=q)
+    if cat:
+        products = products.filter(category__icontains=cat)
+    categories = org.products.values_list('category', flat=True).distinct().exclude(category='')
+    paginator = Paginator(products, 12)
+    page = paginator.get_page(request.GET.get('page'))
+    return render(request, 'manage_products.html', {
+        'org': org,
+        'page_obj': page,
+        'categories': categories,
+        'q': q,
+        'cat': cat,
+        'total': org.products.count(),
+        'in_stock': org.products.filter(in_stock=True).count(),
+    })
+
+
+@login_required
+def add_product(request):
+    org = request.user.organization
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save(commit=False)
+            product.organization = org
+            product.save()
+            messages.success(request, f'Product "{product.name}" added successfully.')
+            return redirect('manage_products')
+    else:
+        form = ProductForm()
+    return render(request, 'product_form.html', {
+        'form': form, 'org': org, 'action': 'Add New'
+    })
+
+
+@login_required
+def edit_product(request, pk):
+    org = request.user.organization
+    product = get_object_or_404(Product, pk=pk, organization=org)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Product "{product.name}" updated.')
+            return redirect('manage_products')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'product_form.html', {
+        'form': form, 'org': org, 'action': 'Edit', 'product': product
+    })
+
+
+@login_required
+def delete_product(request, pk):
+    org = request.user.organization
+    product = get_object_or_404(Product, pk=pk, organization=org)
+    name = product.name
+    product.delete()
+    messages.success(request, f'Product "{name}" deleted.')
+    return redirect('manage_products')
+
+
+@login_required
+def toggle_product_stock(request, pk):
+    """Quick toggle in/out of stock via AJAX or form post"""
+    org = request.user.organization
+    product = get_object_or_404(Product, pk=pk, organization=org)
+    product.in_stock = not product.in_stock
+    product.save()
+    status = 'In Stock' if product.in_stock else 'Out of Stock'
+    messages.success(request, f'{product.name} marked as {status}.')
+    return redirect('manage_products')
 
 
 @login_required

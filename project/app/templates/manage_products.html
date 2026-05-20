@@ -1,0 +1,167 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Products — {{ org.name }}{% endblock %}
+{% block dash_css %}
+<style>
+.product-card {
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 18px; overflow: hidden; transition: all .25s;
+  height: 100%; display: flex; flex-direction: column;
+}
+.product-card:hover { border-color: #a78bfa; transform: translateY(-3px); box-shadow: 0 12px 32px rgba(124,58,237,0.12); }
+.product-img {
+  height: 160px; background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; color: var(--muted); position: relative; overflow: hidden;
+}
+.product-img img { width: 100%; height: 100%; object-fit: cover; }
+.discount-tag {
+  position: absolute; top: 10px; left: 10px;
+  background: #ef4444; color: #fff; font-size: 0.72rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 50px;
+}
+.featured-tag {
+  position: absolute; top: 10px; right: 10px;
+  background: var(--accent); color: #fff; font-size: 0.72rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 50px;
+}
+.stock-badge { border-radius: 50px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; }
+.in-stock { background: #dcfce7; color: #166534; }
+.out-stock { background: #fee2e2; color: #991b1b; }
+.product-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+.product-price .original { text-decoration: line-through; color: var(--muted); font-size: 0.82rem; }
+.product-price .sale { color: #ef4444; font-weight: 800; font-size: 1.1rem; }
+.product-price .regular { color: var(--brand); font-weight: 800; font-size: 1.1rem; }
+.search-bar { background: #fff; border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 24px; }
+.filter-chip { border: 1.5px solid var(--border); border-radius: 50px; padding: 6px 16px; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: none; color: var(--brand); transition: all .2s; }
+.filter-chip:hover, .filter-chip.active { border-color: #7c3aed; background: #ede9fe; color: #7c3aed; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state i { font-size: 4rem; color: var(--border); display: block; margin-bottom: 20px; }
+</style>
+{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-box-seam me-2"></i>Products</h1>
+    <div class="text-muted small">{{ total }} total &bull; {{ in_stock }} in stock</div>
+  </div>
+  <a href="{% url 'add_product' %}" class="btn btn-primary" style="border-radius:10px; background:#7c3aed; border:none;">
+    <i class="bi bi-plus-lg me-2"></i>Add Product
+  </a>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="search-bar">
+  <form method="get" class="d-flex gap-3 align-items-center flex-wrap">
+    <div class="flex-grow-1" style="min-width:200px;">
+      <div style="position:relative;">
+        <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);"></i>
+        <input type="text" name="q" value="{{ q }}" class="form-control" style="padding-left:36px;border-radius:10px;" placeholder="Search products by name...">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="border-radius:10px;background:#7c3aed;border:none;">Search</button>
+    {% if q or cat %}<a href="{% url 'manage_products' %}" class="btn btn-outline-secondary" style="border-radius:10px;">Clear</a>{% endif %}
+  </form>
+  {% if categories %}
+  <div class="d-flex gap-2 flex-wrap mt-3">
+    <span class="text-muted small fw-600 me-1 align-self-center">Category:</span>
+    <a href="{% url 'manage_products' %}" class="filter-chip {% if not cat %}active{% endif %}">All</a>
+    {% for c in categories %}
+    <a href="?cat={{ c }}" class="filter-chip {% if cat == c %}active{% endif %}">{{ c }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{% if page_obj.object_list %}
+<div class="row g-4">
+  {% for product in page_obj %}
+  <div class="col-sm-6 col-lg-4 col-xl-3">
+    <div class="product-card">
+      <!-- Image -->
+      <div class="product-img">
+        {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}">
+        {% else %}
+          <i class="bi bi-{{ product.icon|default:'box-seam' }}"></i>
+        {% endif %}
+        {% if product.discount_percent %}<span class="discount-tag">-{{ product.discount_percent }}%</span>{% endif %}
+        {% if product.is_featured %}<span class="featured-tag">★ Featured</span>{% endif %}
+      </div>
+
+      <!-- Body -->
+      <div class="product-body">
+        {% if product.brand or product.category %}
+        <div class="text-muted small mb-1">{{ product.brand }}{% if product.brand and product.category %} · {% endif %}{{ product.category }}</div>
+        {% endif %}
+        <h6 class="fw-700 mb-1" style="line-height:1.3;">{{ product.name }}</h6>
+        {% if product.sku %}<div class="text-muted" style="font-size:0.72rem;">SKU: {{ product.sku }}</div>{% endif %}
+
+        <div class="product-price mt-2">
+          {% if product.discount_price %}
+          <div><span class="original">₹{{ product.price }}</span></div>
+          <span class="sale">₹{{ product.discount_price }}</span>
+          {% else %}
+          <span class="regular">₹{{ product.price }}</span>
+          {% endif %}
+          <span class="text-muted small"> / {{ product.unit }}</span>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mt-2">
+          <span class="stock-badge {% if product.in_stock %}in-stock{% else %}out-stock{% endif %}">
+            {% if product.in_stock %}In Stock ({{ product.stock_quantity }}){% else %}Out of Stock{% endif %}
+          </span>
+          <span class="badge" style="background:#f1f5f9;color:#64748b;border-radius:50px;font-size:0.7rem;">{{ product.get_condition_display }}</span>
+        </div>
+
+        <div class="d-flex gap-2 mt-auto pt-3">
+          <a href="{% url 'edit_product' product.pk %}" class="btn btn-sm btn-outline-primary flex-fill" style="border-radius:8px;border-color:#7c3aed;color:#7c3aed;">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+          <form method="post" action="{% url 'toggle_product_stock' product.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if product.in_stock %}btn-outline-warning{% else %}btn-outline-success{% endif %}" style="border-radius:8px;" title="Toggle stock">
+              <i class="bi bi-{% if product.in_stock %}x-circle{% else %}check-circle{% endif %}"></i>
+            </button>
+          </form>
+          <a href="{% url 'delete_product' product.pk %}" onclick="return confirm('Delete {{ product.name }}?')" class="btn btn-sm btn-outline-danger" style="border-radius:8px;">
+            <i class="bi bi-trash"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav class="mt-4 d-flex justify-content-center gap-2">
+  {% if page_obj.has_previous %}
+  <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&cat={{ cat }}" class="btn btn-outline-secondary btn-sm" style="border-radius:8px;">
+    <i class="bi bi-chevron-left"></i> Prev
+  </a>
+  {% endif %}
+  <span class="btn btn-sm disabled" style="border-radius:8px;">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+  <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&cat={{ cat }}" class="btn btn-outline-secondary btn-sm" style="border-radius:8px;">
+    Next <i class="bi bi-chevron-right"></i>
+  </a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card-modern">
+  <div class="empty-state">
+    <i class="bi bi-box-seam"></i>
+    <h4>No products yet</h4>
+    <p class="text-muted">Start adding products to your catalog. They'll appear on your public landing page.</p>
+    <a href="{% url 'add_product' %}" class="btn btn-primary" style="border-radius:10px;background:#7c3aed;border:none;">
+      <i class="bi bi-plus me-2"></i>Add Your First Product
+    </a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

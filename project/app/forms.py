@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
-from .models import CustomUser, Organization, Enquiry, Service, BusinessCategory
+from .models import CustomUser, Organization, Enquiry, Service, BusinessCategory, Product
 
 
 class OrganizationSignupForm(forms.ModelForm):
@@ -96,6 +96,30 @@ class ServiceForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
             'price_unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. per visit'}),
             'icon': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. tools'}),
+        }
+
+
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = [
+            'name', 'description', 'sku', 'category', 'brand',
+            'price', 'discount_price', 'stock_quantity', 'unit',
+            'condition', 'icon', 'image', 'image2', 'image3',
+            'is_featured', 'in_stock', 'is_active',
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Name'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Product description...'}),
+            'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'SKU / Product Code'}),
+            'category': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Electronics, Tools'}),
+            'brand': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Brand name'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
+            'discount_price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Optional sale price', 'step': '0.01'}),
+            'stock_quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0'}),
+            'unit': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. piece, kg, box'}),
+            'condition': forms.Select(attrs={'class': 'form-select'}),
+            'icon': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. box-seam, cpu, tools'}),
         }
 
 
