@@ -5,1005 +5,840 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ org.name }}{% if org.tagline %} — {{ org.tagline }}{% endif %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <style>
 :root {
-  --primary: {{ org.category.color_primary|default:"#0d1b2a" }};
-  --secondary: {{ org.category.color_secondary|default:"#1b3a5c" }};
-  --accent: #b89a5a;
-  --accent-light: #d4b97a;
-  --surface: #f5f4f0;
-  --surface-2: #edeae3;
-  --border: #d6d1c4;
-  --border-dark: #b8b0a0;
-  --muted: #6b6458;
-  --text: #1a1612;
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body: 'Source Sans 3', 'Gill Sans', sans-serif;
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.06), 0 2px 12px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.06);
-  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 24px 64px rgba(0,0,0,0.08);
+  --primary:      {{ org.category.color_primary|default:"#0d6efd" }};
+  --primary-dark: {{ org.category.color_secondary|default:"#0a52c4" }};
+  --accent:   #00c9a7;
+  --accent2:  #ffc107;
+  --surface:  #f0f4ff;
+  --surface2: #e8edf8;
+  --border:   #dce3f0;
+  --muted:    #6b7a99;
+  --text:     #1a2340;
+  --card-shadow: 0 2px 16px rgba(13,110,253,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --card-hover:  0 8px 32px rgba(13,110,253,0.16), 0 2px 8px rgba(0,0,0,0.08);
+  --font-head: 'Nunito', sans-serif;
+  --font-body: 'Poppins', sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { font-family: var(--font-body); background: #fff; color: var(--text); margin: 0; line-height: 1.6; }
-h1,h2,h3,h4,h5,h6 { font-family: var(--font-display); letter-spacing: -0.01em; }
-a { text-decoration: none; }
+body { font-family: var(--font-body); background: #f8faff; color: var(--text); margin: 0; line-height: 1.6; }
+h1,h2,h3,h4,h5,h6 { font-family: var(--font-head); }
+a { text-decoration: none; color: inherit; }
 
-/* ─── TOPBAR ─────────────────────────────────────────────── */
+/* ── TOPBAR ─────────────────────────────────── */
 .topbar {
-  background: var(--primary);
-  border-bottom: 1px solid rgba(184,154,90,0.25);
-  padding: 9px 0;
-  font-size: 0.78rem;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 0.03em;
+  background: var(--primary-dark);
+  color: rgba(255,255,255,0.75);
+  font-size: 0.75rem;
+  padding: 6px 0;
 }
-.topbar a { color: rgba(255,255,255,0.55); transition: color .2s; }
+.topbar a { color: rgba(255,255,255,0.75); }
 .topbar a:hover { color: var(--accent); }
-.topbar .divider { margin: 0 12px; opacity: 0.3; }
+.topbar .sep { margin: 0 10px; opacity: 0.3; }
 
-/* ─── NAV ────────────────────────────────────────────────── */
-.biz-nav {
+/* ── NAVBAR ─────────────────────────────────── */
+.main-nav {
   background: #fff;
-  border-bottom: 1px solid var(--border);
-  padding: 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 20px rgba(13,110,253,0.08);
 }
-.biz-nav .brand {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--primary);
-  text-decoration: none;
-  letter-spacing: -0.01em;
-  padding: 18px 0;
-  display: block;
-}
-.biz-nav .nav-link {
-  color: #3a3530 !important;
-  font-weight: 600;
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 24px 14px !important;
-  position: relative;
-  transition: color .2s;
-}
-.biz-nav .nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 14px; right: 14px;
-  height: 2px;
-  background: var(--accent);
-  transform: scaleX(0);
-  transition: transform .25s ease;
-}
-.biz-nav .nav-link:hover { color: var(--accent) !important; }
-.biz-nav .nav-link:hover::after { transform: scaleX(1); }
-.btn-enquire {
-  background: var(--primary);
-  color: #fff !important;
-  border: none;
-  padding: 10px 22px;
-  border-radius: 2px;
-  font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: background .25s, box-shadow .25s;
-}
-.btn-enquire:hover { background: var(--accent); box-shadow: 0 4px 16px rgba(184,154,90,0.35); }
-
-/* ─── HERO ───────────────────────────────────────────────── */
-.biz-hero {
-  background: var(--primary);
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-}
-.biz-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,0.015) 0px,
-      rgba(255,255,255,0.015) 1px,
-      transparent 1px,
-      transparent 60px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,0.015) 0px,
-      rgba(255,255,255,0.015) 1px,
-      transparent 1px,
-      transparent 60px
-    );
-}
-.biz-hero::after {
-  content: '';
-  position: absolute;
-  top: -200px; right: -200px;
-  width: 600px; height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(184,154,90,0.1) 0%, transparent 70%);
-}
-.hero-inner {
-  padding: 72px 0 80px;
-  position: relative;
-  z-index: 2;
-}
-.hero-logo {
-  width: 80px; height: 80px;
-  border-radius: 4px;
-  object-fit: cover;
-  border: 1px solid rgba(184,154,90,0.4);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-}
-.hero-logo-placeholder {
-  width: 80px; height: 80px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(184,154,90,0.3);
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; color: var(--accent);
+  color: #fff; font-size: 1.25rem;
+  box-shadow: 0 3px 12px rgba(13,110,253,0.3);
+}
+.brand-text  { font-family: var(--font-head); font-size: 1.1rem; font-weight: 900; color: var(--primary-dark); line-height: 1.1; }
+.brand-sub   { font-size: 0.62rem; color: var(--muted); font-weight: 500; }
+.nav-link-item {
+  color: var(--text) !important;
+  font-weight: 600; font-size: 0.78rem;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 22px 14px !important;
+  position: relative; transition: color .2s;
+}
+.nav-link-item::after {
+  content: ''; position: absolute;
+  bottom: 0; left: 14px; right: 14px;
+  height: 3px; background: var(--primary);
+  border-radius: 3px 3px 0 0;
+  transform: scaleX(0); transition: transform .25s;
+}
+.nav-link-item:hover { color: var(--primary) !important; }
+.nav-link-item:hover::after { transform: scaleX(1); }
+.btn-nav-enq {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff !important; border-radius: 8px;
+  padding: 8px 20px; font-weight: 700; font-size: 0.75rem;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  transition: box-shadow .25s, transform .2s; border: none;
+  font-family: var(--font-body);
+}
+.btn-nav-enq:hover { box-shadow: 0 4px 16px rgba(13,110,253,0.4); transform: translateY(-1px); }
+
+/* ── HERO ───────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 65%, #3a9fff 100%);
+  padding: 56px 0 48px; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
 }
 .hero-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 12px;
-  font-family: var(--font-body);
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px; padding: 4px 14px;
+  font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,0.85);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px;
 }
-.hero-title {
-  color: #fff;
-  font-size: clamp(2.2rem, 4.5vw, 3.4rem);
-  font-weight: 700;
-  margin: 0 0 10px;
-  line-height: 1.15;
+.hero-title { color: #fff; font-size: clamp(2rem,4vw,3rem); font-weight: 900; line-height: 1.12; margin-bottom: 10px; }
+.hero-sub   { color: rgba(255,255,255,0.72); font-size: 0.9rem; line-height: 1.7; max-width: 500px; }
+.hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+.hero-chip  {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.88); border-radius: 20px;
+  padding: 4px 13px; font-size: 0.7rem; font-weight: 600;
 }
-.hero-tagline {
-  color: rgba(255,255,255,0.6);
-  font-size: 1.05rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
+.hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.btn-hero-p {
+  background: var(--accent); color: #fff; border: none; border-radius: 10px;
+  padding: 12px 26px; font-weight: 800; font-size: 0.8rem;
+  letter-spacing: 0.06em; text-transform: uppercase; font-family: var(--font-body);
+  transition: box-shadow .25s, transform .2s;
 }
-.hero-rule {
-  width: 48px; height: 2px;
-  background: var(--accent);
-  margin: 20px 0;
-}
-.hero-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-.hero-badge {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(184,154,90,0.3);
-  color: rgba(255,255,255,0.8);
-  border-radius: 2px;
-  padding: 5px 12px;
-  font-size: 0.73rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-family: var(--font-body);
-}
-.hero-stats-bar {
-  display: flex;
-  gap: 0;
-  margin-top: 36px;
-  border: 1px solid rgba(184,154,90,0.2);
-  border-radius: 2px;
-  overflow: hidden;
-  max-width: 480px;
-}
-.hero-stat {
-  flex: 1;
-  padding: 20px 16px;
-  text-align: center;
-  border-right: 1px solid rgba(184,154,90,0.2);
-  background: rgba(255,255,255,0.04);
-}
-.hero-stat:last-child { border-right: none; }
-.hero-stat .num { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: var(--accent); line-height: 1; }
-.hero-stat .lbl { color: rgba(255,255,255,0.45); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 4px; font-family: var(--font-body); }
-.hero-cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 32px; }
-.btn-hero-primary {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 2px;
-  padding: 13px 28px;
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: background .25s, box-shadow .25s;
-  font-family: var(--font-body);
-}
-.btn-hero-primary:hover { background: var(--accent-light); color: #fff; box-shadow: 0 4px 20px rgba(184,154,90,0.4); }
-.btn-hero-outline {
-  background: transparent;
-  color: rgba(255,255,255,0.85);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 2px;
-  padding: 13px 28px;
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.btn-hero-p:hover { box-shadow: 0 6px 20px rgba(0,201,167,0.4); transform: translateY(-2px); color: #fff; }
+.btn-hero-o {
+  background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9);
+  border: 1px solid rgba(255,255,255,0.25); border-radius: 10px;
+  padding: 12px 26px; font-weight: 700; font-size: 0.8rem;
+  letter-spacing: 0.05em; text-transform: uppercase; font-family: var(--font-body);
   transition: border-color .2s, color .2s;
-  font-family: var(--font-body);
 }
-.btn-hero-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-hero-o:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Hero sidebar card */
-.hero-info-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(184,154,90,0.2);
-  border-radius: 2px;
-  padding: 28px;
-  backdrop-filter: blur(10px);
+/* hero info card */
+.hero-card {
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px; padding: 26px; backdrop-filter: blur(12px);
 }
-.hero-info-label {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 20px;
-  font-family: var(--font-body);
-  border-bottom: 1px solid rgba(184,154,90,0.2);
-  padding-bottom: 10px;
+.hc-title {
+  font-size: 0.63rem; font-weight: 800; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 10px; margin-bottom: 18px;
 }
-.hic-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-.hic-icon {
-  width: 36px; height: 36px; flex-shrink: 0;
-  background: rgba(184,154,90,0.12);
-  border: 1px solid rgba(184,154,90,0.2);
-  border-radius: 2px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent); font-size: 0.95rem;
+.hc-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.hc-icon {
+  width: 38px; height: 38px; background: rgba(255,255,255,0.1);
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  color: var(--accent); font-size: 1rem; flex-shrink: 0;
 }
-.hic-meta { color: rgba(255,255,255,0.4); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-body); }
-.hic-val { color: #fff; font-weight: 600; font-size: 0.88rem; }
-.btn-whatsapp-hero {
+.hc-lbl { color: rgba(255,255,255,0.4); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.hc-val { color: #fff; font-weight: 700; font-size: 0.85rem; }
+.btn-wa {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: rgba(37,211,102,0.1);
-  border: 1px solid rgba(37,211,102,0.25);
-  color: #25d366;
-  border-radius: 2px;
-  padding: 11px 18px;
-  font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  transition: background .2s;
-  margin-top: 6px;
-  font-family: var(--font-body);
-  width: 100%;
+  width: 100%; margin-top: 8px;
+  background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.3);
+  color: #25d366; border-radius: 9px; padding: 10px;
+  font-weight: 800; font-size: 0.77rem; letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--font-body); transition: background .2s;
 }
-.btn-whatsapp-hero:hover { background: rgba(37,211,102,0.18); color: #25d366; }
+.btn-wa:hover { background: rgba(37,211,102,0.22); color: #25d366; }
 
-/* ─── SECTION SHARED ─────────────────────────────────────── */
-section { padding: 88px 0; }
-.section-eyebrow {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 10px;
-  font-family: var(--font-body);
-}
-.section-title {
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
-  font-weight: 700;
-  margin: 0 0 6px;
-  color: var(--primary);
-  line-height: 1.2;
-}
-.section-rule { width: 40px; height: 2px; background: var(--accent); margin: 16px 0; }
-section:nth-child(even) { background: var(--surface); }
+/* ── PAGE BODY ──────────────────────────────── */
+.page-body { padding: 36px 0 60px; }
 
-/* ─── ABOUT ──────────────────────────────────────────────── */
-.about-panel {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  box-shadow: var(--shadow-sm);
+/* ── SECTION BLOCKS ─────────────────────────── */
+.sec-header {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  border-radius: 12px 12px 0 0; padding: 12px 20px;
 }
+.sec-header h5 { color: #fff; font-weight: 800; font-size: 0.9rem; margin: 0; }
+.sec-header i  { color: rgba(255,255,255,0.85); font-size: 1.1rem; }
+.sec-body {
+  background: #fff; border: 1px solid var(--border);
+  border-top: none; border-radius: 0 0 12px 12px;
+  padding: 22px; margin-bottom: 24px;
+  box-shadow: var(--card-shadow);
+}
+
+/* about details panel */
 .about-detail {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 18px 28px;
-  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
 }
 .about-detail:last-child { border-bottom: none; }
 .about-detail .icon-box {
-  width: 38px; height: 38px;
-  border-radius: 2px; flex-shrink: 0;
-  background: rgba(13,27,42,0.06);
-  border: 1px solid var(--border);
-  color: var(--primary);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.95rem;
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--primary); display: flex; align-items: center; justify-content: center;
 }
 .about-detail h6 {
-  font-weight: 700;
-  margin-bottom: 2px;
-  font-size: 0.7rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: var(--font-body);
+  font-size: 0.65rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin: 0 0 2px; font-family: var(--font-body);
 }
-.about-detail p { margin: 0; font-size: 0.9rem; color: var(--text); }
-.btn-about {
-  display: inline-block;
-  background: var(--primary);
-  color: #fff;
-  border-radius: 2px;
-  padding: 12px 26px;
-  font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: background .25s;
-  font-family: var(--font-body);
-  margin-top: 24px;
-}
-.btn-about:hover { background: var(--accent); color: #fff; }
+.about-detail p { margin: 0; font-size: 0.88rem; font-weight: 600; color: var(--text); }
 
-/* ─── SERVICES ───────────────────────────────────────────── */
-.service-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 32px 28px;
-  height: 100%;
-  transition: box-shadow .3s, border-color .3s, transform .3s;
-  position: relative;
-  overflow: hidden;
+/* ── SERVICE CARDS ──────────────────────────── */
+.svc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+@media(max-width:768px){ .svc-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:480px){ .svc-grid { grid-template-columns: 1fr; } }
+
+.svc-card {
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  transition: box-shadow .3s, transform .3s, border-color .3s;
 }
-.service-card::after {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--accent);
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform .3s;
-}
-.service-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-dark);
-  transform: translateY(-3px);
-}
-.service-card:hover::after { transform: scaleY(1); }
-.service-icon {
-  width: 52px; height: 52px;
-  border-radius: 2px;
-  background: var(--primary);
-  color: var(--accent);
+.svc-card:hover { box-shadow: var(--card-hover); transform: translateY(-4px); border-color: var(--primary); }
+.svc-img-wrap {
+  width: 100%; aspect-ratio: 16/10; overflow: hidden;
+  background: var(--surface2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.3rem;
-  margin-bottom: 20px;
-  border: 1px solid rgba(184,154,90,0.3);
+  position: relative;
 }
-.service-card h5 {
-  font-weight: 700;
-  font-size: 1.05rem;
-  margin-bottom: 10px;
-  color: var(--primary);
-}
-.service-card .price {
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 0.92rem;
-  font-family: var(--font-body);
-}
+.svc-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.svc-icon-ph { font-size: 2.4rem; color: var(--primary); }
 .featured-badge {
-  position: absolute;
-  top: 0; right: 28px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 4px 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: var(--font-body);
+  position: absolute; top: 8px; right: 8px;
+  background: var(--accent2); color: #333;
+  font-size: 0.6rem; font-weight: 800; padding: 3px 9px;
+  border-radius: 20px; text-transform: uppercase; font-family: var(--font-body);
 }
-.btn-service {
-  display: inline-block;
-  background: transparent;
-  color: var(--primary);
-  border: 1px solid var(--border-dark);
-  border-radius: 2px;
-  padding: 8px 18px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: var(--font-body);
-  transition: background .2s, color .2s, border-color .2s;
-  margin-top: 16px;
+.svc-label {
+  padding: 9px 12px; font-size: 0.78rem; font-weight: 700;
+  color: var(--text); text-align: center;
+  font-family: var(--font-head);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-top: 1px solid var(--border); background: var(--surface);
+  transition: background .25s, color .25s;
 }
-.btn-service:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.svc-card:hover .svc-label { background: var(--primary); color: #fff; }
+.svc-price { font-size: 0.75rem; color: var(--accent); font-weight: 700; padding: 0 12px 4px; text-align: center; }
+.btn-svc-enq {
+  display: block; width: calc(100% - 24px); margin: 6px 12px 12px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  color: #fff; border: none; border-radius: 7px; padding: 7px;
+  font-size: 0.7rem; font-weight: 700; text-align: center;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  font-family: var(--font-body); transition: box-shadow .2s;
+}
+.btn-svc-enq:hover { box-shadow: 0 3px 12px rgba(13,110,253,0.35); color: #fff; }
 
-/* ─── PRODUCTS ───────────────────────────────────────────── */
-.product-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+/* ── PRODUCT CARDS ──────────────────────────── */
+.prod-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+@media(max-width:992px){ .prod-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:480px){ .prod-grid { grid-template-columns: 1fr; } }
+
+.prod-card {
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  display: flex; flex-direction: column;
   transition: box-shadow .3s, transform .3s;
 }
-.product-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
-.product-img {
-  height: 170px;
-  background: var(--surface-2);
+.prod-card:hover { box-shadow: var(--card-hover); transform: translateY(-3px); }
+.prod-img-wrap {
+  width: 100%; aspect-ratio: 4/3; overflow: hidden;
+  position: relative; background: var(--surface2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 2.2rem; color: var(--muted);
-  position: relative; overflow: hidden;
 }
-.product-img img { width: 100%; height: 100%; object-fit: cover; }
-.product-badge-disc {
-  position: absolute; top: 12px; left: 12px;
-  background: #c0392b; color: #fff;
-  font-size: 0.65rem; font-weight: 700; padding: 3px 9px;
-  text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-body);
+.prod-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.prod-img-ph { font-size: 2.2rem; color: var(--muted); }
+.prod-badge-disc {
+  position: absolute; top: 8px; left: 8px;
+  background: #dc3545; color: #fff;
+  font-size: 0.6rem; font-weight: 800; padding: 3px 9px;
+  border-radius: 20px; text-transform: uppercase; font-family: var(--font-body);
 }
-.product-badge-feat {
-  position: absolute; top: 12px; right: 12px;
+.prod-badge-feat {
+  position: absolute; top: 8px; right: 8px;
   background: var(--accent); color: #fff;
-  font-size: 0.65rem; font-weight: 700; padding: 3px 9px;
-  text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--font-body);
+  font-size: 0.6rem; font-weight: 800; padding: 3px 9px;
+  border-radius: 20px; text-transform: uppercase; font-family: var(--font-body);
 }
-.product-oos-overlay {
-  position: absolute; inset: 0;
-  background: rgba(255,255,255,0.75);
-  display: flex; align-items: center; justify-content: center;
+.prod-oos { position: absolute; inset: 0; background: rgba(255,255,255,0.75); display: flex; align-items: center; justify-content: center; }
+.prod-oos span { background: var(--text); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 6px 14px; border-radius: 6px; text-transform: uppercase; }
+.prod-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+.prod-brand { color: var(--muted); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.prod-name  { font-weight: 800; font-size: 0.88rem; color: var(--text); margin: 4px 0 6px; line-height: 1.3; font-family: var(--font-head); }
+.prod-desc  { color: var(--muted); font-size: 0.78rem; line-height: 1.5; margin-bottom: 8px; }
+.prod-footer { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+.prod-price-sale { font-weight: 900; font-size: 1rem; color: #dc3545; }
+.prod-price-orig { text-decoration: line-through; color: var(--muted); font-size: 0.78rem; margin-left: 5px; }
+.prod-price-reg  { font-weight: 900; font-size: 1rem; color: var(--primary); }
+.prod-unit { color: var(--muted); font-size: 0.72rem; }
+.prod-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.stock-in  { font-size: 0.65rem; font-weight: 700; padding: 3px 9px; background: #edfaf1; color: #1a6e34; border: 1px solid #b6e9c6; border-radius: 20px; }
+.stock-out { font-size: 0.65rem; font-weight: 700; padding: 3px 9px; background: #fdf0f0; color: #9b1c1c; border: 1px solid #f5c2c2; border-radius: 20px; }
+.btn-prod-enq {
+  background: var(--primary); color: #fff; border-radius: 7px;
+  padding: 6px 13px; font-size: 0.7rem; font-weight: 700;
+  text-transform: uppercase; font-family: var(--font-body); transition: background .2s;
 }
-.product-oos-label {
-  background: var(--primary); color: #fff;
-  font-size: 0.7rem; font-weight: 700; padding: 6px 14px;
-  text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-body);
-}
-.product-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-.product-brand { color: var(--muted); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-body); }
-.product-name { font-weight: 700; font-size: 0.95rem; margin: 4px 0 8px; color: var(--primary); line-height: 1.3; }
-.product-desc { color: var(--muted); font-size: 0.82rem; line-height: 1.5; margin-bottom: 12px; }
-.product-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
-.product-price-disc { font-weight: 800; font-size: 1.05rem; color: #c0392b; }
-.product-price-orig { text-decoration: line-through; color: var(--muted); font-size: 0.82rem; margin-left: 6px; }
-.product-price-reg { font-weight: 800; font-size: 1.05rem; color: var(--primary); }
-.product-unit { color: var(--muted); font-size: 0.75rem; }
-.product-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-.product-stock-in { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; background: #edfaf1; color: #1a6e34; border: 1px solid #b6e9c6; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-body); }
-.product-stock-out { font-size: 0.68rem; font-weight: 700; padding: 3px 10px; background: #fdf0f0; color: #9b1c1c; border: 1px solid #f5c2c2; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-body); }
-.btn-product-enquire {
-  background: var(--primary); color: #fff;
-  border-radius: 2px; padding: 6px 14px;
-  font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-  font-family: var(--font-body); transition: background .2s;
-}
-.btn-product-enquire:hover { background: var(--accent); color: #fff; }
+.btn-prod-enq:hover { background: var(--primary-dark); color: #fff; }
 
-/* ─── ENQUIRY ────────────────────────────────────────────── */
+/* ── SIDEBAR ────────────────────────────────── */
+.sidebar-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  margin-bottom: 20px; box-shadow: var(--card-shadow);
+}
+.sidebar-header {
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  padding: 11px 16px; color: #fff;
+  font-weight: 800; font-size: 0.85rem; font-family: var(--font-head);
+  display: flex; align-items: center; gap: 8px;
+}
+.sidebar-body { padding: 14px 16px; }
+.cinfo-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.cinfo-row:last-child { border-bottom: none; }
+.cinfo-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.cinfo-row h6 {
+  font-size: 0.63rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin: 0 0 1px; font-family: var(--font-body);
+}
+.cinfo-row p { margin: 0; font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.cinfo-row a { color: var(--primary); font-weight: 700; font-size: 0.82rem; }
+
+.social-bar { display: flex; gap: 8px; justify-content: center; padding: 12px 16px; border-top: 1px solid var(--border); }
+.soc-btn {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: #fff; transition: transform .2s, box-shadow .2s;
+}
+.soc-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); color: #fff; }
+
+/* ── ENQUIRY ────────────────────────────────── */
 .enquiry-section {
-  background: var(--primary) !important;
-  position: relative;
-  overflow: hidden;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  padding: 60px 0; position: relative; overflow: hidden;
 }
 .enquiry-section::before {
-  content: '';
-  position: absolute; inset: 0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px,
-      transparent 1px, transparent 80px
-    );
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4z'/%3E%3C/g%3E%3C/svg%3E");
 }
-.enquiry-card {
-  background: #fff;
-  border-radius: 2px;
-  padding: 44px 40px;
-  box-shadow: var(--shadow-lg);
-  border-top: 3px solid var(--accent);
+.enq-card {
+  background: #fff; border-radius: 16px; padding: 36px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  border-top: 4px solid var(--accent);
+  position: relative; z-index: 2;
 }
-.enquiry-card h4 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 28px;
-}
-.form-control, .form-select {
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 10px 14px;
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  transition: border-color .2s, box-shadow .2s;
-}
-.form-control:focus, .form-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(13,27,42,0.08);
-  outline: none;
-}
+.enq-card h4 { font-weight: 900; color: var(--primary-dark); margin-bottom: 24px; }
 .form-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 6px;
-  font-family: var(--font-body);
+  display: block; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px; font-family: var(--font-body);
 }
+.form-ctrl {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 9px;
+  padding: 10px 14px; font-family: var(--font-body); font-size: 0.88rem;
+  color: var(--text); transition: border-color .2s, box-shadow .2s; background: #fff;
+}
+.form-ctrl:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,110,253,0.1); outline: none; }
+textarea.form-ctrl { resize: vertical; min-height: 100px; }
 .btn-submit {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  width: 100%;
-  padding: 14px;
-  border-radius: 2px;
-  font-weight: 700;
-  font-size: 0.82rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-family: var(--font-body);
-  transition: background .25s, box-shadow .25s;
+  width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff; border: none; border-radius: 10px; padding: 14px;
+  font-weight: 800; font-size: 0.82rem; letter-spacing: 0.1em;
+  text-transform: uppercase; font-family: var(--font-body);
+  transition: box-shadow .25s, transform .2s;
 }
-.btn-submit:hover { background: var(--accent); box-shadow: 0 4px 20px rgba(184,154,90,0.35); }
-.enquiry-info-block { position: relative; z-index: 2; }
-.enquiry-heading { color: #fff; font-size: 2.2rem; font-weight: 700; margin-top: 10px; line-height: 1.2; }
-.enquiry-sub { color: rgba(255,255,255,0.6); margin-top: 14px; font-size: 0.95rem; line-height: 1.8; }
-.enquiry-contact-row {
-  display: flex; align-items: center; gap: 14px;
-  margin-top: 20px;
+.btn-submit:hover { box-shadow: 0 6px 24px rgba(13,110,253,0.4); transform: translateY(-2px); }
+.enq-info-block { position: relative; z-index: 2; }
+.enq-heading { color: #fff; font-weight: 900; font-size: 2rem; line-height: 1.2; margin-top: 8px; }
+.enq-sub { color: rgba(255,255,255,0.65); font-size: 0.88rem; line-height: 1.8; margin-top: 12px; }
+.enq-crow { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+.enq-cicon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  color: var(--accent); font-size: 1.1rem; flex-shrink: 0;
 }
-.eqc-icon {
-  width: 42px; height: 42px;
-  background: rgba(184,154,90,0.12);
-  border: 1px solid rgba(184,154,90,0.25);
-  border-radius: 2px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent); font-size: 1rem; flex-shrink: 0;
+.enq-clbl { color: rgba(255,255,255,0.4); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.enq-cval { color: #fff; font-weight: 700; font-size: 0.9rem; }
+.enq-eyebrow {
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(0,201,167,0.9);
 }
-.eqc-meta { color: rgba(255,255,255,0.4); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: var(--font-body); }
-.eqc-val { color: #fff; font-weight: 600; font-size: 0.9rem; }
 
-/* ─── TESTIMONIALS ───────────────────────────────────────── */
-.testimonial-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 30px;
-  height: 100%;
-  position: relative;
-}
-.testimonial-card::before {
-  content: '\201C';
-  position: absolute;
-  top: 20px; left: 26px;
-  font-family: var(--font-display);
-  font-size: 4rem;
-  color: var(--accent);
-  opacity: 0.2;
-  line-height: 1;
-}
-.stars { color: var(--accent); font-size: 0.9rem; letter-spacing: 2px; }
-.testimonial-text { color: var(--muted); line-height: 1.75; font-size: 0.9rem; margin-top: 14px; }
-.client-avatar {
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--accent);
+/* success state */
+.success-check {
+  width: 68px; height: 68px;
+  background: #edfaf1; border: 1px solid #b6e9c6; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 0.95rem;
-  font-family: var(--font-display);
-  flex-shrink: 0;
+  margin: 0 auto 18px; font-size: 1.9rem; color: #1a6e34;
 }
-.client-name { font-weight: 700; font-size: 0.9rem; color: var(--primary); }
-.client-role { color: var(--muted); font-size: 0.78rem; }
 
-/* ─── CONTACT ────────────────────────────────────────────── */
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 20px 24px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  margin-bottom: 10px;
-  text-decoration: none;
-  color: inherit;
-  transition: box-shadow .2s, border-color .2s;
+/* ── TESTIMONIALS ───────────────────────────── */
+.test-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  padding: 28px; height: 100%; position: relative;
 }
-.contact-item:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); color: inherit; }
-.contact-icon {
-  width: 46px; height: 46px;
-  border-radius: 2px; flex-shrink: 0;
+.test-card::before {
+  content: '\201C'; position: absolute; top: 16px; left: 22px;
+  font-family: var(--font-head); font-size: 4rem;
+  color: var(--primary); opacity: 0.12; line-height: 1;
+}
+.stars { color: var(--accent2); font-size: 0.9rem; letter-spacing: 2px; }
+.test-text { color: var(--muted); line-height: 1.75; font-size: 0.88rem; margin-top: 12px; }
+.client-av {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--primary); color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem;
+  font-weight: 800; font-size: 0.95rem; font-family: var(--font-head); flex-shrink: 0;
 }
-.contact-item h6 {
-  margin: 0;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: var(--font-body);
-}
-.contact-item p { margin: 0; font-weight: 600; font-size: 0.9rem; color: var(--primary); }
+.client-name { font-weight: 800; font-size: 0.88rem; color: var(--text); }
+.client-role { color: var(--muted); font-size: 0.75rem; }
 
-/* ─── FOOTER ─────────────────────────────────────────────── */
-.biz-footer {
-  background: var(--primary);
-  padding: 48px 0 24px;
+/* ── FOOTER ─────────────────────────────────── */
+.site-footer {
+  background: var(--primary-dark);
+  padding: 40px 0 20px;
   border-top: 3px solid var(--accent);
 }
-.footer-brand { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
-.footer-tagline { color: rgba(255,255,255,0.4); font-size: 0.82rem; margin-top: 4px; }
-.footer-divider { border-color: rgba(255,255,255,0.1); margin: 28px 0; }
-.footer-link { color: rgba(255,255,255,0.55); font-size: 0.82rem; transition: color .2s; }
+.footer-brand  { font-family: var(--font-head); font-size: 1.3rem; font-weight: 900; color: #fff; }
+.footer-sub    { color: rgba(255,255,255,0.4); font-size: 0.78rem; margin-top: 4px; }
+.footer-link   { color: rgba(255,255,255,0.55); font-size: 0.8rem; transition: color .2s; display: block; margin-bottom: 6px; }
 .footer-link:hover { color: var(--accent); }
-.social-link {
-  width: 38px; height: 38px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.6);
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 0.95rem; text-decoration: none;
-  transition: background .2s, border-color .2s, color .2s;
-}
-.social-link:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-.footer-copy { color: rgba(255,255,255,0.3); font-size: 0.75rem; }
+.footer-copy   { color: rgba(255,255,255,0.3); font-size: 0.72rem; text-align: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); }
 
-/* ─── ENQUIRY SUCCESS ────────────────────────────────────── */
-.success-check {
-  width: 72px; height: 72px;
-  background: #edfaf1;
-  border: 1px solid #b6e9c6;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 20px;
-  font-size: 2rem;
-  color: #1a6e34;
-}
-
-/* ─── SCROLL REVEAL ──────────────────────────────────────── */
-.reveal { opacity: 0; transform: translateY(24px); transition: opacity .65s ease, transform .65s ease; }
-.reveal.visible { opacity: 1; transform: translateY(0); }
+/* ── ANIMATIONS ─────────────────────────────── */
+.fade-up { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s ease; }
+.fade-up.visible { opacity: 1; transform: translateY(0); }
 </style>
 </head>
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar d-none d-md-block">
-  <div class="container d-flex justify-content-between align-items-center">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap">
     <div>
-      {% if org.phone %}<a href="tel:{{ org.phone }}"><i class="bi bi-telephone me-1"></i>{{ org.phone }}</a><span class="divider">|</span>{% endif %}
-      {% if org.email %}<a href="mailto:{{ org.email }}"><i class="bi bi-envelope me-1"></i>{{ org.email }}</a>{% endif %}
+      {% if org.phone %}<i class="bi bi-telephone me-1"></i><a href="tel:{{ org.phone }}">{{ org.phone }}</a>{% endif %}
+      {% if org.email %}<span class="sep">|</span><i class="bi bi-envelope me-1"></i><a href="mailto:{{ org.email }}">{{ org.email }}</a>{% endif %}
     </div>
     <div>
-      {% if org.is_verified %}<span><i class="bi bi-patch-check-fill me-1" style="color:var(--accent);"></i>Verified Business</span>{% endif %}
-      {% if org.city %}<span class="divider">|</span><i class="bi bi-geo-alt me-1"></i>{{ org.city }}, {{ org.state }}{% endif %}
+      {% if org.is_verified %}<i class="bi bi-patch-check-fill me-1" style="color:var(--accent);"></i>Verified Business{% endif %}
+      {% if org.city %}<span class="sep">|</span><i class="bi bi-geo-alt me-1"></i>{{ org.city }}, {{ org.state }}{% endif %}
     </div>
   </div>
 </div>
 
 <!-- NAVBAR -->
-<nav class="biz-nav navbar navbar-expand-lg">
+<nav class="main-nav navbar navbar-expand-lg py-1">
   <div class="container">
-    <a class="brand" href="#home">{{ org.name }}</a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#bizNav">
-      <i class="bi bi-list fs-4" style="color:var(--primary);"></i>
+    <a class="nav-brand" href="#home">
+      <div class="brand-icon">
+        {% if org.category %}<i class="bi bi-{{ org.category.icon|default:'building' }}"></i>{% else %}<i class="bi bi-building"></i>{% endif %}
+      </div>
+      <div>
+        <div class="brand-text">{{ org.name }}</div>
+        {% if org.tagline %}<div class="brand-sub">{{ org.tagline }}</div>{% endif %}
+      </div>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <i class="bi bi-list fs-4" style="color:var(--primary-dark);"></i>
     </button>
-    <div class="collapse navbar-collapse" id="bizNav">
-      <ul class="navbar-nav mx-auto gap-0">
-        <li class="nav-item"><a class="nav-link" href="#about">About Us</a></li>
-        <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-        {% if products %}<li class="nav-item"><a class="nav-link" href="#products">Products</a></li>{% endif %}
-        {% if testimonials %}<li class="nav-item"><a class="nav-link" href="#testimonials">Reviews</a></li>{% endif %}
-        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item"><a class="nav-link-item nav-link" href="#about">About Us</a></li>
+        {% if services %}<li class="nav-item"><a class="nav-link-item nav-link" href="#services">Services</a></li>{% endif %}
+        {% if products %}<li class="nav-item"><a class="nav-link-item nav-link" href="#products">Products</a></li>{% endif %}
+        {% if testimonials %}<li class="nav-item"><a class="nav-link-item nav-link" href="#testimonials">Reviews</a></li>{% endif %}
+        <li class="nav-item"><a class="nav-link-item nav-link" href="#contact">Contact</a></li>
       </ul>
-      <a href="#enquiry" class="btn btn-enquire">Get Enquiry</a>
+      <a href="#enquiry" class="btn-nav-enq"><i class="bi bi-chat-left-text me-1"></i>Get Enquiry</a>
     </div>
   </div>
 </nav>
 
 <!-- HERO -->
-<section class="biz-hero" id="home">
+<section class="hero" id="home">
   <div class="container">
-    <div class="hero-inner">
-      <div class="row align-items-center g-5">
-        <div class="col-lg-7">
-          {% if org.logo %}
-          <img src="{{ org.logo.url }}" alt="{{ org.name }}" class="hero-logo">
-          {% else %}
-          <div class="hero-logo-placeholder">
-            <i class="bi bi-{{ org.category.icon|default:'building' }}"></i>
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7 fade-up">
+        {% if org.category %}
+        <div class="hero-eyebrow">
+          <i class="bi bi-{{ org.category.icon|default:'tools' }}"></i>{{ org.category.name }}
+        </div>
+        {% endif %}
+
+        {% if org.logo %}
+        <img src="{{ org.logo.url }}" alt="{{ org.name }}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid rgba(255,255,255,0.2);margin-bottom:14px;">
+        {% endif %}
+
+        <h1 class="hero-title">{{ org.name }}</h1>
+        {% if org.tagline %}<p class="hero-sub">{{ org.tagline }}</p>{% endif %}
+
+        <div class="hero-chips">
+          {% if org.category %}<span class="hero-chip"><i class="bi bi-{{ org.category.icon }} me-1"></i>{{ org.category.name }}</span>{% endif %}
+          {% if org.is_verified %}<span class="hero-chip"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>{% endif %}
+          {% if org.home_service_available %}<span class="hero-chip"><i class="bi bi-house me-1"></i>Home Service</span>{% endif %}
+          {% if org.accepts_online_payment %}<span class="hero-chip"><i class="bi bi-credit-card me-1"></i>Online Payment</span>{% endif %}
+          {% if org.is_open_sunday %}<span class="hero-chip"><i class="bi bi-sun me-1"></i>Open Sunday</span>{% endif %}
+          {% if org.established_year %}<span class="hero-chip"><i class="bi bi-calendar me-1"></i>Est. {{ org.established_year }}</span>{% endif %}
+        </div>
+
+        <div class="hero-ctas">
+          <a href="#enquiry" class="btn-hero-p"><i class="bi bi-chat-left-text me-2"></i>Send Enquiry</a>
+          {% if org.phone %}<a href="tel:{{ org.phone }}" class="btn-hero-o"><i class="bi bi-telephone me-2"></i>Call Now</a>{% endif %}
+        </div>
+      </div>
+
+      <div class="col-lg-5 d-none d-lg-block fade-up" style="transition-delay:.15s;">
+        <div class="hero-card">
+          <div class="hc-title">Quick Information</div>
+          {% if org.working_hours %}
+          <div class="hc-row">
+            <div class="hc-icon"><i class="bi bi-clock"></i></div>
+            <div><div class="hc-lbl">Working Hours</div><div class="hc-val">{{ org.working_hours }}</div></div>
           </div>
           {% endif %}
-          <div class="hero-eyebrow mt-4">
-            {% if org.category %}{{ org.category.name }}{% else %}Professional Services{% endif %}
+          {% if org.city %}
+          <div class="hc-row">
+            <div class="hc-icon"><i class="bi bi-geo-alt"></i></div>
+            <div><div class="hc-lbl">Location</div><div class="hc-val">{{ org.city }}, {{ org.state }}</div></div>
           </div>
-          <h1 class="hero-title">{{ org.name }}</h1>
-          {% if org.tagline %}<p class="hero-tagline">{{ org.tagline }}</p>{% endif %}
-          <div class="hero-rule"></div>
-          <div class="hero-badges">
-            {% if org.category %}<span class="hero-badge"><i class="bi bi-{{ org.category.icon }} me-1"></i>{{ org.category.name }}</span>{% endif %}
-            {% if org.is_verified %}<span class="hero-badge"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>{% endif %}
-            {% if org.home_service_available %}<span class="hero-badge"><i class="bi bi-house me-1"></i>Home Service</span>{% endif %}
-            {% if org.accepts_online_payment %}<span class="hero-badge"><i class="bi bi-credit-card me-1"></i>Online Payment</span>{% endif %}
-            {% if org.is_open_sunday %}<span class="hero-badge"><i class="bi bi-sun me-1"></i>Open Sunday</span>{% endif %}
-            {% if org.established_year %}<span class="hero-badge"><i class="bi bi-calendar me-1"></i>Est. {{ org.established_year }}</span>{% endif %}
+          {% endif %}
+          {% if org.phone %}
+          <div class="hc-row">
+            <div class="hc-icon"><i class="bi bi-telephone"></i></div>
+            <div><div class="hc-lbl">Phone</div><div class="hc-val">{{ org.phone }}</div></div>
           </div>
-          <div class="hero-stats-bar">
-            <div class="hero-stat"><div class="num">{{ services.count }}</div><div class="lbl">Services</div></div>
-            <div class="hero-stat"><div class="num">{{ org.enquiries.count }}</div><div class="lbl">Enquiries</div></div>
-            <div class="hero-stat">
-              <div class="num">{% if org.established_year %}{{ org.established_year|slice:"-2:" }}+{% else %}∞{% endif %}</div>
-              <div class="lbl">Experience</div>
+          {% endif %}
+          {% if org.email %}
+          <div class="hc-row">
+            <div class="hc-icon"><i class="bi bi-envelope"></i></div>
+            <div><div class="hc-lbl">Email</div><div class="hc-val">{{ org.email }}</div></div>
+          </div>
+          {% endif %}
+          {% if org.whatsapp %}
+          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-wa">
+            <i class="bi bi-whatsapp fs-5"></i> WhatsApp Us
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAGE BODY: main + sidebar -->
+<div class="page-body">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- ── MAIN COLUMN ───────────────────── -->
+      <div class="col-lg-8">
+
+        <!-- ABOUT US -->
+        <div id="about" class="fade-up">
+          <div class="sec-header">
+            <i class="bi bi-info-circle-fill"></i>
+            <h5>About {{ org.name }}</h5>
+          </div>
+          <div class="sec-body">
+            <p style="color:var(--muted);line-height:1.85;font-size:0.92rem;margin-bottom:20px;">
+              {% if org.description %}{{ org.description }}
+              {% else %}We are a professional {{ org.category.name|default:"business" }} based in {{ org.city }}, {{ org.state }}. With years of experience, we deliver quality services to our customers.
+              {% endif %}
+            </p>
+            <div class="row g-0">
+              {% if org.email %}
+              <div class="col-12">
+                <div class="about-detail">
+                  <div class="icon-box"><i class="bi bi-envelope"></i></div>
+                  <div><h6>Email</h6><p>{{ org.email }}</p></div>
+                </div>
+              </div>
+              {% endif %}
+              {% if org.phone %}
+              <div class="col-12">
+                <div class="about-detail">
+                  <div class="icon-box"><i class="bi bi-telephone"></i></div>
+                  <div><h6>Phone</h6><p>{{ org.phone }}</p></div>
+                </div>
+              </div>
+              {% endif %}
+              {% if org.address_line1 %}
+              <div class="col-12">
+                <div class="about-detail">
+                  <div class="icon-box"><i class="bi bi-geo-alt"></i></div>
+                  <div><h6>Address</h6><p>{{ org.get_full_address }}</p></div>
+                </div>
+              </div>
+              {% endif %}
+              {% if org.working_hours %}
+              <div class="col-12">
+                <div class="about-detail">
+                  <div class="icon-box"><i class="bi bi-clock"></i></div>
+                  <div><h6>Working Hours</h6><p>{{ org.working_hours }}</p></div>
+                </div>
+              </div>
+              {% endif %}
+              {% if org.established_year %}
+              <div class="col-12">
+                <div class="about-detail">
+                  <div class="icon-box"><i class="bi bi-calendar2-check"></i></div>
+                  <div><h6>Established</h6><p>Since {{ org.established_year }}</p></div>
+                </div>
+              </div>
+              {% endif %}
+              {% if org.gst_number %}
+              <div class="col-12">
+                <div class="about-detail">
+                  <div class="icon-box"><i class="bi bi-file-earmark-text"></i></div>
+                  <div><h6>GST Number</h6><p>{{ org.gst_number }}</p></div>
+                </div>
+              </div>
+              {% endif %}
             </div>
-          </div>
-          <div class="hero-cta-row">
-            <a href="#enquiry" class="btn-hero-primary"><i class="bi bi-chat-left-text me-2"></i>Send Enquiry</a>
-            {% if org.phone %}
-            <a href="tel:{{ org.phone }}" class="btn-hero-outline"><i class="bi bi-telephone me-2"></i>Call Now</a>
-            {% endif %}
           </div>
         </div>
-        <div class="col-lg-5 d-none d-lg-block">
-          <div class="hero-info-card">
-            <div class="hero-info-label">Quick Information</div>
-            {% if org.working_hours %}
-            <div class="hic-row">
-              <div class="hic-icon"><i class="bi bi-clock"></i></div>
-              <div><div class="hic-meta">Working Hours</div><div class="hic-val">{{ org.working_hours }}</div></div>
+
+        <!-- SERVICES -->
+        {% if services %}
+        <div id="services" class="fade-up">
+          <div class="sec-header">
+            <i class="bi bi-grid-fill"></i>
+            <h5>Our Services</h5>
+          </div>
+          <div class="sec-body">
+            <div class="svc-grid">
+              {% for svc in services %}
+              <div class="svc-card">
+                <div class="svc-img-wrap">
+                  {% if svc.image %}
+                  <img src="{{ svc.image.url }}" alt="{{ svc.name }}">
+                  {% else %}
+                  <div class="svc-icon-ph"><i class="bi bi-{{ svc.icon|default:'tools' }}"></i></div>
+                  {% endif %}
+                  {% if svc.is_featured %}<span class="featured-badge">Featured</span>{% endif %}
+                </div>
+                <div class="svc-label">{{ svc.name }}</div>
+                {% if svc.price %}
+                <div class="svc-price">₹{{ svc.price }}{% if svc.price_unit %} / {{ svc.price_unit }}{% endif %}</div>
+                {% endif %}
+                <a href="#enquiry" class="btn-svc-enq">Enquire Now</a>
+              </div>
+              {% endfor %}
             </div>
-            {% endif %}
-            {% if org.city %}
-            <div class="hic-row">
-              <div class="hic-icon"><i class="bi bi-geo-alt"></i></div>
-              <div><div class="hic-meta">Location</div><div class="hic-val">{{ org.city }}, {{ org.state }}</div></div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- PRODUCTS -->
+        {% if products %}
+        <div id="products" class="fade-up">
+          <div class="sec-header">
+            <i class="bi bi-box-seam-fill"></i>
+            <h5>Our Products</h5>
+          </div>
+          <div class="sec-body">
+            <div class="prod-grid">
+              {% for product in products %}
+              <div class="prod-card">
+                <div class="prod-img-wrap">
+                  {% if product.image %}
+                  <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                  {% else %}
+                  <div class="prod-img-ph"><i class="bi bi-{{ product.icon|default:'box-seam' }}"></i></div>
+                  {% endif %}
+                  {% if product.discount_percent %}<span class="prod-badge-disc">−{{ product.discount_percent }}%</span>{% endif %}
+                  {% if product.is_featured %}<span class="prod-badge-feat">Featured</span>{% endif %}
+                  {% if not product.in_stock %}<div class="prod-oos"><span>Out of Stock</span></div>{% endif %}
+                </div>
+                <div class="prod-body">
+                  {% if product.brand %}<div class="prod-brand">{{ product.brand }}</div>{% endif %}
+                  <h6 class="prod-name">{{ product.name }}</h6>
+                  {% if product.description %}<p class="prod-desc">{{ product.description|truncatechars:70 }}</p>{% endif %}
+                  <div class="prod-footer">
+                    {% if product.discount_price %}
+                    <span class="prod-price-sale">₹{{ product.discount_price }}</span>
+                    <span class="prod-price-orig">₹{{ product.price }}</span>
+                    {% else %}
+                    <span class="prod-price-reg">₹{{ product.price }}</span>
+                    {% endif %}
+                    <span class="prod-unit"> / {{ product.unit }}</span>
+                  </div>
+                  <div class="prod-actions">
+                    <span class="{% if product.in_stock %}stock-in{% else %}stock-out{% endif %}">
+                      {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+                    </span>
+                    <a href="#enquiry" class="btn-prod-enq">Enquire</a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div><!-- /main col -->
+
+      <!-- ── SIDEBAR ─────────────────────────── -->
+      <div class="col-lg-4" id="contact">
+
+        <!-- CONTACT CARD -->
+        <div class="sidebar-card fade-up">
+          <div class="sidebar-header"><i class="bi bi-person-lines-fill"></i> Contact</div>
+          <div class="sidebar-body">
+            <div class="cinfo-row">
+              <div class="cinfo-icon" style="background:#dbeafe;"><i class="bi bi-building" style="color:#1e40af;"></i></div>
+              <div><h6>Business</h6><p>{{ org.name }}</p></div>
+            </div>
+            {% if org.address_line1 %}
+            <div class="cinfo-row">
+              <div class="cinfo-icon" style="background:#fce7f3;"><i class="bi bi-geo-alt-fill" style="color:#9d174d;"></i></div>
+              <div><h6>Address</h6><p>{{ org.get_full_address }}</p></div>
             </div>
             {% endif %}
             {% if org.phone %}
-            <div class="hic-row">
-              <div class="hic-icon"><i class="bi bi-telephone"></i></div>
-              <div><div class="hic-meta">Phone</div><div class="hic-val">{{ org.phone }}</div></div>
+            <div class="cinfo-row">
+              <div class="cinfo-icon" style="background:#d1fae5;"><i class="bi bi-telephone-fill" style="color:#065f46;"></i></div>
+              <div><h6>Phone</h6><a href="tel:{{ org.phone }}">{{ org.phone }}</a></div>
             </div>
             {% endif %}
             {% if org.whatsapp %}
-            <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-whatsapp-hero">
-              <i class="bi bi-whatsapp"></i>WhatsApp Us
-            </a>
+            <div class="cinfo-row">
+              <div class="cinfo-icon" style="background:#d1fae5;"><i class="bi bi-whatsapp" style="color:#25d366;"></i></div>
+              <div><h6>WhatsApp</h6><a href="https://wa.me/91{{ org.whatsapp }}" target="_blank">{{ org.whatsapp }}</a></div>
+            </div>
             {% endif %}
+            {% if org.email %}
+            <div class="cinfo-row">
+              <div class="cinfo-icon" style="background:#fef3c7;"><i class="bi bi-envelope-fill" style="color:#92400e;"></i></div>
+              <div><h6>Email</h6><a href="mailto:{{ org.email }}">{{ org.email }}</a></div>
+            </div>
+            {% endif %}
+            {% if org.website %}
+            <div class="cinfo-row">
+              <div class="cinfo-icon" style="background:#ede9fe;"><i class="bi bi-globe" style="color:#5b21b6;"></i></div>
+              <div><h6>Website</h6><a href="{{ org.website }}" target="_blank">{{ org.website }}</a></div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="social-bar">
+            {% if org.phone %}<a href="tel:{{ org.phone }}" class="soc-btn" style="background:#0d6efd;" title="Call"><i class="bi bi-telephone-fill"></i></a>{% endif %}
+            {% if org.whatsapp %}<a href="https://wa.me/91{{ org.whatsapp }}" class="soc-btn" style="background:#25d366;" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>{% endif %}
+            {% if org.facebook_url %}<a href="{{ org.facebook_url }}" class="soc-btn" style="background:#1877f2;" target="_blank"><i class="bi bi-facebook"></i></a>{% endif %}
+            {% if org.instagram_url %}<a href="{{ org.instagram_url }}" class="soc-btn" style="background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);" target="_blank"><i class="bi bi-instagram"></i></a>{% endif %}
+            {% if org.linkedin_url %}<a href="{{ org.linkedin_url }}" class="soc-btn" style="background:#0077b5;" target="_blank"><i class="bi bi-linkedin"></i></a>{% endif %}
+            {% if org.twitter_url %}<a href="{{ org.twitter_url }}" class="soc-btn" style="background:#1da1f2;" target="_blank"><i class="bi bi-twitter-x"></i></a>{% endif %}
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ABOUT US -->
-<section id="about">
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-5 reveal">
-        <div class="section-eyebrow">Who We Are</div>
-        <h2 class="section-title">About {{ org.name }}</h2>
-        <div class="section-rule"></div>
-        {% if org.description %}
-        <p style="color:var(--muted);line-height:1.85;font-size:0.95rem;">{{ org.description }}</p>
-        {% else %}
-        <p style="color:var(--muted);line-height:1.85;font-size:0.95rem;">
-          We are a professional {{ org.category.name|default:"business" }} based in {{ org.city }}, {{ org.state }}.
-          With years of experience, we deliver quality services to our customers.
-        </p>
-        {% endif %}
-        <a href="#enquiry" class="btn-about">Get in Touch</a>
-      </div>
-      <div class="col-lg-7 reveal">
-        <div class="about-panel">
-          {% if org.email %}
-          <div class="about-detail">
-            <div class="icon-box"><i class="bi bi-envelope"></i></div>
-            <div><h6>Email</h6><p>{{ org.email }}</p></div>
-          </div>
-          {% endif %}
-          {% if org.phone %}
-          <div class="about-detail">
-            <div class="icon-box"><i class="bi bi-telephone"></i></div>
-            <div><h6>Phone</h6><p>{{ org.phone }}</p></div>
-          </div>
-          {% endif %}
-          {% if org.address_line1 %}
-          <div class="about-detail">
-            <div class="icon-box"><i class="bi bi-geo-alt"></i></div>
-            <div><h6>Address</h6><p>{{ org.get_full_address }}</p></div>
-          </div>
-          {% endif %}
-          {% if org.working_hours %}
-          <div class="about-detail">
-            <div class="icon-box"><i class="bi bi-clock"></i></div>
-            <div><h6>Working Hours</h6><p>{{ org.working_hours }}</p></div>
-          </div>
-          {% endif %}
-          {% if org.established_year %}
-          <div class="about-detail">
-            <div class="icon-box"><i class="bi bi-calendar2-check"></i></div>
-            <div><h6>Established</h6><p>Since {{ org.established_year }}</p></div>
-          </div>
-          {% endif %}
-          {% if org.gst_number %}
-          <div class="about-detail">
-            <div class="icon-box"><i class="bi bi-file-earmark-text"></i></div>
-            <div><h6>GST Number</h6><p>{{ org.gst_number }}</p></div>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SERVICES -->
-{% if services %}
-<section id="services">
-  <div class="container">
-    <div class="text-center mb-5 reveal">
-      <div class="section-eyebrow">What We Offer</div>
-      <h2 class="section-title">Our Services</h2>
-      <div class="section-rule mx-auto"></div>
-      <p style="color:var(--muted);max-width:520px;margin:0 auto;font-size:0.9rem;">Explore our range of professional services tailored for your needs.</p>
-    </div>
-    <div class="row g-4">
-      {% for svc in services %}
-      <div class="col-sm-6 col-lg-4 reveal">
-        <div class="service-card">
-          {% if svc.is_featured %}<span class="featured-badge">Featured</span>{% endif %}
-          <div class="service-icon"><i class="bi bi-{{ svc.icon|default:'tools' }}"></i></div>
-          <h5>{{ svc.name }}</h5>
-          {% if svc.description %}<p style="color:var(--muted);font-size:0.85rem;line-height:1.65;margin-bottom:12px;">{{ svc.description }}</p>{% endif %}
-          {% if svc.price %}
-          <div class="price">₹{{ svc.price }}{% if svc.price_unit %} <span style="color:var(--muted);font-weight:400;">/ {{ svc.price_unit }}</span>{% endif %}</div>
-          {% endif %}
-          <a href="#enquiry" class="btn-service">Enquire Now</a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-<!-- PRODUCTS -->
-{% if products %}
-<section id="products">
-  <div class="container">
-    <div class="text-center mb-5 reveal">
-      <div class="section-eyebrow">Shop / Catalog</div>
-      <h2 class="section-title">Our Products</h2>
-      <div class="section-rule mx-auto"></div>
-      <p style="color:var(--muted);max-width:520px;margin:0 auto;font-size:0.9rem;">Browse our product catalog — quality guaranteed.</p>
-    </div>
-    <div class="row g-4">
-      {% for product in products %}
-      <div class="col-sm-6 col-lg-3 reveal">
-        <div class="product-card">
-          <div class="product-img">
-            {% if product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name }}">
-            {% else %}
-            <i class="bi bi-{{ product.icon|default:'box-seam' }}"></i>
-            {% endif %}
-            {% if product.discount_percent %}
-            <span class="product-badge-disc">−{{ product.discount_percent }}%</span>
-            {% endif %}
-            {% if product.is_featured %}
-            <span class="product-badge-feat">Featured</span>
-            {% endif %}
-            {% if not product.in_stock %}
-            <div class="product-oos-overlay"><span class="product-oos-label">Out of Stock</span></div>
-            {% endif %}
-          </div>
-          <div class="product-body">
-            {% if product.brand %}<div class="product-brand">{{ product.brand }}</div>{% endif %}
-            <h6 class="product-name">{{ product.name }}</h6>
-            {% if product.description %}<p class="product-desc">{{ product.description|truncatechars:70 }}</p>{% endif %}
-            <div class="product-footer">
-              {% if product.discount_price %}
-              <div>
-                <span class="product-price-disc">₹{{ product.discount_price }}</span>
-                <span class="product-price-orig">₹{{ product.price }}</span>
+        <!-- STATS CARD -->
+        <div class="sidebar-card fade-up" style="transition-delay:.1s;">
+          <div class="sidebar-header"><i class="bi bi-bar-chart-fill"></i> Overview</div>
+          <div class="sidebar-body p-0">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;">
+              <div style="padding:18px 12px;text-align:center;border-right:1px solid var(--border);">
+                <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:900;color:var(--primary);">{{ services.count }}</div>
+                <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Services</div>
               </div>
-              {% else %}
-              <span class="product-price-reg">₹{{ product.price }}</span>
-              {% endif %}
-              <span class="product-unit"> / {{ product.unit }}</span>
-            </div>
-            <div class="product-actions">
-              <span class="{% if product.in_stock %}product-stock-in{% else %}product-stock-out{% endif %}">
-                {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
-              </span>
-              <a href="#enquiry" class="btn-product-enquire">Enquire</a>
+              <div style="padding:18px 12px;text-align:center;border-right:1px solid var(--border);">
+                <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:900;color:var(--primary);">{{ org.enquiries.count }}</div>
+                <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Enquiries</div>
+              </div>
+              <div style="padding:18px 12px;text-align:center;">
+                <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:900;color:var(--primary);">{% if org.established_year %}{{ org.established_year|slice:"-2:" }}+{% else %}∞{% endif %}</div>
+                <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">Exp.</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
 
-<!-- ENQUIRY FORM -->
+      </div><!-- /sidebar -->
+
+    </div><!-- /row -->
+  </div>
+</div>
+
+<!-- ENQUIRY SECTION -->
 <section class="enquiry-section" id="enquiry">
   <div class="container">
     <div class="row align-items-center g-5">
-      <div class="col-lg-5 enquiry-info-block reveal">
-        <div class="section-eyebrow" style="color:rgba(184,154,90,0.9);">Get In Touch</div>
-        <h2 class="enquiry-heading">Send Us an Enquiry</h2>
-        <p class="enquiry-sub">
+      <div class="col-lg-5 enq-info-block fade-up">
+        <div class="enq-eyebrow">Get In Touch</div>
+        <h2 class="enq-heading">Send Us an Enquiry</h2>
+        <p class="enq-sub">
           Interested in our services? Fill out the form and we'll get back to you within 24 hours.
         </p>
-        <div class="mt-4">
-          {% if org.phone %}
-          <div class="enquiry-contact-row">
-            <div class="eqc-icon"><i class="bi bi-telephone"></i></div>
-            <div><div class="eqc-meta">Call Us</div><div class="eqc-val">{{ org.phone }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.email %}
-          <div class="enquiry-contact-row">
-            <div class="eqc-icon"><i class="bi bi-envelope"></i></div>
-            <div><div class="eqc-meta">Email Us</div><div class="eqc-val">{{ org.email }}</div></div>
-          </div>
-          {% endif %}
+        {% if org.phone %}
+        <div class="enq-crow">
+          <div class="enq-cicon"><i class="bi bi-telephone-fill"></i></div>
+          <div><div class="enq-clbl">Call Us</div><div class="enq-cval">{{ org.phone }}</div></div>
         </div>
+        {% endif %}
+        {% if org.email %}
+        <div class="enq-crow">
+          <div class="enq-cicon"><i class="bi bi-envelope-fill"></i></div>
+          <div><div class="enq-clbl">Email Us</div><div class="enq-cval">{{ org.email }}</div></div>
+        </div>
+        {% endif %}
       </div>
-      <div class="col-lg-7 reveal">
-        <div class="enquiry-card">
+
+      <div class="col-lg-7 fade-up" style="transition-delay:.15s;">
+        <div class="enq-card">
           {% if enquiry_success %}
-          <div class="text-center py-4">
+          <div class="text-center py-3">
             <div class="success-check">✓</div>
-            <h4 style="font-weight:700;">Enquiry Submitted</h4>
+            <h4 style="font-weight:900;">Enquiry Submitted!</h4>
             <p style="color:var(--muted);">Thank you. We will contact you within 24 hours.</p>
-            <a href="#enquiry" class="btn-about" style="margin-top:0;">Send Another</a>
+            <a href="#enquiry" class="btn-submit" style="width:auto;padding:10px 28px;display:inline-block;">Send Another</a>
           </div>
           {% else %}
           <h4>Request a Callback</h4>
           <form method="post">
             {% csrf_token %}
             <div class="row g-3">
-              <div class="col-md-6"><label class="form-label">Full Name *</label>{{ enquiry_form.name }}</div>
-              <div class="col-md-6"><label class="form-label">Phone *</label>{{ enquiry_form.phone }}</div>
-              <div class="col-md-6"><label class="form-label">Email *</label>{{ enquiry_form.email }}</div>
-              <div class="col-md-6"><label class="form-label">Service</label>{{ enquiry_form.service }}</div>
-              <div class="col-12"><label class="form-label">Subject *</label>{{ enquiry_form.subject }}</div>
-              <div class="col-12"><label class="form-label">Message *</label>{{ enquiry_form.message }}</div>
-              <div class="col-12"><button type="submit" class="btn-submit"><i class="bi bi-send me-2"></i>Send Enquiry</button></div>
+              <div class="col-md-6">
+                <label class="form-label">Full Name *</label>
+                {{ enquiry_form.name }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone *</label>
+                {{ enquiry_form.phone }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                {{ enquiry_form.email }}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Service</label>
+                {{ enquiry_form.service }}
+              </div>
+              <div class="col-12">
+                <label class="form-label">Subject *</label>
+                {{ enquiry_form.subject }}
+              </div>
+              <div class="col-12">
+                <label class="form-label">Message *</label>
+                {{ enquiry_form.message }}
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn-submit"><i class="bi bi-send me-2"></i>Send Enquiry</button>
+              </div>
             </div>
           </form>
           {% endif %}
@@ -1015,24 +850,27 @@ section:nth-child(even) { background: var(--surface); }
 
 <!-- TESTIMONIALS -->
 {% if testimonials %}
-<section id="testimonials">
+<section id="testimonials" style="padding:60px 0;background:#f8faff;">
   <div class="container">
-    <div class="text-center mb-5 reveal">
-      <div class="section-eyebrow">What Clients Say</div>
-      <h2 class="section-title">Customer Reviews</h2>
-      <div class="section-rule mx-auto"></div>
+    <div class="text-center mb-5 fade-up">
+      <div style="font-size:0.68rem;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:var(--primary);margin-bottom:8px;">What Clients Say</div>
+      <h2 style="font-family:var(--font-head);font-weight:900;color:var(--primary-dark);font-size:clamp(1.6rem,3vw,2.2rem);">Customer Reviews</h2>
+      <div style="width:40px;height:3px;background:var(--accent);border-radius:3px;margin:14px auto 0;"></div>
     </div>
     <div class="row g-4">
       {% for t in testimonials %}
-      <div class="col-md-4 reveal">
-        <div class="testimonial-card">
+      <div class="col-md-4 fade-up">
+        <div class="test-card">
           <div class="stars">
             {% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}
           </div>
-          <p class="testimonial-text">{{ t.message }}</p>
+          <p class="test-text">{{ t.message }}</p>
           <div class="d-flex align-items-center gap-3 mt-4 pt-3" style="border-top:1px solid var(--border);">
-            <div class="client-avatar">{{ t.client_name|first|upper }}</div>
-            <div><div class="client-name">{{ t.client_name }}</div><div class="client-role">{{ t.client_role }}</div></div>
+            <div class="client-av">{{ t.client_name|first|upper }}</div>
+            <div>
+              <div class="client-name">{{ t.client_name }}</div>
+              <div class="client-role">{{ t.client_role }}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1042,85 +880,37 @@ section:nth-child(even) { background: var(--surface); }
 </section>
 {% endif %}
 
-<!-- CONTACT US -->
-<section id="contact">
-  <div class="container">
-    <div class="text-center mb-5 reveal">
-      <div class="section-eyebrow">Reach Us</div>
-      <h2 class="section-title">Contact Us</h2>
-      <div class="section-rule mx-auto"></div>
-    </div>
-    <div class="row g-4 justify-content-center">
-      <div class="col-lg-8 reveal">
-        {% if org.phone %}
-        <a href="tel:{{ org.phone }}" class="contact-item">
-          <div class="contact-icon" style="background:#dbeafe;color:#1e40af;"><i class="bi bi-telephone-fill"></i></div>
-          <div><h6>Phone</h6><p>{{ org.phone }}</p></div>
-          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
-        </a>
-        {% endif %}
-        {% if org.whatsapp %}
-        <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="contact-item">
-          <div class="contact-icon" style="background:#d1fae5;color:#065f46;"><i class="bi bi-whatsapp"></i></div>
-          <div><h6>WhatsApp</h6><p>{{ org.whatsapp }}</p></div>
-          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
-        </a>
-        {% endif %}
-        {% if org.email %}
-        <a href="mailto:{{ org.email }}" class="contact-item">
-          <div class="contact-icon" style="background:#fef3c7;color:#92400e;"><i class="bi bi-envelope-fill"></i></div>
-          <div><h6>Email</h6><p>{{ org.email }}</p></div>
-          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
-        </a>
-        {% endif %}
-        {% if org.address_line1 %}
-        <div class="contact-item">
-          <div class="contact-icon" style="background:#ede9fe;color:#5b21b6;"><i class="bi bi-geo-alt-fill"></i></div>
-          <div><h6>Address</h6><p>{{ org.get_full_address }}</p></div>
-        </div>
-        {% endif %}
-        {% if org.website %}
-        <a href="{{ org.website }}" target="_blank" class="contact-item">
-          <div class="contact-icon" style="background:#f0fdf4;color:#166534;"><i class="bi bi-globe"></i></div>
-          <div><h6>Website</h6><p>{{ org.website }}</p></div>
-          <i class="bi bi-arrow-right ms-auto" style="color:var(--muted);"></i>
-        </a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- FOOTER -->
-<footer class="biz-footer">
+<footer class="site-footer">
   <div class="container">
-    <div class="row align-items-start g-4 pb-5" style="border-bottom:1px solid rgba(255,255,255,0.08);">
+    <div class="row g-4 pb-4" style="border-bottom:1px solid rgba(255,255,255,0.08);">
       <div class="col-md-5">
         <div class="footer-brand">{{ org.name }}</div>
-        {% if org.tagline %}<p class="footer-tagline">{{ org.tagline }}</p>{% endif %}
-        <div class="d-flex gap-2 mt-4">
-          {% if org.facebook_url %}<a href="{{ org.facebook_url }}" class="social-link" target="_blank"><i class="bi bi-facebook"></i></a>{% endif %}
-          {% if org.instagram_url %}<a href="{{ org.instagram_url }}" class="social-link" target="_blank"><i class="bi bi-instagram"></i></a>{% endif %}
-          {% if org.linkedin_url %}<a href="{{ org.linkedin_url }}" class="social-link" target="_blank"><i class="bi bi-linkedin"></i></a>{% endif %}
-          {% if org.twitter_url %}<a href="{{ org.twitter_url }}" class="social-link" target="_blank"><i class="bi bi-twitter-x"></i></a>{% endif %}
+        {% if org.tagline %}<div class="footer-sub">{{ org.tagline }}</div>{% endif %}
+        <div class="d-flex gap-2 mt-3">
+          {% if org.phone %}<a href="tel:{{ org.phone }}" class="soc-btn" style="background:rgba(255,255,255,0.1);"><i class="bi bi-telephone-fill"></i></a>{% endif %}
+          {% if org.whatsapp %}<a href="https://wa.me/91{{ org.whatsapp }}" class="soc-btn" style="background:#25d366;" target="_blank"><i class="bi bi-whatsapp"></i></a>{% endif %}
+          {% if org.facebook_url %}<a href="{{ org.facebook_url }}" class="soc-btn" style="background:#1877f2;" target="_blank"><i class="bi bi-facebook"></i></a>{% endif %}
+          {% if org.instagram_url %}<a href="{{ org.instagram_url }}" class="soc-btn" style="background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);" target="_blank"><i class="bi bi-instagram"></i></a>{% endif %}
+          {% if org.linkedin_url %}<a href="{{ org.linkedin_url }}" class="soc-btn" style="background:#0077b5;" target="_blank"><i class="bi bi-linkedin"></i></a>{% endif %}
+          {% if org.twitter_url %}<a href="{{ org.twitter_url }}" class="soc-btn" style="background:#1da1f2;" target="_blank"><i class="bi bi-twitter-x"></i></a>{% endif %}
         </div>
       </div>
       <div class="col-md-4">
-        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:14px;font-family:var(--font-body);">Contact</div>
-        <div class="d-flex flex-column gap-2">
-          {% if org.phone %}<a href="tel:{{ org.phone }}" class="footer-link"><i class="bi bi-telephone me-2"></i>{{ org.phone }}</a>{% endif %}
-          {% if org.email %}<a href="mailto:{{ org.email }}" class="footer-link"><i class="bi bi-envelope me-2"></i>{{ org.email }}</a>{% endif %}
-        </div>
+        <div style="font-size:0.65rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:12px;">Contact</div>
+        {% if org.phone %}<a href="tel:{{ org.phone }}" class="footer-link"><i class="bi bi-telephone me-2"></i>{{ org.phone }}</a>{% endif %}
+        {% if org.email %}<a href="mailto:{{ org.email }}" class="footer-link"><i class="bi bi-envelope me-2"></i>{{ org.email }}</a>{% endif %}
+        {% if org.website %}<a href="{{ org.website }}" target="_blank" class="footer-link"><i class="bi bi-globe me-2"></i>{{ org.website }}</a>{% endif %}
       </div>
       <div class="col-md-3">
         {% if org.city %}
-        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:14px;font-family:var(--font-body);">Location</div>
-        <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;line-height:1.7;">{{ org.city }}, {{ org.state }}</p>
+        <div style="font-size:0.65rem;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:12px;">Location</div>
+        <p style="color:rgba(255,255,255,0.5);font-size:0.82rem;line-height:1.8;">{{ org.city }}, {{ org.state }}</p>
         {% endif %}
       </div>
     </div>
-    <div class="text-center pt-4 footer-copy">
-      &copy; {{ org.established_year|default:"2024" }} {{ org.name }}. Powered by <a href="/" style="color:rgba(184,154,90,0.7);">OrgPortal</a>
+    <div class="footer-copy">
+      &copy; {{ org.established_year|default:"2024" }} {{ org.name }}. Powered by <a href="/" style="color:rgba(0,201,167,0.8);">OrgPortal</a>
     </div>
   </div>
 </footer>
@@ -1128,11 +918,15 @@ section:nth-child(even) { background: var(--surface); }
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Scroll reveal
-const reveals = document.querySelectorAll('.reveal');
 const obs = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
-}, { threshold: 0.1 });
-reveals.forEach(r => obs.observe(r));
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+// Style Django form widgets to match design
+document.querySelectorAll('input,select,textarea').forEach(el => {
+  if (!el.classList.contains('form-ctrl')) el.classList.add('form-ctrl');
+});
 </script>
 </body>
 </html>

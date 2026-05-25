@@ -51,6 +51,9 @@ urlpatterns = [
 
     # Public landing page
     path('org/<slug:slug>/', views.public_landing, name='public_landing'),
+
+    path('dashboard/referrals/', views.referral_dashboard, name='referral_dashboard'),
+    path('invite/<str:ref_code>/', views.signup_with_ref, name='signup_with_ref')
 ]
 
 # Serve media files in development

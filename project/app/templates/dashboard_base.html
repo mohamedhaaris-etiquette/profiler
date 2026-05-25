@@ -56,6 +56,10 @@ body { background: #f1f5f9; }
   <a href="{% url 'org_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'org_settings' %}active{% endif %}">
     <i class="bi bi-sliders"></i> Settings
   </a>
+  <a href="{% url 'referral_dashboard' %}" class="nav-link {% if 'referral' in request.resolver_match.url_name %}active{% endif %}" style="color:rgba(250,204,21,0.85);">
+    <i class="bi bi-gift"></i> Invite & Earn
+    <span style="background:#f97316;color:#fff;font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;">NEW</span>
+  </a>
 
   <div class="sidebar-section">Public</div>
   <a href="{% url 'public_landing' user.organization.slug %}" target="_blank" class="nav-link">

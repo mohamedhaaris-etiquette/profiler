@@ -340,3 +340,136 @@ def org_settings(request):
     else:
         form = OrganizationUpdateForm(instance=org)
     return render(request, 'org_settings.html', {'form': form, 'org': org})
+
+
+
+# ══════════════════════════════════════════════════════════════
+#  REFERRAL SYSTEM
+# ══════════════════════════════════════════════════════════════
+from .models import ReferralCode, Referral, ReferralBonus, ReferralProgram
+from django.utils import timezone
+
+
+def _get_or_create_referral_code(org):
+    """Get or lazily create a referral code for an org."""
+    try:
+        return org.referral_code
+    except ReferralCode.DoesNotExist:
+        code = ReferralCode.generate_code()
+        while ReferralCode.objects.filter(code=code).exists():
+            code = ReferralCode.generate_code()
+        return ReferralCode.objects.create(organization=org, code=code)
+
+
+def signup_with_ref(request, ref_code):
+    """Signup page pre-loaded with a referral code."""
+    try:
+        ref = ReferralCode.objects.select_related('organization').get(code=ref_code)
+        ref.total_clicks += 1
+        ref.save(update_fields=['total_clicks'])
+    except ReferralCode.DoesNotExist:
+        ref = None
+
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    categories = BusinessCategory.objects.all()
+    form = OrganizationSignupForm()
+
+    if request.method == 'POST':
+        form = OrganizationSignupForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    org = form.save(commit=False)
+                    org.save()
+
+                    user = CustomUser.objects.create_user(
+                        username=form.cleaned_data['username'],
+                        email=form.cleaned_data['user_email'],
+                        password=form.cleaned_data['password1'],
+                        first_name=form.cleaned_data['first_name'],
+                        last_name=form.cleaned_data['last_name'],
+                        phone=form.cleaned_data['user_phone'],
+                        organization=org,
+                        role='org_admin',
+                    )
+
+                    if org.category:
+                        for i, svc_name in enumerate(org.category.default_services):
+                            Service.objects.create(
+                                organization=org, name=svc_name,
+                                icon=org.category.icon, order=i, is_featured=(i < 3),
+                            )
+
+                    # ── Award referral bonus ──────────────────────
+                    if ref:
+                        program = ReferralProgram.objects.filter(is_active=True).first()
+                        pts = program.points_per_referral if program else 100
+
+                        referral_obj = Referral.objects.create(
+                            referrer=ref.organization,
+                            referred=org,
+                            code=ref,
+                            status='rewarded',
+                            points_awarded=pts,
+                            confirmed_at=timezone.now(),
+                        )
+                        ReferralBonus.objects.create(
+                            organization=ref.organization,
+                            referral=referral_obj,
+                            transaction_type='earn',
+                            points=pts,
+                            note=f'Referral bonus — {org.name} joined via your invite',
+                        )
+                        messages.success(
+                            request,
+                            f'Welcome! You joined via {ref.organization.name}\'s invite. '
+                            f'They earned {pts} OrgPoints!'
+                        )
+                    else:
+                        messages.success(request, f'Welcome to OrgPortal, {org.name}!')
+
+                    login(request, user)
+                    return redirect('dashboard')
+            except Exception as e:
+                messages.error(request, f'Registration failed: {str(e)}')
+        else:
+            messages.error(request, 'Please fix the errors below.')
+
+    return render(request, 'signup.html', {
+        'form': form,
+        'categories': categories,
+        'ref_code': ref_code,
+        'referrer_org': ref.organization if ref else None,
+    })
+
+
+@login_required
+def referral_dashboard(request):
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+
+    ref_code = _get_or_create_referral_code(org)
+    invite_url = ref_code.get_invite_url(request)
+    whatsapp_url = ref_code.get_whatsapp_url(request)
+
+    referrals = Referral.objects.filter(referrer=org).select_related('referred')
+    bonus_transactions = ReferralBonus.objects.filter(organization=org)
+    total_points = ReferralBonus.get_balance(org)
+
+    program = ReferralProgram.objects.filter(is_active=True).first()
+
+    return render(request, 'referral_dashboard.html', {
+        'org': org,
+        'ref_code': ref_code,
+        'invite_url': invite_url,
+        'whatsapp_url': whatsapp_url,
+        'referrals': referrals,
+        'bonus_transactions': bonus_transactions,
+        'total_points': total_points,
+        'total_referrals': referrals.count(),
+        'rewarded_referrals': referrals.filter(status='rewarded').count(),
+        'program': program,
+    })

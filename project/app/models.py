@@ -232,3 +232,101 @@ class Testimonial(models.Model):
         return f"{self.client_name} → {self.organization.name}"
 
 
+import uuid as _uuid
+
+class ReferralProgram(models.Model):
+    """Bonus point rules set by Super Admin"""
+    name = models.CharField(max_length=100, default='Default Program')
+    points_per_referral = models.PositiveIntegerField(default=100)
+    bonus_description = models.CharField(max_length=200, default='100 OrgPoints per successful referral')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.points_per_referral} pts)"
+
+
+class ReferralCode(models.Model):
+    """One unique invite code per organization"""
+    organization = models.OneToOneField(
+        Organization, on_delete=models.CASCADE, related_name='referral_code'
+    )
+    code = models.CharField(max_length=12, unique=True, db_index=True)
+    total_clicks = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.organization.name} → {self.code}"
+
+    @staticmethod
+    def generate_code():
+        import random, string
+        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+    def get_invite_url(self, request=None):
+        from django.urls import reverse
+        path = reverse('signup_with_ref', args=[self.code])
+        if request:
+            return request.build_absolute_uri(path)
+        return path
+
+    def get_whatsapp_url(self, request=None):
+        import urllib.parse
+        url = self.get_invite_url(request)
+        org = self.organization
+        msg = (
+            f"Hi!  I'm using OrgPortal to manage my business *{org.name}*. "
+            f"Register your business using my invite link and we both get bonus points!\n\n"
+            f"{url}\n\n"
+            f"Use referral code: *{self.code}*"
+        )
+        return f"https://wa.me/?text={urllib.parse.quote(msg)}"
+
+
+class Referral(models.Model):
+    """Each successful registration via a referral code"""
+    STATUS_CHOICES = [
+        ('pending',   'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('rewarded',  'Rewarded'),
+    ]
+    referrer    = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='referrals_made')
+    referred    = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='referred_by', null=True, blank=True)
+    code        = models.ForeignKey(ReferralCode, on_delete=models.SET_NULL, null=True)
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    points_awarded = models.PositiveIntegerField(default=0)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.referrer.name} referred {self.referred.name if self.referred else '?'}"
+
+
+class ReferralBonus(models.Model):
+    """Running points wallet per organization"""
+    TRANSACTION_TYPES = [
+        ('earn',   'Earned'),
+        ('redeem', 'Redeemed'),
+        ('expire', 'Expired'),
+    ]
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='bonus_transactions')
+    referral     = models.ForeignKey(Referral, on_delete=models.SET_NULL, null=True, blank=True)
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES, default='earn')
+    points       = models.IntegerField()          # positive = earn, negative = redeem
+    note         = models.CharField(max_length=200, blank=True)
+    created_at   = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.organization.name}: {'+' if self.points > 0 else ''}{self.points} pts"
+
+    @classmethod
+    def get_balance(cls, organization):
+        from django.db.models import Sum
+        result = cls.objects.filter(organization=organization).aggregate(total=Sum('points'))
+        return result['total'] or 0

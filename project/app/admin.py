@@ -75,3 +75,26 @@ class ProductAdmin(admin.ModelAdmin):
 
 admin.site.site_header = 'OrgPortal Administration'
 admin.site.site_title = 'OrgPortal'
+
+
+from .models import ReferralProgram, ReferralCode, Referral, ReferralBonus
+
+@admin.register(ReferralProgram)
+class ReferralProgramAdmin(admin.ModelAdmin):
+    list_display = ['name', 'points_per_referral', 'is_active']
+
+@admin.register(ReferralCode)
+class ReferralCodeAdmin(admin.ModelAdmin):
+    list_display = ['organization', 'code', 'total_clicks', 'created_at']
+    readonly_fields = ['code', 'total_clicks', 'created_at']
+
+@admin.register(Referral)
+class ReferralAdmin(admin.ModelAdmin):
+    list_display = ['referrer', 'referred', 'status', 'points_awarded', 'created_at']
+    list_filter = ['status']
+    readonly_fields = ['created_at', 'confirmed_at']
+
+@admin.register(ReferralBonus)
+class ReferralBonusAdmin(admin.ModelAdmin):
+    list_display = ['organization', 'transaction_type', 'points', 'note', 'created_at']
+    list_filter = ['transaction_type', 'organization']
