@@ -343,10 +343,10 @@ class Product(models.Model):
     image3 = models.ImageField(upload_to='products/', blank=True, null=True)
     icon = models.CharField(max_length=50, default='box-seam')
     is_featured = models.BooleanField(default=False)
-    youtube_url   = "models.URLField(blank=True, help_text='YouTube demo video URL')"
-    instagram_url = "models.URLField(blank=True, help_text='Instagram post URL')"
-    pdf_catalog   = "models.FileField(upload_to='catalogs/', blank=True, null=True, help_text='Downloadable PDF catalog')"
-    specs_json    = "models.JSONField(default=dict, blank=True, help_text='Key-value product specifications')"
+    youtube_url = models.URLField(blank=True, help_text='YouTube demo video URL')
+    instagram_url = models.URLField(blank=True, help_text='Instagram post URL')
+    pdf_catalog = models.FileField(upload_to='catalogs/', blank=True, null=True, help_text='Downloadable PDF catalog')
+    specs_json = models.JSONField(default=dict, blank=True, help_text='Key-value product specifications')
     is_active = models.BooleanField(default=True)
     in_stock = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)

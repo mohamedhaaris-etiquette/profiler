@@ -327,6 +327,7 @@ class ProductForm(forms.ModelForm):
             'name', 'description', 'sku', 'category', 'brand',
             'price', 'discount_price', 'stock_quantity', 'unit',
             'condition', 'icon', 'image', 'image2', 'image3',
+            'youtube_url', 'instagram_url', 'pdf_catalog', 'specs_json',
             'is_featured', 'in_stock', 'is_active',
         ]
         widgets = {
@@ -341,6 +342,10 @@ class ProductForm(forms.ModelForm):
             'unit':           forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. piece, kg, box'}),
             'condition':      forms.Select(attrs={'class': FS}),
             'icon':           forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. box-seam'}),
+            'youtube_url':    forms.URLInput(attrs={'class': FC, 'placeholder': 'https://youtu.be/...'}),
+            'instagram_url':  forms.URLInput(attrs={'class': FC, 'placeholder': 'https://instagram.com/...'}),
+            'pdf_catalog':    forms.ClearableFileInput(attrs={'class': FC}),
+            'specs_json':     forms.Textarea(attrs={'class': FC, 'rows': 3, 'placeholder': '{"color": "red", "size": "large"}'}),
         }
 
 

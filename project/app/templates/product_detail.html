@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} — {{ org.name }}{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+  .pd-hero { background: linear-gradient(135deg, #0b1f12 0%, #132b1a 100%); padding: 40px 0; border-bottom: 1px solid rgba(45,106,79,0.35); }
+  .pd-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+  .pd-breadcrumb { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 16px; }
+  .pd-breadcrumb a { color: #74c69d; text-decoration: none; }
+  .pd-breadcrumb a:hover { text-decoration: underline; }
+  .pd-breadcrumb span { margin: 0 8px; opacity: 0.4; }
+  
+  .pd-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin: 60px 0; align-items: start; }
+  @media (max-width: 992px) { .pd-layout { grid-template-columns: 1fr; gap: 36px; } }
+  
+  .pd-gallery { position: sticky; top: 100px; }
+  @media (max-width: 992px) { .pd-gallery { position: static; } }
+  
+  .pd-main-img {
+    width: 100%; height: 500px; object-fit: cover;
+    border-radius: 16px; border: 1px solid rgba(45,106,79,0.5);
+    background: rgba(5,15,8,0.8); margin-bottom: 16px;
+    display: block;
+  }
+  
+  .pd-thumbs {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  
+  .pd-thumb {
+    width: 100%; height: 100px; object-fit: cover;
+    border-radius: 12px; border: 2px solid transparent;
+    cursor: pointer; transition: all 0.2s;
+    background: rgba(5,15,8,0.8);
+  }
+  
+  .pd-thumb:hover { border-color: #74c69d; }
+  .pd-thumb.active { border-color: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+  
+  .pd-info h1 {
+    font-size: 2.5rem; font-weight: 800; letter-spacing: 0.02em;
+    color: #ffffff; margin-bottom: 8px; line-height: 1.1;
+  }
+  
+  .pd-brand { font-size: 0.85rem; color: #40916c; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; }
+  
+  .pd-rating { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; font-size: 0.95rem; }
+  .pd-stars { color: #f59e0b; font-size: 1.1rem; }
+  .pd-rating-text { color: rgba(255,255,255,0.6); }
+  
+  .pd-price-section {
+    background: rgba(45,106,79,0.2); border-left: 4px solid #74c69d;
+    padding: 20px; border-radius: 12px; margin-bottom: 24px;
+  }
+  
+  .pd-price-main { font-size: 2rem; font-weight: 900; color: #74c69d; margin-bottom: 4px; }
+  .pd-price-orig { font-size: 1.1rem; color: rgba(255,255,255,0.5); text-decoration: line-through; margin-right: 12px; }
+  .pd-price-disc { font-size: 0.9rem; background: rgba(245,158,11,0.15); color: #f59e0b; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+  .pd-price-unit { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-left: 8px; }
+  
+  .pd-stock { padding: 12px 16px; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+  .pd-stock.in-stock { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .pd-stock.out-of-stock { background: rgba(239,68,68,0.15); color: #ef4444; }
+  
+  .pd-description {
+    color: rgba(255,255,255,0.8); font-size: 1.05rem; line-height: 1.8;
+    margin: 24px 0; padding: 20px 0; border-top: 1px solid rgba(45,106,79,0.3); border-bottom: 1px solid rgba(45,106,79,0.3);
+  }
+  
+  .pd-actions {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;
+  }
+  @media (max-width: 576px) { .pd-actions { grid-template-columns: 1fr; } }
+  
+  .btn-pd { padding: 14px 20px; border-radius: 10px; font-weight: 700; border: none;
+    font-size: 0.9rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-decoration: none; text-align: center;
+  }
+  
+  .btn-pd-wa { background: #25d366; color: white; }
+  .btn-pd-wa:hover { box-shadow: 0 0 20px rgba(37,211,102,0.5); transform: translateY(-2px); }
+  
+  .btn-pd-enq { background: #7c3aed; color: white; }
+  .btn-pd-enq:hover { box-shadow: 0 0 20px rgba(124,58,237,0.5); transform: translateY(-2px); }
+  
+  .btn-pd-pdf { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+  .btn-pd-pdf:hover { background: rgba(239,68,68,0.25); }
+  
+  .pd-quick-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 576px) { .pd-quick-links { grid-template-columns: 1fr; } }
+  
+  .btn-quick { padding: 12px; border-radius: 10px; border: 1px solid rgba(45,106,79,0.5);
+    background: rgba(45,106,79,0.1); color: rgba(255,255,255,0.8); font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.2s; text-align: center;
+  }
+  .btn-quick:hover { border-color: #74c69d; background: rgba(116,198,157,0.1); color: #74c69d; }
+  
+  .pd-tabs {
+    display: flex; gap: 16px; margin-top: 32px; border-bottom: 1px solid rgba(45,106,79,0.3);
+    padding-bottom: 16px;
+  }
+  
+  .pd-tab {
+    background: none; border: none; color: rgba(255,255,255,0.6); font-weight: 600; font-size: 0.9rem;
+    cursor: pointer; padding: 0; position: relative; transition: color 0.2s;
+  }
+  
+  .pd-tab.active {
+    color: #74c69d;
+  }
+  
+  .pd-tab::after {
+    content: ''; position: absolute; bottom: -16px; left: 0; right: 0; height: 3px;
+    background: #74c69d; border-radius: 2px 2px 0 0;
+    transform: scaleX(0); transition: transform 0.2s;
+  }
+  
+  .pd-tab.active::after { transform: scaleX(1); }
+  
+  .pd-tab-content { display: none; margin-top: 24px; }
+  .pd-tab-content.active { display: block; }
+  
+  .pd-specs-table {
+    width: 100%; border-collapse: collapse;
+  }
+  
+  .pd-specs-table tr {
+    border-bottom: 1px solid rgba(45,106,79,0.3);
+  }
+  
+  .pd-specs-table td {
+    padding: 12px 0; vertical-align: middle;
+  }
+  
+  .pd-specs-table td:first-child {
+    font-weight: 600; color: #74c69d; width: 40%;
+  }
+  
+  .pd-specs-table td:last-child {
+    color: rgba(255,255,255,0.8);
+  }
+  
+  .pd-video-embed {
+    position: relative; width: 100%; padding-bottom: 56.25%;
+    background: rgba(5,15,8,0.8); border-radius: 12px; overflow: hidden;
+    border: 1px solid rgba(45,106,79,0.3);
+  }
+  
+  .pd-video-embed iframe {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    border: none;
+  }
+  
+  .pd-ig-link {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, #405de6 0%, #5b51d8 50%, #833ab4 100%);
+    color: white; padding: 14px 24px; border-radius: 10px;
+    text-decoration: none; font-weight: 600; transition: all 0.2s;
+  }
+  
+  .pd-ig-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(64,93,230,0.4);
+  }
+  
+  .pd-specs-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;
+    margin-top: 16px;
+  }
+  
+  .pd-spec-card {
+    background: rgba(45,106,79,0.1); border: 1px solid rgba(45,106,79,0.3);
+    border-radius: 10px; padding: 16px;
+  }
+  
+  .pd-spec-key {
+    font-size: 0.8rem; color: rgba(255,255,255,0.5); text-transform: uppercase;
+    letter-spacing: 0.08em; font-weight: 600; display: block; margin-bottom: 4px;
+  }
+  
+  .pd-spec-val {
+    color: #74c69d; font-size: 1.05rem; font-weight: 600; display: block;
+  }
+  
+  .pd-related { margin-top: 80px; padding-top: 60px; border-top: 1px solid rgba(45,106,79,0.3); }
+  .pd-related h2 { font-size: 1.8rem; margin-bottom: 32px; }
+  .pd-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
+  
+  .pd-related-card {
+    background: rgba(45,106,79,0.1); border: 1px solid rgba(45,106,79,0.3);
+    border-radius: 12px; overflow: hidden; cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .pd-related-card:hover {
+    border-color: #74c69d; background: rgba(45,106,79,0.15);
+    transform: translateY(-4px);
+  }
+  
+  .pd-related-img {
+    width: 100%; height: 150px; object-fit: cover; background: rgba(5,15,8,0.8);
+  }
+  
+  .pd-related-info {
+    padding: 16px;
+  }
+  
+  .pd-related-name {
+    font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: white;
+  }
+  
+  .pd-related-price {
+    color: #74c69d; font-weight: 700; font-size: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pd-hero">
+  <div class="pd-container">
+    <div class="pd-breadcrumb">
+      <a href="{% url 'public_landing' org.slug %}">{{ org.name }}</a>
+      <span>→</span>
+      <span>{{ product.name }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="pd-container" style="padding: 40px 20px;">
+  <div class="pd-layout">
+    <!-- Gallery -->
+    <div class="pd-gallery">
+      <img id="pdMainImg" class="pd-main-img" src="{{ product.image.url }}" alt="{{ product.name }}">
+      <div class="pd-thumbs">
+        {% if product.image %}
+        <img class="pd-thumb active" src="{{ product.image.url }}" alt="" onclick="changePdImage('{{ product.image.url }}')">
+        {% endif %}
+        {% if product.image2 %}
+        <img class="pd-thumb" src="{{ product.image2.url }}" alt="" onclick="changePdImage('{{ product.image2.url }}')">
+        {% endif %}
+        {% if product.image3 %}
+        <img class="pd-thumb" src="{{ product.image3.url }}" alt="" onclick="changePdImage('{{ product.image3.url }}')">
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Info -->
+    <div class="pd-info">
+      {% if product.brand %}<div class="pd-brand">{{ product.brand }}</div>{% endif %}
+      
+      <h1>{{ product.name }}</h1>
+      
+      <div class="pd-rating">
+        <span class="pd-stars">★★★★★</span>
+        <span class="pd-rating-text">(Based on customer reviews)</span>
+      </div>
+      
+      <!-- Price -->
+      <div class="pd-price-section">
+        <div>
+          <span class="pd-price-main">₹{% if product.discount_price %}{{ product.discount_price }}{% else %}{{ product.price }}{% endif %}</span>
+          {% if product.discount_price %}
+          <span class="pd-price-orig">₹{{ product.price }}</span>
+          <span class="pd-price-disc">−{{ product.discount_percent }}% OFF</span>
+          {% endif %}
+          <span class="pd-price-unit">/ {{ product.unit }}</span>
+        </div>
+      </div>
+      
+      <!-- Stock -->
+      <div class="pd-stock {% if product.in_stock %}in-stock{% else %}out-of-stock{% endif %}">
+        <i class="bi {% if product.in_stock %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %}"></i>
+        {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+      </div>
+      
+      <!-- Description -->
+      {% if product.description %}
+      <div class="pd-description">
+        {{ product.description }}
+      </div>
+      {% endif %}
+      
+      <!-- Actions -->
+      <div class="pd-actions">
+        <a href="https://wa.me/91{{ org.phone|add:'' }}" target="_blank" class="btn-pd btn-pd-wa">
+          <i class="bi bi-whatsapp"></i> Message Seller
+        </a>
+        <button class="btn-pd btn-pd-enq" onclick="document.querySelector('.pd-enquiry').scrollIntoView({ behavior: 'smooth' })">
+          <i class="bi bi-lightning-charge-fill"></i> Enquire Now
+        </button>
+        {% if product.pdf_catalog %}
+        <a href="{% url 'download_product_catalog' org.slug product.pk %}" download class="btn-pd btn-pd-pdf" style="grid-column: 1 / -1;">
+          <i class="bi bi-file-pdf-fill"></i> Download Catalog
+        </a>
+        {% endif %}
+      </div>
+      
+      <!-- Quick Links -->
+      {% if product.youtube_url or product.instagram_url or org.visiting_card or org.payment_qr %}
+      <div class="pd-quick-links">
+        {% if product.youtube_url %}
+        <a href="{{ product.youtube_url }}" target="_blank" class="btn-quick">
+          <i class="bi bi-youtube"></i> Watch Video
+        </a>
+        {% endif %}
+        {% if product.instagram_url %}
+        <a href="{{ product.instagram_url }}" target="_blank" class="btn-quick">
+          <i class="bi bi-instagram"></i> Instagram
+        </a>
+        {% endif %}
+        {% if org.visiting_card %}
+        <a href="{{ org.visiting_card.url }}" download class="btn-quick">
+          <i class="bi bi-download"></i> Visiting Card
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+      
+      <!-- Share Button -->
+      <div style="margin-top: 24px;">
+        <button id="pdShareBtn" class="btn-quick" style="grid-column: 1 / -1; width: 100%;">
+          <i class="bi bi-share-fill"></i> Share on WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Tabs: Specs, Video, Instagram -->
+  {% if product.specs_json or product.youtube_url or product.instagram_url %}
+  <div style="margin-top: 48px;">
+    <div class="pd-tabs">
+      <button class="pd-tab active" data-tab="specs">Specifications</button>
+      {% if product.youtube_url %}<button class="pd-tab" data-tab="video">Video Demo</button>{% endif %}
+      {% if product.instagram_url %}<button class="pd-tab" data-tab="instagram">Instagram</button>{% endif %}
+    </div>
+    
+    <!-- Specs Tab -->
+    <div class="pd-tab-content active" data-content="specs">
+      <table class="pd-specs-table">
+        <tr><td>SKU</td><td>{{ product.sku }}</td></tr>
+        <tr><td>Category</td><td>{{ product.category }}</td></tr>
+        <tr><td>Condition</td><td>{{ product.get_condition_display }}</td></tr>
+        {% if product.specs_json %}
+          {% for key, value in product.specs_json.items %}
+          <tr><td>{{ key|title }}</td><td>{{ value }}</td></tr>
+          {% endfor %}
+        {% endif %}
+      </table>
+    </div>
+    
+    <!-- Video Tab -->
+    {% if product.youtube_url %}
+    <div class="pd-tab-content" data-content="video">
+      <div class="pd-video-embed">
+        <iframe id="pdVideoFrame" src="" allowfullscreen="" loading="lazy"></iframe>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Instagram Tab -->
+    {% if product.instagram_url %}
+    <div class="pd-tab-content" data-content="instagram">
+      <p style="color: rgba(255,255,255,0.6); margin-bottom: 16px;">Check out this product on Instagram:</p>
+      <a href="{{ product.instagram_url }}" target="_blank" class="pd-ig-link">
+        <i class="bi bi-instagram fs-5"></i> View on Instagram
+      </a>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+  
+  <!-- Payment QR Code -->
+  {% if org.payment_qr %}
+  <div style="margin-top: 60px; padding: 40px; background: rgba(45,106,79,0.1); border-radius: 16px; border: 1px solid rgba(45,106,79,0.3); text-align: center;">
+    <h3 style="margin-bottom: 24px;">Quick Payment</h3>
+    <img src="{{ org.payment_qr.url }}" alt="Payment QR Code" style="width: 200px; height: 200px; object-fit: contain;">
+  </div>
+  {% endif %}
+  
+  <!-- Enquiry Form -->
+  <div class="pd-enquiry" style="margin-top: 60px; padding: 40px; background: rgba(45,106,79,0.1); border-radius: 16px; border: 1px solid rgba(45,106,79,0.3);">
+    <h3 style="margin-bottom: 24px;">Send Your Enquiry</h3>
+    <form method="post" action="{% url 'public_landing' org.slug %}#enquiry" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+      {% csrf_token %}
+      <input type="text" name="name" placeholder="Your Name" required style="padding: 12px; border-radius: 10px; border: 1px solid rgba(45,106,79,0.5); background: rgba(5,15,8,0.8); color: white;">
+      <input type="email" name="email" placeholder="Your Email" required style="padding: 12px; border-radius: 10px; border: 1px solid rgba(45,106,79,0.5); background: rgba(5,15,8,0.8); color: white;">
+      <input type="text" name="phone" placeholder="Phone Number" style="padding: 12px; border-radius: 10px; border: 1px solid rgba(45,106,79,0.5); background: rgba(5,15,8,0.8); color: white;">
+      <input type="hidden" name="subject" value="Enquiry: {{ product.name }}">
+      <textarea name="message" placeholder="Your message..." rows="3" style="padding: 12px; border-radius: 10px; border: 1px solid rgba(45,106,79,0.5); background: rgba(5,15,8,0.8); color: white; grid-column: 1 / -1;"></textarea>
+      <button type="submit" style="grid-column: 1 / -1; padding: 14px; background: #7c3aed; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">Send Enquiry</button>
+    </form>
+  </div>
+  
+  <!-- Related Products -->
+  {% if related_products %}
+  <div class="pd-related">
+    <h2>Related Products</h2>
+    <div class="pd-related-grid">
+      {% for prod in related_products %}
+      <div class="pd-related-card" onclick="window.location.href='{% url 'public_product_detail' org.slug prod.pk %}'">
+        <img class="pd-related-img" src="{% if prod.image %}{{ prod.image.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%23132b1a'/%3E%3C/svg%3E{% endif %}" alt="{{ prod.name }}">
+        <div class="pd-related-info">
+          <div class="pd-related-name">{{ prod.name }}</div>
+          <div class="pd-related-price">₹{% if prod.discount_price %}{{ prod.discount_price }}{% else %}{{ prod.price }}{% endif %}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  function changePdImage(src) {
+    const main = document.getElementById('pdMainImg');
+    main.style.opacity = '0';
+    setTimeout(() => {
+      main.src = src;
+      main.style.opacity = '1';
+    }, 200);
+    document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+  
+  // Tab switching
+  document.querySelectorAll('.pd-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const key = tab.dataset.tab;
+      document.querySelectorAll('.pd-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.pd-tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelector(`.pd-tab-content[data-content="${key}"]`).classList.add('active');
+      
+      if (key === 'video') {
+        const ytUrl = '{{ product.youtube_url }}';
+        if (ytUrl) {
+          const embedUrl = ytUrl.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/');
+          document.getElementById('pdVideoFrame').src = embedUrl;
+        }
+      }
+    });
+  });
+  
+  // Share button
+  document.getElementById('pdShareBtn').addEventListener('click', () => {
+    const productId = {{ product.pk }};
+    fetch('/api/record_share/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: productId })
+    }).finally(() => {
+      const text = encodeURIComponent(`Check this product: *{{ product.name }}* - ₹{% if product.discount_price %}{{ product.discount_price }}{% else %}{{ product.price }}{% endif %}\n\n{{ request.build_absolute_uri }}`);
+      window.open(`https://wa.me/?text=${text}`, '_blank');
+    });
+  });
+</script>
+{% endblock %}

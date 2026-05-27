@@ -181,6 +181,53 @@
   </div>
 </div>
 
+<!-- Extended Information -->
+<div class="row g-4 mt-0">
+  <div class="col-lg-8">
+    <div class="card-modern">
+      <div class="card-header" style="background:#4c1d95;"><i class="bi bi-film me-2"></i>Media & Marketing</div>
+      <div class="p-4">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-600">YouTube Demo Link</label>
+            {{ form.youtube_url }}
+            <div class="text-muted small">e.g. https://youtu.be/...</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">Instagram Post Link</label>
+            {{ form.instagram_url }}
+            <div class="text-muted small">e.g. https://instagram.com/p/...</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-600">PDF Catalog / Brochure</label>
+            {% if product and product.pdf_catalog %}
+            <div class="alert alert-info small mb-2">
+              <i class="bi bi-file-pdf me-1"></i>Current: <a href="{{ product.pdf_catalog.url }}" target="_blank">Download</a>
+            </div>
+            {% endif %}
+            {{ form.pdf_catalog }}
+            <div class="text-muted small">Upload PDF brochure or catalog (optional)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card-modern">
+      <div class="card-header" style="background:#4c1d95;"><i class="bi bi-sliders me-2"></i>Specifications</div>
+      <div class="p-4">
+        <label class="form-label fw-600 mb-2">Product Specs (JSON)</label>
+        {{ form.specs_json }}
+        <div class="text-muted small mt-2">
+          Enter as JSON:<br/>
+          <code style="font-size:0.7rem;background:#f1f5f9;padding:4px 6px;border-radius:4px;display:block;margin-top:4px;">{"color": "red", "size": "L"}</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Action Buttons -->
 <div class="d-flex gap-3 mt-4">
   <button type="submit" class="btn btn-primary px-5 py-2" style="border-radius:12px;background:#7c3aed;border:none;font-weight:700;">

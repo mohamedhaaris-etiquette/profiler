@@ -41,6 +41,7 @@ urlpatterns = [
     path('dashboard/products/edit/<int:pk>/', views.edit_product, name='edit_product'),
     path('dashboard/products/delete/<int:pk>/', views.delete_product, name='delete_product'),
     path('dashboard/products/toggle-stock/<int:pk>/', views.toggle_product_stock, name='toggle_product_stock'),
+    path('org/<slug:slug>/product/<int:pk>/catalog/', views.download_product_catalog, name='download_product_catalog'),
 
     # Enquiries
     path('dashboard/enquiries/', views.enquiries_list, name='enquiries'),
