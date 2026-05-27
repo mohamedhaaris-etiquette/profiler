@@ -2,7 +2,7 @@
 {% block title %}Super Admin — OrgPortal{% endblock %}
 {% block dash_content %}
 
-<!-- ── Page Header ────────────────────────────────────────────── -->
+<!-- ── Page Header ──────────────────────────────────────────────-->
 <div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
   <div>
     <h1><i class="bi bi-shield-check me-2"></i>Super Admin</h1>
@@ -64,7 +64,8 @@
     <span><i class="bi bi-building me-2"></i>All Registered Organizations</span>
     <div class="d-flex align-items-center gap-2">
       <span class="badge bg-secondary" style="border-radius:50px;">{{ orgs.count }} total</span>
-      <a href="{% url 'member_list' %}" class="btn btn-sm btn-outline-light" style="border-radius:8px;font-size:0.78rem;">
+      <a href="{% url 'member_list' %}" class="btn btn-sm btn-outline-light"
+        style="border-radius:8px;font-size:0.78rem;">
         <i class="bi bi-sliders me-1"></i>Manage
       </a>
     </div>
@@ -96,12 +97,13 @@
             <td>
               <div class="d-flex align-items-center gap-3">
                 {% if org.logo %}
-                  <img src="{{ org.logo.url }}"
-                    style="width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;">
+                <img src="{{ org.logo.url }}"
+                  style="width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;">
                 {% else %}
-                  <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0f172a,var(--accent,#f97316));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0;">
-                    <i class="bi bi-building"></i>
-                  </div>
+                <div
+                  style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0f172a,var(--accent,#f97316));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0;">
+                  <i class="bi bi-building"></i>
+                </div>
                 {% endif %}
                 <div>
                   <div class="fw-600" style="font-size:0.88rem;">{{ org.name }}</div>
@@ -118,7 +120,8 @@
             <!-- Category -->
             <td>
               {% if org.category %}
-              <span class="badge" style="background:#dbeafe;color:#1d4ed8;border-radius:50px;padding:4px 10px;font-size:0.72rem;">
+              <span class="badge"
+                style="background:#dbeafe;color:#1d4ed8;border-radius:50px;padding:4px 10px;font-size:0.72rem;">
                 {{ org.category.name }}
               </span>
               {% endif %}
@@ -132,27 +135,33 @@
             <!-- Plan Badge -->
             <td>
               {% if org.plan %}
-                {% with lvl=org.plan.level %}
-                  {% if lvl == 'trial' %}
-                    <span class="badge" style="background:#f3f4f6;color:#6b7280;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Trial</span>
-                  {% elif lvl == 'silver' %}
-                    <span class="badge" style="background:#e2e8f0;color:#334155;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Silver</span>
-                  {% elif lvl == 'gold' %}
-                    <span class="badge" style="background:#fef3c7;color:#d97706;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Gold</span>
-                  {% elif lvl == 'platinum' %}
-                    <span class="badge" style="background:#ede9fe;color:#7c3aed;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Platinum</span>
-                  {% else %}
-                    <span class="badge" style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:4px 10px;font-size:0.72rem;">{{ org.plan.name }}</span>
-                  {% endif %}
-                {% endwith %}
-                {% if org.plan_end_date %}
-                <div style="font-size:0.67rem;margin-top:3px;
-                  color:{% if org.is_plan_active %}#16a34a{% else %}#dc2626{% endif %};">
-                  <i class="bi bi-calendar3 me-1"></i>{{ org.plan_end_date|date:"d M Y" }}
-                </div>
-                {% endif %}
+              {% with lvl=org.plan.level %}
+              {% if lvl == 'trial' %}
+              <span class="badge"
+                style="background:#f3f4f6;color:#6b7280;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Trial</span>
+              {% elif lvl == 'silver' %}
+              <span class="badge"
+                style="background:#e2e8f0;color:#334155;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Silver</span>
+              {% elif lvl == 'gold' %}
+              <span class="badge"
+                style="background:#fef3c7;color:#d97706;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Gold</span>
+              {% elif lvl == 'platinum' %}
+              <span class="badge"
+                style="background:#ede9fe;color:#7c3aed;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Platinum</span>
               {% else %}
-                <span class="text-muted small">—</span>
+              <span class="badge"
+                style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:4px 10px;font-size:0.72rem;">{{
+                org.plan.name }}</span>
+              {% endif %}
+              {% endwith %}
+              {% if org.plan_end_date %}
+              <div style="font-size:0.67rem;margin-top:3px;
+                  color:{% if org.is_plan_active %}#16a34a{% else %}#dc2626{% endif %};">
+                <i class="bi bi-calendar3 me-1"></i>{{ org.plan_end_date|date:"d M Y" }}
+              </div>
+              {% endif %}
+              {% else %}
+              <span class="text-muted small">—</span>
               {% endif %}
             </td>
 
@@ -175,27 +184,33 @@
             <!-- Status -->
             <td>
               {% if org.status == 'active' %}
-                <span class="badge" style="background:#dcfce7;color:#166534;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
-                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Active
-                </span>
+              <span class="badge"
+                style="background:#dcfce7;color:#166534;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Active
+              </span>
               {% elif org.status == 'inactive' %}
-                <span class="badge" style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
-                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Inactive
-                </span>
+              <span class="badge"
+                style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Inactive
+              </span>
               {% elif org.status == 'suspended' %}
-                <span class="badge" style="background:#fee2e2;color:#991b1b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
-                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Suspended
-                </span>
+              <span class="badge"
+                style="background:#fee2e2;color:#991b1b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Suspended
+              </span>
               {% elif org.status == 'pending' %}
-                <span class="badge" style="background:#fef9c3;color:#92400e;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
-                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Pending
-                </span>
+              <span class="badge"
+                style="background:#fef9c3;color:#92400e;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Pending
+              </span>
               {% else %}
-                {% if org.is_verified %}
-                  <span class="badge" style="background:#dcfce7;color:#166534;border-radius:50px;padding:4px 11px;font-size:0.72rem;">Verified</span>
-                {% else %}
-                  <span class="badge" style="background:#fef9c3;color:#92400e;border-radius:50px;padding:4px 11px;font-size:0.72rem;">Pending</span>
-                {% endif %}
+              {% if org.is_verified %}
+              <span class="badge"
+                style="background:#dcfce7;color:#166534;border-radius:50px;padding:4px 11px;font-size:0.72rem;">Verified</span>
+              {% else %}
+              <span class="badge"
+                style="background:#fef9c3;color:#92400e;border-radius:50px;padding:4px 11px;font-size:0.72rem;">Pending</span>
+              {% endif %}
               {% endif %}
             </td>
 
@@ -207,12 +222,12 @@
             <!-- Actions -->
             <td>
               <div class="d-flex gap-1">
-                <a href="{% url 'public_landing' org.slug %}" target="_blank"
-                   class="btn btn-sm btn-outline-primary" style="border-radius:8px;" title="View Site">
+                <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-sm btn-outline-primary"
+                  style="border-radius:8px;" title="View Site">
                   <i class="bi bi-eye"></i>
                 </a>
-                <a href="{% url 'edit_member' org.pk %}"
-                   class="btn btn-sm btn-outline-secondary" style="border-radius:8px;" title="Edit">
+                <a href="{% url 'edit_member' org.pk %}" class="btn btn-sm btn-outline-secondary"
+                  style="border-radius:8px;" title="Edit">
                   <i class="bi bi-pencil"></i>
                 </a>
               </div>
