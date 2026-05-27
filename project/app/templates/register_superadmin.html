@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}Register Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.sa-page {
+  min-height: calc(100vh - 70px);
+  display: flex; align-items: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  position: relative; overflow: hidden; padding: 40px 0;
+}
+.sa-page::before {
+  content: '';
+  position: absolute; width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(249,115,22,0.18) 0%, transparent 70%);
+  top: -200px; right: -100px; border-radius: 50%;
+}
+.sa-page::after {
+  content: '';
+  position: absolute; width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(249,115,22,0.10) 0%, transparent 70%);
+  bottom: -100px; left: -100px; border-radius: 50%;
+}
+.sa-card {
+  background: rgba(255,255,255,0.97);
+  border-radius: 28px; padding: 48px 40px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+  position: relative; z-index: 2;
+}
+.sa-logo { font-family: var(--font-display, sans-serif); font-size: 2rem; font-weight: 800; color: var(--brand, #0f172a); }
+.sa-logo span { color: var(--accent, #f97316); }
+.sa-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fef9c3; color: #92400e; border: 1px solid #fde68a;
+  border-radius: 50px; padding: 5px 14px; font-size: 0.82rem; font-weight: 600;
+  margin-top: 12px;
+}
+.sa-title { font-size: 1.5rem; font-weight: 800; margin-top: 20px; margin-bottom: 4px; }
+.sa-sub { color: #64748b; font-size: 0.9rem; }
+.input-icon-wrap { position: relative; }
+.input-icon-wrap i.prefix {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: #94a3b8; font-size: 1rem; z-index: 2;
+}
+.input-icon-wrap .form-control,
+.input-icon-wrap .form-select { padding-left: 40px; }
+.btn-sa {
+  width: 100%; padding: 14px; font-size: 1rem; font-weight: 700;
+  border-radius: 14px; background: var(--brand, #0f172a); border: none; color: #fff;
+  transition: all .3s; margin-top: 8px;
+}
+.btn-sa:hover { background: var(--accent, #f97316); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(249,115,22,0.35); }
+.pw-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; z-index: 3; }
+.section-label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: #94a3b8; margin: 20px 0 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+.already-notice {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px 16px;
+  display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sa-page">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-9 col-lg-6">
+        <div class="sa-card">
+
+          <div class="sa-logo">Org<span>Portal</span></div>
+          <div class="sa-badge"><i class="bi bi-shield-fill-check"></i> Super Admin Setup</div>
+          <h2 class="sa-title">Create Super Admin</h2>
+          <p class="sa-sub">
+            {% if already_exists %}
+              Add another Super Admin account to the platform.
+            {% else %}
+              First-time setup — create the platform's Super Admin.
+            {% endif %}
+          </p>
+
+          {% if already_exists %}
+          <div class="already-notice">
+            <i class="bi bi-info-circle-fill text-warning mt-1"></i>
+            <div class="small text-muted">
+              A Super Admin already exists. Only an existing Super Admin can create additional ones.
+            </div>
+          </div>
+          {% endif %}
+
+          {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-{{ msg.tags }} mt-3">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" class="mt-4" novalidate>
+            {% csrf_token %}
+
+            <!-- Personal Info -->
+            <div class="section-label"><i class="bi bi-person"></i> Personal Info</div>
+            <div class="row g-3 mb-3">
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-person prefix"></i>
+                  {{ form.first_name }}
+                </div>
+                {% if form.first_name.errors %}
+                  <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold">Last Name</label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-person prefix"></i>
+                  {{ form.last_name }}
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Phone</label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-telephone prefix"></i>
+                {{ form.phone }}
+              </div>
+            </div>
+
+            <!-- Account Info -->
+            <div class="section-label"><i class="bi bi-at"></i> Account Info</div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Username <span class="text-danger">*</span></label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-person-badge prefix"></i>
+                {{ form.username }}
+              </div>
+              {% if form.username.errors %}
+                <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Email <span class="text-danger">*</span></label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-envelope prefix"></i>
+                {{ form.email }}
+              </div>
+              {% if form.email.errors %}
+                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div class="section-label"><i class="bi bi-lock"></i> Password</div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Password <span class="text-danger">*</span></label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-lock prefix"></i>
+                {{ form.password1 }}
+                <i class="bi bi-eye pw-toggle" onclick="togglePw('id_password1', this)"></i>
+              </div>
+              {% if form.password1.errors %}
+                <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-4">
+              <label class="form-label small fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-lock prefix"></i>
+                {{ form.password2 }}
+                <i class="bi bi-eye pw-toggle" onclick="togglePw('id_password2', this)"></i>
+              </div>
+              {% if form.password2.errors %}
+                <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-sa">
+              <i class="bi bi-shield-check me-2"></i>Create Super Admin
+            </button>
+          </form>
+
+          <div class="mt-4 text-center">
+            <a href="{% url 'login' %}" class="text-muted small">
+              <i class="bi bi-arrow-left me-1"></i> Back to Login
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw(fieldId, icon) {
+  const f = document.getElementById(fieldId);
+  const isHidden = f.type === 'password';
+  f.type = isHidden ? 'text' : 'password';
+  icon.classList.toggle('bi-eye', !isHidden);
+  icon.classList.toggle('bi-eye-slash', isHidden);
+}
+</script>
+{% endblock %}

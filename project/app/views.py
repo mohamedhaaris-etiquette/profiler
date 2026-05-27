@@ -134,58 +134,158 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 
 def public_landing(request, slug):
-    """Public-facing landing page for an organization"""
-
-    org = get_object_or_404(
-        Organization,
-        slug=slug,
-        is_active=True
-    )
-
-    services = org.get_services()
+    """Public-facing landing page for an organization (with notifications)."""
+    from django.shortcuts import render, redirect, get_object_or_404
+    from django.contrib import messages as dj_messages
+    from .models import Organization
+    from .forms import EnquiryForm
+    from .notifications import notify_admin_whatsapp, notify_nearest_staff
+ 
+    org = get_object_or_404(Organization, slug=slug, is_active=True)
+ 
+    services          = org.get_services()
     featured_services = services.filter(is_featured=True)
-
-    products = org.products.filter(is_active=True)
+    products          = org.products.filter(is_active=True)
     featured_products = products.filter(is_featured=True)
-
-    gallery = org.gallery.all()[:8]
-    testimonials = org.testimonials.filter(is_active=True)
-
-    # Handle enquiry form submission
+    gallery           = org.gallery.all()[:8]
+    testimonials      = org.testimonials.filter(is_active=True)
+ 
+    wa_admin_url = ''    # WhatsApp deep-link to notify admin (set after POST)
+ 
     if request.method == 'POST':
-
-        enquiry_form = EnquiryForm(
-            organization=org,
-            data=request.POST
-        )
-
+        enquiry_form = EnquiryForm(organization=org, data=request.POST)
         if enquiry_form.is_valid():
-
-            enquiry = enquiry_form.save(commit=False)
+            enquiry              = enquiry_form.save(commit=False)
             enquiry.organization = org
             enquiry.save()
-
-            messages.success(
+ 
+            # ── Notify admin ─────────────────────────────────────────────
+            wa_admin_url = notify_admin_whatsapp(enquiry)
+ 
+            # ── Auto-notify backup staff if any is unavailable ────────────
+            notify_nearest_staff(enquiry)
+ 
+            dj_messages.success(
                 request,
-                'Your enquiry has been submitted successfully! We will contact you within 24 hours.'
+                'Your enquiry has been submitted! We will contact you within 24 hours.'
             )
-
-            # Redirect after successful POST
+            # Pass wa_admin_url in session so it survives redirect
+            request.session['wa_admin_url'] = wa_admin_url
             return redirect('public_landing', slug=slug)
-
     else:
         enquiry_form = EnquiryForm(organization=org)
-
+        # Retrieve the admin url from session (after redirect)
+        wa_admin_url = request.session.pop('wa_admin_url', '')
+ 
     return render(request, 'landing.html', {
-        'org': org,
-        'services': services,
+        'org':              org,
+        'services':         services,
         'featured_services': featured_services,
-        'products': products,
+        'products':         products,
         'featured_products': featured_products,
-        'gallery': gallery,
-        'testimonials': testimonials,
-        'enquiry_form': enquiry_form,
+        'gallery':          gallery,
+        'testimonials':     testimonials,
+        'enquiry_form':     enquiry_form,
+        'wa_admin_url':     wa_admin_url,   # ← used in JS after POST
     })
+ 
+
+def product_detail(request, slug, pk):
+    """Public-facing product detail page."""
+    org = get_object_or_404(Organization, slug=slug, is_active=True)
+    product = get_object_or_404(Product, pk=pk, organization=org, is_active=True)
+    gallery = [img for img in [product.image, product.image2, product.image3] if img]
+    return render(request, 'product_detail.html', {
+        'org': org,
+        'product': product,
+        'gallery': gallery,
+        'related_products': org.products.filter(is_active=True).exclude(pk=product.pk)[:8],
+    })
+
+
+def product_detail_json(request, slug, pk):
+    """Return product details as JSON for the modal."""
+    from django.shortcuts import get_object_or_404
+    from django.http import JsonResponse
+    from .models import Organization, Product
+ 
+    org     = get_object_or_404(Organization, slug=slug, is_active=True)
+    product = get_object_or_404(Product, pk=pk, organization=org, is_active=True)
+ 
+    images = []
+    for img_field in [product.image, product.image2, product.image3]:
+        if img_field:
+            images.append(img_field.url)
+ 
+    data = {
+        'id':             product.pk,
+        'name':           product.name,
+        'brand':          product.brand,
+        'description':    product.description,
+        'price':          str(product.price),
+        'discount_price': str(product.discount_price) if product.discount_price else None,
+        'discount_percent': product.discount_percent,
+        'unit':           product.unit,
+        'condition':      product.get_condition_display(),
+        'in_stock':       product.in_stock,
+        'sku':            product.sku,
+        'category':       product.category,
+        'images':         images,
+        'youtube_url':    getattr(product, 'youtube_url', ''),
+        'instagram_url':  getattr(product, 'instagram_url', ''),
+        'pdf_catalog':    product.pdf_catalog.url if getattr(product, 'pdf_catalog', None) else '',
+        'specs':          getattr(product, 'specs_json', {}),
+        'org_whatsapp':   org.whatsapp or org.phone,
+        'org_name':       org.name,
+    }
+    return JsonResponse(data)
+
+def download_product_catalog(request, slug, pk):
+    """Serve the product's uploaded PDF catalog."""
+    from django.shortcuts import get_object_or_404
+    from django.http import FileResponse, Http404
+    from .models import Organization, Product
+    import os
+ 
+    org     = get_object_or_404(Organization, slug=slug, is_active=True)
+    product = get_object_or_404(Product, pk=pk, organization=org, is_active=True)
+ 
+    pdf = getattr(product, 'pdf_catalog', None)
+    if not pdf:
+        raise Http404("No catalog available for this product.")
+ 
+    file_path = pdf.path
+    if not os.path.exists(file_path):
+        raise Http404("Catalog file not found.")
+ 
+    filename = f"{product.name.replace(' ', '_')}_catalog.pdf"
+    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+def toggle_staff_availability(request, user_pk):
+    """Quick toggle for a staff member's availability status."""
+    from django.shortcuts import redirect, get_object_or_404
+    from django.contrib.auth.decorators import login_required
+    from django.contrib import messages as dj_messages
+    from .models import CustomUser, StaffAvailability
+ 
+    if not request.user.is_authenticated:
+        return redirect('login')
+ 
+    target_user = get_object_or_404(
+        CustomUser, pk=user_pk, organization=request.user.organization
+    )
+    avail, _ = StaffAvailability.objects.get_or_create(staff=target_user)
+    avail.status = 'available' if avail.status != 'available' else 'busy'
+    avail.save()
+ 
+    dj_messages.success(
+        request,
+        f"{target_user.get_full_name()}: {avail.get_status_display()}"
+    )
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 @login_required
 def manage_services(request):
