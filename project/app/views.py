@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from .models import Organization, CustomUser, BusinessCategory, Service, Enquiry, GalleryImage, Testimonial, Product
 from .forms import (
     OrganizationSignupForm, CustomLoginForm, EnquiryForm,
-    ServiceForm, OrganizationUpdateForm, ProductForm
+    ServiceForm, OrganizationUpdateForm, ProductForm ,SuperAdminRegisterForm
 )
 
 
@@ -130,29 +130,51 @@ def dashboard(request):
         'total_products': products.count(),
     })
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 
 def public_landing(request, slug):
     """Public-facing landing page for an organization"""
-    org = get_object_or_404(Organization, slug=slug, is_active=True)
+
+    org = get_object_or_404(
+        Organization,
+        slug=slug,
+        is_active=True
+    )
+
     services = org.get_services()
     featured_services = services.filter(is_featured=True)
+
     products = org.products.filter(is_active=True)
     featured_products = products.filter(is_featured=True)
+
     gallery = org.gallery.all()[:8]
     testimonials = org.testimonials.filter(is_active=True)
 
-    enquiry_form = EnquiryForm(organization=org)
-    enquiry_success = False
-
+    # Handle enquiry form submission
     if request.method == 'POST':
-        enquiry_form = EnquiryForm(organization=org, data=request.POST)
+
+        enquiry_form = EnquiryForm(
+            organization=org,
+            data=request.POST
+        )
+
         if enquiry_form.is_valid():
-            enq = enquiry_form.save(commit=False)
-            enq.organization = org
-            enq.save()
-            enquiry_success = True
-            enquiry_form = EnquiryForm(organization=org)
-            messages.success(request, 'Your enquiry has been submitted! We will contact you soon.')
+
+            enquiry = enquiry_form.save(commit=False)
+            enquiry.organization = org
+            enquiry.save()
+
+            messages.success(
+                request,
+                'Your enquiry has been submitted successfully! We will contact you within 24 hours.'
+            )
+
+            # Redirect after successful POST
+            return redirect('public_landing', slug=slug)
+
+    else:
+        enquiry_form = EnquiryForm(organization=org)
 
     return render(request, 'landing.html', {
         'org': org,
@@ -163,9 +185,7 @@ def public_landing(request, slug):
         'gallery': gallery,
         'testimonials': testimonials,
         'enquiry_form': enquiry_form,
-        'enquiry_success': enquiry_success,
     })
-
 
 @login_required
 def manage_services(request):
@@ -473,3 +493,317 @@ def referral_dashboard(request):
         'rewarded_referrals': referrals.filter(status='rewarded').count(),
         'program': program,
     })
+
+
+# ════════════════════════════════════════════════════════════════
+#  ADD TO views.py  — Admin "Add Member" two-step flow
+#  Place this block after the existing imports / views
+# ════════════════════════════════════════════════════════════════
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db import transaction
+from django.http import JsonResponse
+from django.utils import timezone
+
+from .forms import AddMemberStep1Form, AddMemberStep2Form
+from .models import (
+    Organization, CustomUser, BusinessCategory,
+    SubCategory, Plan, Service
+)
+
+
+# ── AJAX: load sub-categories for a given main category ──────────────────────
+def load_sub_categories(request):
+    """
+    Called by the Step-1 form via AJAX when user changes Main Category.
+    Returns JSON list of sub-categories.
+
+    URL: /ajax/subcategories/?category_id=<id>
+    """
+    cat_id = request.GET.get('category_id')
+    subs = SubCategory.objects.filter(
+        main_category_id=cat_id, is_active=True
+    ).values('id', 'name').order_by('order', 'name')
+    return JsonResponse({'sub_categories': list(subs)})
+
+
+# ── Main two-step Add Member view ─────────────────────────────────────────────
+@login_required
+def add_member(request):
+    """
+    Two-step wizard for Admin Staff to create a new member (Organisation + User).
+
+    Step 1: Site URL (subdomain), Site Title, Main Category, Sub Category, Plan
+    Step 2: Full contact/account details
+
+    Session keys used:
+        add_member_step1  — cleaned Step-1 data (dict)
+    """
+    if not request.user.is_super_admin:
+        messages.error(request, 'Access denied. Super Admin only.')
+        return redirect('dashboard')
+
+    # ── Step determination ────────────────────────────────────────
+    step = request.POST.get('step') or request.GET.get('step', '1')
+
+    # ── Step 1 POST ───────────────────────────────────────────────
+    if request.method == 'POST' and step == '1':
+        form1 = AddMemberStep1Form(request.POST)
+        form2 = AddMemberStep2Form()
+        if form1.is_valid():
+            request.session['add_member_step1'] = {
+                'site_url':      form1.cleaned_data['site_url'],
+                'site_title':    form1.cleaned_data['site_title'],
+                'main_category': form1.cleaned_data['main_category'].pk,
+                'sub_category':  (
+                    form1.cleaned_data['sub_category'].pk
+                    if form1.cleaned_data.get('sub_category') else None
+                ),
+                'plan': form1.cleaned_data['plan'].pk,
+            }
+            return render(request, 'add_member.html', {
+                'form1': form1,
+                'form2': form2,
+                'current_step': 2,
+                'step1_data': form1.cleaned_data,
+            })
+        else:
+            return render(request, 'add_member.html', {
+                'form1': form1,
+                'form2': AddMemberStep2Form(),
+                'current_step': 1,
+            })
+
+    # ── Step 2 POST (final submit) ────────────────────────────────
+    elif request.method == 'POST' and step == '2':
+        step1_session = request.session.get('add_member_step1')
+        if not step1_session:
+            messages.warning(request, 'Session expired. Please start again.')
+            return redirect('add_member')
+
+        form2 = AddMemberStep2Form(request.POST, request.FILES)
+        form1 = AddMemberStep1Form()
+
+        if form2.is_valid():
+            try:
+                with transaction.atomic():
+                    cd = form2.cleaned_data
+                    s1 = step1_session
+
+                    # ── Resolve FK objects ────────────────────────
+                    main_cat = BusinessCategory.objects.get(pk=s1['main_category'])
+                    sub_cat  = (
+                        SubCategory.objects.get(pk=s1['sub_category'])
+                        if s1.get('sub_category') else None
+                    )
+                    plan_obj = Plan.objects.get(pk=s1['plan'])
+
+                    # ── Create Organisation ───────────────────────
+                    org = Organization.objects.create(
+                        name          = cd['company_name'],
+                        subdomain     = s1['site_url'],
+                        category      = main_cat,
+                        sub_category  = sub_cat,
+                        plan          = plan_obj,
+                        plan_start_date = cd.get('plan_start_date'),
+                        plan_end_date   = cd.get('plan_end_date'),
+                        email         = cd['email'],
+                        phone         = cd['mobile'],
+                        whatsapp      = cd.get('whatsapp', ''),
+                        landline      = cd.get('landline', ''),
+                        website       = cd.get('website', ''),
+                        address_line1 = cd['address'],
+                        city          = cd['city'],
+                        district      = cd.get('district', ''),
+                        state         = cd['state'],
+                        pincode       = cd['pincode'],
+                        status        = cd.get('status', 'active'),
+                        file_attachment = cd.get('file_attachment'),
+                        is_active     = (cd.get('status', 'active') == 'active'),
+                    )
+
+                    # ── Auto-generate username if blank ───────────
+                    username = cd.get('username') or \
+                               cd['email'].split('@')[0].replace('.', '_').replace('+', '_')
+                    base_uname = username
+                    counter = 1
+                    while CustomUser.objects.filter(username=username).exists():
+                        username = f"{base_uname}{counter}"
+                        counter += 1
+
+                    # ── Parse first / last name ───────────────────
+                    name_parts = cd['contact_name'].strip().split(' ', 1)
+                    first_name = name_parts[0]
+                    last_name  = name_parts[1] if len(name_parts) > 1 else ''
+
+                    # ── Create User ───────────────────────────────
+                    user = CustomUser.objects.create_user(
+                        username     = username,
+                        email        = cd['email'],
+                        password     = cd['password'],
+                        first_name   = first_name,
+                        last_name    = last_name,
+                        phone        = cd['mobile'],
+                        landline     = cd.get('landline', ''),
+                        gender       = cd.get('gender', 'male'),
+                        date_of_birth = cd.get('date_of_birth'),
+                        organization = org,
+                        role         = cd.get('user_role', 'org_admin'),
+                    )
+                    if cd.get('profile_picture'):
+                        user.profile_pic = cd['profile_picture']
+                        user.save()
+
+                    # ── Pre-fill services from category template ──
+                    for i, svc_name in enumerate(main_cat.default_services):
+                        Service.objects.create(
+                            organization = org,
+                            name         = svc_name,
+                            icon         = main_cat.icon,
+                            order        = i,
+                            is_featured  = (i < 3),
+                        )
+
+                    # ── Clear session ─────────────────────────────
+                    if 'add_member_step1' in request.session:
+                        del request.session['add_member_step1']
+
+                    messages.success(
+                        request,
+                        f'Member "{org.name}" created successfully! '
+                        f'Login: {username} | Plan: {plan_obj.name}'
+                    )
+                    return redirect('member_list')   # or 'dashboard'
+
+            except Exception as e:
+                messages.error(request, f'Member creation failed: {str(e)}')
+        else:
+            # Re-render Step 2 with errors
+            step1_data = {}
+            if step1_session:
+                try:
+                    step1_data['main_category'] = BusinessCategory.objects.get(pk=step1_session['main_category'])
+                    step1_data['sub_category']  = (
+                        SubCategory.objects.get(pk=step1_session['sub_category'])
+                        if step1_session.get('sub_category') else None
+                    )
+                    step1_data['plan']       = Plan.objects.get(pk=step1_session['plan'])
+                    step1_data['site_url']   = step1_session['site_url']
+                    step1_data['site_title'] = step1_session['site_title']
+                except Exception:
+                    pass
+
+        return render(request, 'add_member.html', {
+            'form1': form1,
+            'form2': form2,
+            'current_step': 2,
+            'step1_data': step1_data,
+        })
+
+    # ── GET: show Step 1 ──────────────────────────────────────────
+    else:
+        # Clear any stale session
+        if 'add_member_step1' in request.session:
+            del request.session['add_member_step1']
+        return render(request, 'add_member.html', {
+            'form1': AddMemberStep1Form(),
+            'form2': AddMemberStep2Form(),
+            'current_step': 1,
+        })
+
+
+# ── Member List (Super Admin) ─────────────────────────────────────────────────
+@login_required
+def member_list(request):
+    """Super admin view of all member organisations."""
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+
+    from django.core.paginator import Paginator
+
+    q      = request.GET.get('q', '')
+    plan   = request.GET.get('plan', '')
+    status = request.GET.get('status', '')
+
+    orgs = Organization.objects.select_related(
+        'category', 'sub_category', 'plan'
+    ).order_by('-created_at')
+
+    if q:
+        orgs = orgs.filter(name__icontains=q)
+    if plan:
+        orgs = orgs.filter(plan__level=plan)
+    if status:
+        orgs = orgs.filter(status=status)
+
+    paginator = Paginator(orgs, 15)
+    page      = paginator.get_page(request.GET.get('page'))
+
+    return render(request, 'member_list.html', {
+        'page_obj':       page,
+        'plans':          Plan.objects.filter(is_active=True),
+        'status_choices': Organization.STATUS_CHOICES,
+        'q': q, 'plan': plan, 'status': status,
+        'total': orgs.count(),
+    })
+
+
+# ── Edit Member ───────────────────────────────────────────────────────────────
+@login_required
+def edit_member(request, pk):
+    """Super admin edit for an existing organisation/member."""
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+
+    from .forms import OrganizationUpdateForm
+    org = get_object_or_404(Organization, pk=pk)
+
+    if request.method == 'POST':
+        form = OrganizationUpdateForm(request.POST, request.FILES, instance=org)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Member "{org.name}" updated.')
+            return redirect('member_list')
+    else:
+        form = OrganizationUpdateForm(instance=org)
+
+    return render(request, 'edit_member.html', {'form': form, 'org': org})
+
+
+def register_super_admin(request):
+    already_exists = CustomUser.objects.filter(role='super_admin').exists()
+
+    if already_exists and not (request.user.is_authenticated and request.user.is_super_admin):
+        messages.error(request, 'A Super Admin already exists. Contact them to create additional accounts.')
+        return redirect('login')
+
+    form = SuperAdminRegisterForm()
+
+    if request.method == 'POST':
+        form = SuperAdminRegisterForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            user = CustomUser.objects.create_user(
+                username   = cd['username'],
+                email      = cd['email'],
+                password   = cd['password1'],
+                first_name = cd['first_name'],
+                last_name  = cd.get('last_name', ''),
+                phone      = cd.get('phone', ''),
+                role       = 'super_admin',
+                is_staff   = True,
+            )
+            messages.success(request, f'Super Admin "{user.username}" created successfully!')
+            if not request.user.is_authenticated:
+                login(request, user)
+                return redirect('dashboard')
+            return redirect('member_list')
+
+    return render(request, 'register_superadmin.html', {
+        'form': form,
+        'already_exists': already_exists,
+    })
+
+

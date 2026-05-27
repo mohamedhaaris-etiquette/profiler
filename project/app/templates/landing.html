@@ -232,7 +232,7 @@ a { text-decoration: none; color: inherit; }
   color: #fff; border: none; border-radius: 7px; padding: 7px;
   font-size: 0.7rem; font-weight: 700; text-align: center;
   text-transform: uppercase; letter-spacing: 0.05em;
-  font-family: var(--font-body); transition: box-shadow .2s;
+  font-family: var(--font-body); transition: box-shadow .2s; cursor: pointer;
 }
 .btn-svc-enq:hover { box-shadow: 0 3px 12px rgba(13,110,253,0.35); color: #fff; }
 
@@ -285,6 +285,7 @@ a { text-decoration: none; color: inherit; }
   background: var(--primary); color: #fff; border-radius: 7px;
   padding: 6px 13px; font-size: 0.7rem; font-weight: 700;
   text-transform: uppercase; font-family: var(--font-body); transition: background .2s;
+  border: none; cursor: pointer;
 }
 .btn-prod-enq:hover { background: var(--primary-dark); color: #fff; }
 
@@ -318,7 +319,6 @@ a { text-decoration: none; color: inherit; }
 }
 .cinfo-row p { margin: 0; font-size: 0.82rem; font-weight: 600; color: var(--text); }
 .cinfo-row a { color: var(--primary); font-weight: 700; font-size: 0.82rem; }
-
 .social-bar { display: flex; gap: 8px; justify-content: center; padding: 12px 16px; border-top: 1px solid var(--border); }
 .soc-btn {
   width: 40px; height: 40px; border-radius: 10px;
@@ -380,14 +380,6 @@ textarea.form-ctrl { resize: vertical; min-height: 100px; }
   text-transform: uppercase; color: rgba(0,201,167,0.9);
 }
 
-/* success state */
-.success-check {
-  width: 68px; height: 68px;
-  background: #edfaf1; border: 1px solid #b6e9c6; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 18px; font-size: 1.9rem; color: #1a6e34;
-}
-
 /* ── TESTIMONIALS ───────────────────────────── */
 .test-card {
   background: #fff; border: 1px solid var(--border); border-radius: 12px;
@@ -424,6 +416,14 @@ textarea.form-ctrl { resize: vertical; min-height: 100px; }
 /* ── ANIMATIONS ─────────────────────────────── */
 .fade-up { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s ease; }
 .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+/* ── PREFILL FLASH ──────────────────────────── */
+@keyframes prefill-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(13,110,253,0.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(13,110,253,0); }
+  100% { box-shadow: 0 0 0 0 rgba(13,110,253,0); }
+}
+.prefill-highlight { animation: prefill-flash 0.8s ease; border-color: var(--primary) !important; }
 </style>
 </head>
 <body>
@@ -490,6 +490,7 @@ textarea.form-ctrl { resize: vertical; min-height: 100px; }
 
         <div class="hero-chips">
           {% if org.category %}<span class="hero-chip"><i class="bi bi-{{ org.category.icon }} me-1"></i>{{ org.category.name }}</span>{% endif %}
+          {% if org.sub_category %}<span class="hero-chip"><i class="bi bi-tag me-1"></i>{{ org.sub_category.name }}</span>{% endif %}
           {% if org.is_verified %}<span class="hero-chip"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>{% endif %}
           {% if org.home_service_available %}<span class="hero-chip"><i class="bi bi-house me-1"></i>Home Service</span>{% endif %}
           {% if org.accepts_online_payment %}<span class="hero-chip"><i class="bi bi-credit-card me-1"></i>Online Payment</span>{% endif %}
@@ -637,7 +638,11 @@ textarea.form-ctrl { resize: vertical; min-height: 100px; }
                 {% if svc.price %}
                 <div class="svc-price">₹{{ svc.price }}{% if svc.price_unit %} / {{ svc.price_unit }}{% endif %}</div>
                 {% endif %}
-                <a href="#enquiry" class="btn-svc-enq">Enquire Now</a>
+                <!-- Enquire button: scrolls to form and pre-selects this service -->
+                <button type="button" class="btn-svc-enq"
+                  onclick="prefillEnquiry('{{ svc.pk }}', 'service', '{{ svc.name|escapejs }}')">
+                  Enquire Now
+                </button>
               </div>
               {% endfor %}
             </div>
@@ -683,7 +688,11 @@ textarea.form-ctrl { resize: vertical; min-height: 100px; }
                     <span class="{% if product.in_stock %}stock-in{% else %}stock-out{% endif %}">
                       {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
                     </span>
-                    <a href="#enquiry" class="btn-prod-enq">Enquire</a>
+                    <!-- Enquire button: scrolls to form and pre-selects this product -->
+                    <button type="button" class="btn-prod-enq"
+                      onclick="prefillEnquiry('{{ product.pk }}', 'product', '{{ product.name|escapejs }}')">
+                      Enquire
+                    </button>
                   </div>
                 </div>
               </div>
@@ -778,72 +787,110 @@ textarea.form-ctrl { resize: vertical; min-height: 100px; }
 <section class="enquiry-section" id="enquiry">
   <div class="container">
     <div class="row align-items-center g-5">
+
+      <!-- LEFT INFO -->
       <div class="col-lg-5 enq-info-block fade-up">
         <div class="enq-eyebrow">Get In Touch</div>
         <h2 class="enq-heading">Send Us an Enquiry</h2>
         <p class="enq-sub">
-          Interested in our services? Fill out the form and we'll get back to you within 24 hours.
+          Interested in our services or products? Fill out the form and we'll get back to you within 24 hours.
         </p>
         {% if org.phone %}
         <div class="enq-crow">
           <div class="enq-cicon"><i class="bi bi-telephone-fill"></i></div>
-          <div><div class="enq-clbl">Call Us</div><div class="enq-cval">{{ org.phone }}</div></div>
+          <div>
+            <div class="enq-clbl">Call Us</div>
+            <div class="enq-cval">{{ org.phone }}</div>
+          </div>
         </div>
         {% endif %}
         {% if org.email %}
         <div class="enq-crow">
           <div class="enq-cicon"><i class="bi bi-envelope-fill"></i></div>
-          <div><div class="enq-clbl">Email Us</div><div class="enq-cval">{{ org.email }}</div></div>
+          <div>
+            <div class="enq-clbl">Email Us</div>
+            <div class="enq-cval">{{ org.email }}</div>
+          </div>
         </div>
         {% endif %}
       </div>
 
+      <!-- RIGHT FORM -->
       <div class="col-lg-7 fade-up" style="transition-delay:.15s;">
         <div class="enq-card">
-          {% if enquiry_success %}
-          <div class="text-center py-3">
-            <div class="success-check">✓</div>
-            <h4 style="font-weight:900;">Enquiry Submitted!</h4>
-            <p style="color:var(--muted);">Thank you. We will contact you within 24 hours.</p>
-            <a href="#enquiry" class="btn-submit" style="width:auto;padding:10px 28px;display:inline-block;">Send Another</a>
-          </div>
-          {% else %}
-          <h4>Request a Callback</h4>
+          <h4><i class="bi bi-chat-left-text me-2" style="color:var(--accent);"></i>Request a Callback</h4>
+
+          <!-- SUCCESS MESSAGE -->
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-success mb-4" style="border-radius:10px;">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+
           <form method="post">
             {% csrf_token %}
             <div class="row g-3">
+
+              <!-- Name -->
               <div class="col-md-6">
                 <label class="form-label">Full Name *</label>
                 {{ enquiry_form.name }}
               </div>
+
+              <!-- Phone -->
               <div class="col-md-6">
                 <label class="form-label">Phone *</label>
                 {{ enquiry_form.phone }}
               </div>
+
+              <!-- Email -->
               <div class="col-md-6">
                 <label class="form-label">Email</label>
                 {{ enquiry_form.email }}
               </div>
+
+              <!-- Service -->
               <div class="col-md-6">
-                <label class="form-label">Service</label>
+                <label class="form-label">
+                  <i class="bi bi-briefcase me-1"></i>Service
+                </label>
                 {{ enquiry_form.service }}
               </div>
-              <div class="col-12">
+
+              <!-- ── NEW: Product ── -->
+              <div class="col-md-6">
+                <label class="form-label">
+                  <i class="bi bi-box-seam me-1"></i>Product
+                </label>
+                {{ enquiry_form.product }}
+              </div>
+
+              <!-- Subject -->
+              <div class="col-md-6">
                 <label class="form-label">Subject *</label>
                 {{ enquiry_form.subject }}
               </div>
+
+              <!-- Message -->
               <div class="col-12">
                 <label class="form-label">Message *</label>
                 {{ enquiry_form.message }}
               </div>
+
+              <!-- Submit -->
               <div class="col-12">
-                <button type="submit" class="btn-submit"><i class="bi bi-send me-2"></i>Send Enquiry</button>
+                <button type="submit" class="btn-submit">
+                  <i class="bi bi-send me-2"></i>Send Enquiry
+                </button>
               </div>
+
             </div>
           </form>
-          {% endif %}
         </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -917,16 +964,70 @@ textarea.form-ctrl { resize: vertical; min-height: 100px; }
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Scroll reveal
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
 const obs = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+  });
 }, { threshold: 0.08 });
 document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
 
-// Style Django form widgets to match design
+// ── Style Django form widgets to match design ─────────────────────────────────
 document.querySelectorAll('input,select,textarea').forEach(el => {
   if (!el.classList.contains('form-ctrl')) el.classList.add('form-ctrl');
 });
+
+// ── Prefill enquiry form when clicking "Enquire" on a service or product ──────
+function prefillEnquiry(pk, type, name) {
+  // 1. Scroll to enquiry section smoothly
+  document.getElementById('enquiry').scrollIntoView({ behavior: 'smooth' });
+
+  // 2. Wait for scroll then update form
+  setTimeout(function () {
+
+    if (type === 'service') {
+      // Select matching service option, clear product
+      const svcSel = document.querySelector('select[name="service"]');
+      const prodSel = document.querySelector('select[name="product"]');
+      if (svcSel) {
+        svcSel.value = pk;
+        flash(svcSel);
+      }
+      if (prodSel) prodSel.value = '';
+
+      // Pre-fill subject if empty
+      const subj = document.querySelector('input[name="subject"]');
+      if (subj && !subj.value) {
+        subj.value = 'Enquiry about service: ' + name;
+        flash(subj);
+      }
+
+    } else if (type === 'product') {
+      // Select matching product option, clear service
+      const prodSel = document.querySelector('select[name="product"]');
+      const svcSel = document.querySelector('select[name="service"]');
+      if (prodSel) {
+        prodSel.value = pk;
+        flash(prodSel);
+      }
+      if (svcSel) svcSel.value = '';
+
+      // Pre-fill subject if empty
+      const subj = document.querySelector('input[name="subject"]');
+      if (subj && !subj.value) {
+        subj.value = 'Enquiry about product: ' + name;
+        flash(subj);
+      }
+    }
+
+  }, 600); // slight delay to let scroll finish
+}
+
+// Flash highlight effect on a field
+function flash(el) {
+  el.classList.add('prefill-highlight');
+  setTimeout(() => el.classList.remove('prefill-highlight'), 1000);
+}
 </script>
 </body>
 </html>

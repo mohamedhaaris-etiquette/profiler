@@ -187,15 +187,11 @@ label { font-weight: 500; color: var(--brand); margin-bottom: 4px; }
 </nav>
 {% endblock %}
 
-{% if messages %}
-<div class="container mt-3">
-  {% for msg in messages %}
-  <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
-    {{ msg }} <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
+{# ── Messages are intentionally NOT rendered here.                          #}
+{# ── dashboard_base.html handles them inside .main-content with better UX. #}
+{# ── Non-dashboard pages that need messages should use {% block messages %} #}
+{# ── or add their own include. See dashboard_base.html for the pattern.     #}
+{% block messages %}{% endblock %}
 
 {% block content %}{% endblock %}
 

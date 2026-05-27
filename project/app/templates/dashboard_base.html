@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}Super Admin — OrgPortal{% endblock %}
 {% block extra_css %}
 <style>
 body { background: #f1f5f9; }
@@ -6,6 +7,7 @@ body { background: #f1f5f9; }
   background: #fff; border-bottom: 1px solid var(--border);
   padding: 20px 30px; margin: -30px -30px 30px;
   display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
 }
 .page-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
 .org-badge {
@@ -15,25 +17,172 @@ body { background: #f1f5f9; }
   display: flex; align-items: center; gap: 8px;
 }
 .org-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+
+/* ── Sidebar ────────────────────────────────── */
+.sidebar {
+  width: 260px; background: var(--brand);
+  position: fixed; top: 0; left: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  overflow-y: auto; z-index: 300;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+.sidebar-section {
+  font-size: 0.62rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.3);
+  padding: 18px 24px 6px;
+}
+.nav-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 24px; color: rgba(255,255,255,0.6);
+  font-size: 0.85rem; font-weight: 500;
+  text-decoration: none; transition: all .2s;
+  border-left: 3px solid transparent;
+}
+.nav-link i { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-link:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); }
+.nav-link.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff; font-weight: 600;
+  border-left-color: var(--accent);
+}
+
+/* ── Main Content ────────────────────────────── */
+.main-content {
+  margin-left: 260px;
+  padding: 30px;
+  min-height: 100vh;
+}
+
+/* ── Cards ───────────────────────────────────── */
+.card-modern {
+  background: #fff; border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+.card-modern .card-header {
+  background: var(--brand); color: #fff;
+  padding: 14px 20px; font-weight: 700;
+  font-size: 0.9rem; border: none;
+}
+.stat-card {
+  background: #fff; border-radius: 16px;
+  border: 1px solid var(--border); padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow .2s, transform .2s;
+}
+.stat-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.stat-card .icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; margin-bottom: 14px;
+}
+.stat-card .value { font-size: 1.8rem; font-weight: 800; color: var(--brand); line-height: 1; }
+.stat-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+/* ── Tables ──────────────────────────────────── */
+.table-modern { border-collapse: separate; border-spacing: 0; width: 100%; }
+.table-modern thead th {
+  background: #f8fafc; font-size: 0.72rem;
+  font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted);
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.table-modern tbody td {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  font-size: 0.86rem; vertical-align: middle;
+}
+.table-modern tbody tr:last-child td { border-bottom: none; }
+.table-modern tbody tr:hover td { background: #fafbff; }
+.fw-600 { font-weight: 600; }
+.fw-500 { font-weight: 500; }
+
+/* ── Status badges ───────────────────────────── */
+.badge-new       { background: #dbeafe; color: #1d4ed8; }
+.badge-contacted { background: #fef3c7; color: #92400e; }
+.badge-in_progress { background: #ede9fe; color: #5b21b6; }
+.badge-resolved  { background: #dcfce7; color: #166534; }
+.badge-closed    { background: #f1f5f9; color: #475569; }
+
+/* ── Plan badge colors ───────────────────────── */
+.plan-trial    { background: #f3f4f6; color: #374151; }
+.plan-silver   { background: #f0f9ff; color: #0369a1; }
+.plan-gold     { background: #fffbeb; color: #92400e; }
+.plan-platinum { background: #f5f3ff; color: #5b21b6; }
+
+/* ── Mobile sidebar toggle ───────────────────── */
+.sidebar-toggle {
+  display: none; position: fixed; bottom: 20px; right: 20px;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--brand); color: #fff; border: none;
+  font-size: 1.3rem; z-index: 400;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); transition: transform .3s; }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; padding: 20px; }
+  .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+  .page-header { padding: 16px 20px; margin: -20px -20px 20px; }
+}
 </style>
 {% block dash_css %}{% endblock %}
 {% endblock %}
 
 {% block navbar %}{% endblock %}
 
+{# ── Override the messages block so base.html renders nothing there.        #}
+{# ── We render messages ourselves below, inside .main-content, for proper   #}
+{# ── positioning alongside the sidebar layout.                               #}
+{% block messages %}{% endblock %}
+
 {% block content %}
-<!-- Sidebar -->
-<div class="sidebar">
-  <div style="padding: 20px 24px 10px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+<!-- ══════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════ -->
+<div class="sidebar" id="sidebar">
+
+  <!-- Logo / Brand -->
+  <div style="padding:20px 24px 10px;border-bottom:1px solid rgba(255,255,255,0.08);">
     <a href="{% url 'home' %}" style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;color:#fff;text-decoration:none;">
       Org<span style="color:var(--accent);">Portal</span>
     </a>
     {% if user.organization %}
-    <div style="color:rgba(255,255,255,0.5);font-size:0.75rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+    <div style="color:rgba(255,255,255,0.45);font-size:0.72rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ user.organization.name }}">
       {{ user.organization.name }}
     </div>
     {% endif %}
   </div>
+
+  <!-- ── SUPER ADMIN NAVIGATION ───────────────── -->
+  {% if user.is_super_admin %}
+
+  <div class="sidebar-section">Overview</div>
+  <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+    <i class="bi bi-grid-1x2"></i> Dashboard
+  </a>
+
+  <div class="sidebar-section">Member Management</div>
+  <a href="{% url 'member_list' %}" class="nav-link {% if request.resolver_match.url_name == 'member_list' %}active{% endif %}">
+    <i class="bi bi-people-fill"></i> All Members
+  </a>
+  <a href="{% url 'add_member' %}" class="nav-link {% if request.resolver_match.url_name == 'add_member' %}active{% endif %}">
+    <i class="bi bi-person-plus-fill"></i> Add Member
+    <span style="background:var(--accent);color:#fff;font-size:0.58rem;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;">NEW</span>
+  </a>
+
+  <div class="sidebar-section">System</div>
+  <a href="/admin/" class="nav-link" target="_blank">
+    <i class="bi bi-shield-lock"></i> Django Admin
+  </a>
+
+  <!-- ── ORG ADMIN / STAFF NAVIGATION ─────────── -->
+  {% else %}
 
   <div class="sidebar-section">Main</div>
   <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
@@ -50,15 +199,17 @@ body { background: #f1f5f9; }
   </a>
   <a href="{% url 'enquiries' %}" class="nav-link {% if 'enquir' in request.resolver_match.url_name %}active{% endif %}">
     <i class="bi bi-chat-left-dots"></i> Enquiries
-    {% with cnt=user.organization.enquiries.filter %}
+    {% with new_count=user.organization.enquiries.filter %}
     {% endwith %}
   </a>
   <a href="{% url 'org_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'org_settings' %}active{% endif %}">
     <i class="bi bi-sliders"></i> Settings
   </a>
+
+  <div class="sidebar-section">Grow</div>
   <a href="{% url 'referral_dashboard' %}" class="nav-link {% if 'referral' in request.resolver_match.url_name %}active{% endif %}" style="color:rgba(250,204,21,0.85);">
     <i class="bi bi-gift"></i> Invite & Earn
-    <span style="background:#f97316;color:#fff;font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;">NEW</span>
+    <span style="background:#f97316;color:#fff;font-size:0.58rem;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;">NEW</span>
   </a>
 
   <div class="sidebar-section">Public</div>
@@ -67,27 +218,78 @@ body { background: #f1f5f9; }
   </a>
   {% endif %}
 
+  {% endif %}
+
+  <!-- ── ACCOUNT (common to all roles) ─────────── -->
   <div class="sidebar-section">Account</div>
-  <a href="{% url 'logout' %}" class="nav-link" style="color:rgba(239,68,68,0.8);">
+  <a href="{% url 'logout' %}" class="nav-link" style="color:rgba(239,68,68,0.75);">
     <i class="bi bi-box-arrow-left"></i> Logout
   </a>
 
-  <div style="padding: 24px; margin-top: auto;">
+  <!-- ── User info card ─────────────────────────── -->
+  <div style="padding:20px 16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.07);">
     <div style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:14px;">
-      <div style="color:rgba(255,255,255,0.9);font-size:0.8rem;font-weight:600;">{{ user.get_full_name|default:user.username }}</div>
-      <div style="color:rgba(255,255,255,0.4);font-size:0.72rem;">{{ user.get_role_display }}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:0.9rem;flex-shrink:0;">
+          {{ user.first_name|first|upper|default:user.username|first|upper }}
+        </div>
+        <div style="overflow:hidden;">
+          <div style="color:rgba(255,255,255,0.9);font-size:0.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ user.get_full_name|default:user.username }}
+          </div>
+          <div style="color:rgba(255,255,255,0.4);font-size:0.68rem;">{{ user.get_role_display }}</div>
+        </div>
+      </div>
+
+      <!-- Plan badge (org users only) -->
+      {% if user.organization and user.organization.plan %}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+        <span style="background:{{ user.organization.plan_badge_color }};color:#fff;font-size:0.63rem;font-weight:700;padding:3px 10px;border-radius:50px;">
+          <i class="bi bi-award-fill me-1"></i>{{ user.organization.plan.name }}
+        </span>
+        {% if not user.organization.is_plan_active %}
+        <span style="background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:50px;">
+          Expired
+        </span>
+        {% elif user.organization.plan_end_date %}
+        <span style="color:rgba(255,255,255,0.4);font-size:0.65rem;">
+          till {{ user.organization.plan_end_date|date:"d M" }}
+        </span>
+        {% endif %}
+      </div>
+      {% elif user.is_super_admin %}
+      <span style="background:rgba(249,115,22,0.3);color:var(--accent);font-size:0.63rem;font-weight:700;padding:3px 10px;border-radius:50px;">
+        <i class="bi bi-shield-fill-check me-1"></i>Super Admin
+      </span>
+      {% endif %}
     </div>
   </div>
-</div>
 
-<!-- Main Content -->
+</div><!-- /sidebar -->
+
+<!-- Mobile sidebar toggle -->
+<button class="sidebar-toggle" id="sidebarToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+  <i class="bi bi-list"></i>
+</button>
+
+<!-- ══════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════ -->
 <div class="main-content">
+
+  {# ── Single source of truth for messages. base.html renders nothing      #}
+  {# ── because we override {% block messages %} above to be empty.         #}
   {% if messages %}
   {% for msg in messages %}
-  <div class="alert alert-{{ msg.tags }} alert-dismissible fade show">{{ msg }} <button class="btn-close" data-bs-dismiss="alert"></button></div>
+  <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" style="border-radius:12px;">
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
   {% endfor %}
   {% endif %}
 
   {% block dash_content %}{% endblock %}
-</div>
+
+</div><!-- /main-content -->
+
 {% endblock %}

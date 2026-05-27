@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Organization, BusinessCategory, Service, Enquiry, GalleryImage, Testimonial, Product
-
+from .models import *
 
 @admin.register(BusinessCategory)
 class BusinessCategoryAdmin(admin.ModelAdmin):
@@ -98,3 +97,16 @@ class ReferralAdmin(admin.ModelAdmin):
 class ReferralBonusAdmin(admin.ModelAdmin):
     list_display = ['organization', 'transaction_type', 'points', 'note', 'created_at']
     list_filter = ['transaction_type', 'organization']
+
+
+@admin.register(Plan)
+class PlanAdmin(admin.ModelAdmin):
+    list_display  = ['name', 'level', 'price', 'duration_days',
+                     'max_services', 'max_products', 'max_staff', 'is_active', 'order']
+    list_filter   = ['level', 'is_active']
+    list_editable = ['price', 'is_active', 'order']
+ 
+ 
+
+ 
+ 
