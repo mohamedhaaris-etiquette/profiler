@@ -1027,9 +1027,7 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
           {% if org.pdf_catalog %}<a href="{{ org.pdf_catalog.url }}" class="btn btn-outline-dark" download>Download Catalog</a>{% endif %}
         </div>
       </div>
-      <div class="col-md-4 text-md-end">
-        {% include '_contact_inline.html' %}
-      </div>
+      
     </div>
   </div>
 </section>
@@ -1107,9 +1105,18 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
           <div class="svc-name">{{ svc.name }}</div>
           {% if svc.description %}<p class="svc-desc">{{ svc.description|truncatechars:90 }}</p>{% endif %}
           {% if svc.price %}<div class="svc-price"><i class="bi bi-currency-rupee"></i>{{ svc.price }} / {{ svc.price_unit|default:"visit" }}</div>{% endif %}
-          <button type="button" class="btn-book" onclick="prefillEnquiry('{{ svc.pk }}','service','{{ svc.name|escapejs }}')">
-            <i class="bi bi-calendar-check"></i> Book Now
-          </button>
+         <div class="d-flex gap-2">
+  <button type="button" class="btn-book" onclick="prefillEnquiry('{{ svc.pk }}','service','{{ svc.name|escapejs }}')">
+    <i class="bi bi-calendar-check"></i> Book Now
+  </button>
+  <button type="button"
+    class="btn-book"
+    style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.4);"
+    onclick="addToCart('service', {{ svc.pk }}, '{{ svc.name|escapejs }}')"
+    title="Add to cart">
+    <i class="bi bi-cart-plus"></i>
+  </button>
+</div>
         </div>
       </div>
       {% endfor %}
@@ -1161,9 +1168,20 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
             <span class="{% if product.in_stock %}stock-in{% else %}stock-out{% endif %}">
               {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
             </span>
-            <button class="btn-view-prod" onclick="openProductModal({{ product.pk }}, '{{ org.slug }}')">
-              View Details
-            </button>
+           <div class="d-flex gap-2 align-items-center">
+  <button class="btn-view-prod" onclick="openProductModal({{ product.pk }}, '{{ org.slug }}')">
+    View Details
+  </button>
+  {% if product.in_stock %}
+  <button
+    class="btn-view-prod"
+    style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.35);color:var(--gold);"
+    onclick="addToCart('product', {{ product.pk }}, '{{ product.name|escapejs }}')"
+    title="Add to cart">
+    <i class="bi bi-cart-plus"></i>
+  </button>
+  {% endif %}
+</div>
           </div>
         </div>
         {% if product.youtube_url or product.instagram_url or product.pdf_catalog %}
@@ -1923,6 +1941,16 @@ function renderProductModal(p) {
   enqBtn.onclick = () => { closeProductModal(); prefillEnquiry(p.id, 'product', p.name); };
   actions.appendChild(enqBtn);
 
+  if (p.in_stock) {
+    const cartBtn = document.createElement('button');
+    cartBtn.className = 'btn-pm-enq';
+    cartBtn.style.cssText = 'background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:var(--gold);';
+    cartBtn.innerHTML = '<i class="bi bi-cart-plus" style="font-size:1.1rem;"></i>';
+    cartBtn.title = 'Add to Cart';
+    cartBtn.onclick = () => { addToCart('product', p.id, p.name); closeProductModal(); };
+    actions.appendChild(cartBtn);
+  }
+
   if (p.pdf_catalog) {
     const pdfA = document.createElement('a');
     pdfA.href = p.pdf_catalog;
@@ -1958,5 +1986,6 @@ document.querySelectorAll('.pm-tab').forEach(tab => {
 modal.addEventListener('click', e => { if (e.target === modal) closeProductModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProductModal(); });
 </script>
+{% include '_cart_drawer.html' %}
 </body>
 </html>

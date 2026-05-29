@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
 from django.core.paginator import Paginator
-from .models import Organization, CustomUser, BusinessCategory, Service, Enquiry, GalleryImage, Testimonial, Product
+from .models import *
 from .forms import (
     OrganizationSignupForm, CustomLoginForm, EnquiryForm,
     ServiceForm, OrganizationUpdateForm, ProductForm ,SuperAdminRegisterForm
@@ -1295,3 +1295,273 @@ def edit_visiting_card(request):
         return redirect('org_settings')
 
     return redirect('org_settings')
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+ 
+from .models import Organization, Product, Service, Cart, CartItem, Enquiry
+ 
+ 
+# ── Helpers ───────────────────────────────────────────────────────────────────
+ 
+def _ensure_session_key(request):
+    """Make sure the session has a key (creates one if needed)."""
+    if not request.session.session_key:
+        request.session.create()
+    return request.session.session_key
+ 
+ 
+def _get_or_create_cart(request, org: Organization) -> Cart:
+    """
+    Get the active cart for this session + org, or create one.
+    If the session has an active cart for a DIFFERENT org, abandon it first.
+    """
+    sk = _ensure_session_key(request)
+ 
+    # Try to reuse existing active cart for this org + session
+    cart = Cart.objects.filter(
+        session_key=sk, organization=org, status='active'
+    ).first()
+ 
+    if not cart:
+        # Abandon any stale cart for a different org in this session
+        Cart.objects.filter(session_key=sk, status='active').update(status='abandoned')
+        cart = Cart.objects.create(session_key=sk, organization=org)
+ 
+    return cart
+ 
+ 
+def _get_cart(request, org: Organization):
+    """Return existing active cart or None."""
+    sk = _ensure_session_key(request)
+    return Cart.objects.filter(
+        session_key=sk, organization=org, status='active'
+    ).prefetch_related('items__product', 'items__service').first()
+ 
+ 
+def _cart_to_dict(cart) -> dict:
+    """Serialise cart to a dict for JSON responses."""
+    if not cart:
+        return {'item_count': 0, 'total': '0.00', 'items': []}
+ 
+    items = []
+    for item in cart.items.select_related('product', 'service'):
+        img_url = ''
+        if item.display_image:
+            try:
+                img_url = item.display_image.url
+            except Exception:
+                pass
+        items.append({
+            'id':          item.pk,
+            'name':        item.display_name,
+            'type':        item.item_type,
+            'quantity':    item.quantity,
+            'unit_price':  str(item.unit_price or 0),
+            'line_total':  str(item.line_total),
+            'image':       img_url,
+            'note':        item.note,
+        })
+ 
+    return {
+        'item_count': cart.item_count,
+        'total':      str(cart.total),
+        'items':      items,
+    }
+ 
+ 
+# ── VIEWS ─────────────────────────────────────────────────────────────────────
+ 
+@require_POST
+def cart_add(request, slug):
+    """
+    Add a product or service to the cart.
+    Accepts POST with:
+      product_id  OR  service_id
+      quantity    (default 1)
+      note        (optional customer note)
+    Returns JSON for AJAX calls; redirects for plain form posts.
+    """
+    org     = get_object_or_404(Organization, slug=slug, is_active=True)
+    cart    = _get_or_create_cart(request, org)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+              request.content_type == 'application/json'
+ 
+    product_id  = request.POST.get('product_id')
+    service_id  = request.POST.get('service_id')
+    quantity    = max(1, int(request.POST.get('quantity', 1)))
+    note        = request.POST.get('note', '').strip()
+ 
+    added_name = ''
+ 
+    if product_id:
+        product = get_object_or_404(Product, pk=product_id, organization=org, is_active=True)
+ 
+        # Update quantity if already in cart, else create
+        item, created = CartItem.objects.get_or_create(
+            cart=cart, product=product,
+            defaults={'quantity': quantity, 'note': note}
+        )
+        if not created:
+            item.quantity = min(item.quantity + quantity, 99)
+            if note:
+                item.note = note
+            item.save()
+ 
+        added_name = product.name
+ 
+    elif service_id:
+        service = get_object_or_404(Service, pk=service_id, organization=org, is_active=True)
+ 
+        item, created = CartItem.objects.get_or_create(
+            cart=cart, service=service,
+            defaults={'quantity': quantity, 'note': note}
+        )
+        if not created:
+            item.quantity = min(item.quantity + quantity, 99)
+            if note:
+                item.note = note
+            item.save()
+ 
+        added_name = service.name
+ 
+    else:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'error': 'No item specified'}, status=400)
+        return redirect('public_landing', slug=slug)
+ 
+    # Refresh cart from DB
+    cart.refresh_from_db()
+ 
+    if is_ajax:
+        return JsonResponse({
+            'ok':        True,
+            'message':   f'"{added_name}" added to cart.',
+            'cart':      _cart_to_dict(cart),
+        })
+ 
+    return redirect('public_landing', slug=slug)
+ 
+ 
+@require_POST
+def cart_update(request, slug, item_pk):
+    """Update quantity of a cart item. qty=0 removes it."""
+    org  = get_object_or_404(Organization, slug=slug, is_active=True)
+    cart = _get_cart(request, org)
+ 
+    if not cart:
+        return JsonResponse({'ok': False, 'error': 'No cart'}, status=404)
+ 
+    item = get_object_or_404(CartItem, pk=item_pk, cart=cart)
+    qty  = int(request.POST.get('quantity', 1))
+ 
+    if qty <= 0:
+        item.delete()
+    else:
+        item.quantity = min(qty, 99)
+        item.note     = request.POST.get('note', item.note).strip()
+        item.save()
+ 
+    cart.refresh_from_db()
+    return JsonResponse({'ok': True, 'cart': _cart_to_dict(cart)})
+ 
+ 
+@require_POST
+def cart_remove(request, slug, item_pk):
+    """Remove a single item from the cart."""
+    org  = get_object_or_404(Organization, slug=slug, is_active=True)
+    cart = _get_cart(request, org)
+ 
+    if not cart:
+        return JsonResponse({'ok': False, 'error': 'No cart'}, status=404)
+ 
+    item = get_object_or_404(CartItem, pk=item_pk, cart=cart)
+    item.delete()
+ 
+    cart.refresh_from_db()
+    return JsonResponse({'ok': True, 'cart': _cart_to_dict(cart)})
+ 
+ 
+@require_POST
+def cart_clear(request, slug):
+    """Empty the cart entirely."""
+    org  = get_object_or_404(Organization, slug=slug, is_active=True)
+    cart = _get_cart(request, org)
+    if cart:
+        cart.items.all().delete()
+    return JsonResponse({'ok': True, 'cart': {'item_count': 0, 'total': '0.00', 'items': []}})
+ 
+ 
+def cart_json(request, slug):
+    """Return the current cart state as JSON (for page-load hydration)."""
+    org  = get_object_or_404(Organization, slug=slug, is_active=True)
+    cart = _get_cart(request, org)
+    return JsonResponse({'cart': _cart_to_dict(cart)})
+ 
+ 
+@require_POST
+def cart_checkout(request, slug):
+    """
+    Convert the cart into an Enquiry and (optionally) open WhatsApp.
+    POST fields:
+      name, email, phone  — required for the enquiry
+      checkout_type       — 'enquiry' (default) | 'whatsapp'
+    """
+    org  = get_object_or_404(Organization, slug=slug, is_active=True)
+    cart = _get_cart(request, org)
+ 
+    if not cart or cart.item_count == 0:
+        return JsonResponse({'ok': False, 'error': 'Cart is empty'}, status=400)
+ 
+    name  = request.POST.get('name', '').strip()
+    email = request.POST.get('email', '').strip()
+    phone = request.POST.get('phone', '').strip()
+ 
+    if not all([name, phone]):
+        return JsonResponse({'ok': False, 'error': 'Name and phone are required.'}, status=400)
+ 
+    # Build subject and message from cart items
+    items_text = "\n".join(
+        f"- {item.display_name} × {item.quantity} @ ₹{item.unit_price or 0}"
+        for item in cart.items.all()
+    )
+    subject = f"Cart Order — {cart.item_count} item(s) — ₹{cart.total}"
+    message = f"Order details:\n{items_text}\n\nTotal: ₹{cart.total}"
+ 
+    enquiry = Enquiry.objects.create(
+        organization = org,
+        name         = name,
+        email        = email or 'noemail@provided.com',
+        phone        = phone,
+        subject      = subject,
+        message      = message,
+        status       = 'new',
+    )
+ 
+    # Link enquiry to cart and close cart
+    cart.enquiry = enquiry
+    cart.status  = 'checkout'
+    cart.save(update_fields=['enquiry', 'status'])
+ 
+    # Build WhatsApp URL
+    wa_number = org.whatsapp or org.phone
+    wa_url = ''
+    if wa_number:
+        wa_url = f"https://wa.me/91{wa_number.replace(' ','').replace('+','')}?text={cart.get_whatsapp_summary(org.name)}"
+ 
+    return JsonResponse({
+        'ok':          True,
+        'enquiry_id':  enquiry.pk,
+        'wa_url':      wa_url,
+        'message':     'Your enquiry has been submitted!',
+    })
+ 
+ 
+def cart_view(request, slug):
+    """Full cart page (fallback for non-JS)."""
+    org  = get_object_or_404(Organization, slug=slug, is_active=True)
+    cart = _get_cart(request, org)
+    return render(request, 'cart.html', {'org': org, 'cart': cart})

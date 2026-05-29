@@ -176,6 +176,12 @@ body { background: #f1f5f9; }
     <i class="bi bi-person-plus-fill"></i> Add Member
     <span style="background:var(--accent);color:#fff;font-size:0.58rem;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;">NEW</span>
   </a>
+  <a href="{% url 'invite_member' %}" class="nav-link {% if request.resolver_match.url_name == 'invite_member' %}active{% endif %}">
+    <i class="bi bi-envelope-plus"></i> Invite Member
+  </a>
+  <a href="{% url 'invitation_list' %}" class="nav-link {% if request.resolver_match.url_name == 'invitation_list' %}active{% endif %}">
+    <i class="bi bi-send"></i> Invitations
+  </a>
 
   <div class="sidebar-section">System</div>
   <a href="/admin/" class="nav-link" target="_blank">
@@ -250,19 +256,6 @@ body { background: #f1f5f9; }
   </a>
 
   {% endif %}
-
-  <!-- Super Admin only -->
-{% if user.is_super_admin %}
-<a href="{% url 'invite_member' %}">
-  <i class="bi bi-envelope-plus"></i> Invite Member
-</a>
-<a href="{% url 'invitation_list' %}">
-  <i class="bi bi-send"></i> Invitations
-</a>
-<a href="{% url 'member_list' %}">
-  <i class="bi bi-people"></i> Members
-</a>
-{% endif %}
 
   <!-- ── ACCOUNT (common to all roles) ─────────── -->
   <div class="sidebar-section">Account</div>

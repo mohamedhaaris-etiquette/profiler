@@ -807,3 +807,149 @@ class WhatsAppConfig(models.Model):
         import urllib.parse
         msg = custom_message or self.greeting_message
         return f"https://wa.me/{self.whatsapp_number}?text={urllib.parse.quote(msg)}"
+
+
+class Cart(models.Model):
+    """
+    Session-scoped cart — works for anonymous visitors.
+    Created lazily when first item is added.
+    Linked to an Organization so items can only come from one org at a time.
+    """
+    STATUS_CHOICES = [
+        ('active',    'Active'),
+        ('checkout',  'Checked Out'),
+        ('abandoned', 'Abandoned'),
+    ]
+ 
+    session_key  = models.CharField(max_length=64, db_index=True)
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='carts'
+    )
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+ 
+    # Optional: if the visitor later submits an enquiry we link it here
+    enquiry = models.OneToOneField(
+        'Enquiry', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='cart'
+    )
+ 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['-updated_at']
+ 
+    def __str__(self):
+        return f"Cart [{self.session_key[:8]}] — {self.organization.name} ({self.item_count} items)"
+ 
+    # ── Computed helpers ──────────────────────────────────────────────────────
+ 
+    @property
+    def item_count(self):
+        return sum(i.quantity for i in self.items.all())
+ 
+    @property
+    def total(self):
+        return sum(i.line_total for i in self.items.all())
+ 
+    @property
+    def items_list(self):
+        return self.items.select_related('product', 'service').all()
+ 
+    def get_whatsapp_summary(self, org_name: str = '') -> str:
+        """
+        Build a WhatsApp-ready order summary string.
+        Used by the "Enquire via WhatsApp" button on checkout.
+        """
+        import urllib.parse
+        lines = [f"Hi! I'd like to enquire about the following from *{org_name or self.organization.name}*:"]
+        lines.append("")
+        for item in self.items.select_related('product', 'service'):
+            label = item.product.name if item.product else (item.service.name if item.service else item.custom_label)
+            price = f"₹{item.unit_price}" if item.unit_price else ""
+            lines.append(f"• {label} × {item.quantity} {price}")
+        lines.append(f"\n*Total: ₹{self.total}*")
+        return urllib.parse.quote("\n".join(lines))
+ 
+ 
+class CartItem(models.Model):
+    """
+    A line-item in a Cart.
+    Can reference a Product OR a Service (or neither for custom entries).
+    """
+    cart        = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+ 
+    # One of these should be set, or custom_label for custom items
+    product     = models.ForeignKey(
+        'Product', on_delete=models.CASCADE, null=True, blank=True, related_name='cart_items'
+    )
+    service     = models.ForeignKey(
+        'Service', on_delete=models.CASCADE, null=True, blank=True, related_name='cart_items'
+    )
+    custom_label = models.CharField(max_length=200, blank=True)
+ 
+    quantity    = models.PositiveIntegerField(default=1)
+    unit_price  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+ 
+    # Snapshot of item name/price at time of adding (protects against edits)
+    name_snapshot  = models.CharField(max_length=200, blank=True)
+    price_snapshot = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+ 
+    note       = models.CharField(max_length=300, blank=True,
+                                  help_text='Customer note for this line item')
+    added_at   = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['added_at']
+        unique_together = [('cart', 'product'), ('cart', 'service')]
+ 
+    def __str__(self):
+        return f"{self.display_name} × {self.quantity}"
+ 
+    def save(self, *args, **kwargs):
+        # Snapshot name & price on first save
+        if not self.name_snapshot:
+            if self.product:
+                self.name_snapshot  = self.product.name
+                self.price_snapshot = self.product.effective_price
+                if not self.unit_price:
+                    self.unit_price = self.product.effective_price
+            elif self.service:
+                self.name_snapshot  = self.service.name
+                self.price_snapshot = self.service.price
+                if not self.unit_price:
+                    self.unit_price = self.service.price
+            else:
+                self.name_snapshot = self.custom_label
+        super().save(*args, **kwargs)
+ 
+    @property
+    def display_name(self):
+        return self.name_snapshot or (
+            self.product.name if self.product else
+            self.service.name if self.service else
+            self.custom_label
+        )
+ 
+    @property
+    def display_image(self):
+        """Return the primary image field for cart display."""
+        if self.product and self.product.image:
+            return self.product.image
+        if self.service and self.service.image:
+            return self.service.image
+        return None
+ 
+    @property
+    def line_total(self):
+        if self.unit_price:
+            return self.unit_price * self.quantity
+        return 0
+ 
+    @property
+    def item_type(self):
+        if self.product:
+            return 'product'
+        if self.service:
+            return 'service'
+        return 'custom'

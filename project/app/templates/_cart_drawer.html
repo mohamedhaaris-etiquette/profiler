@@ -1,0 +1,112 @@
+<div id="cartDrawer" class="cart-drawer">
+  <div class="cart-drawer-header">
+    <div>
+      <div style="font-size:0.9rem;color:rgba(255,255,255,0.72);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:4px;">Your Cart</div>
+      <div style="font-size:1.3rem;font-weight:700;">Selected items</div>
+    </div>
+    <button type="button" class="btn-close btn-close-white" aria-label="Close" onclick="closeCartDrawer()"></button>
+  </div>
+  <div id="cartItems" class="cart-drawer-body">
+    <p style="color:rgba(255,255,255,0.6);">No items added yet.</p>
+  </div>
+  <div class="cart-drawer-footer">
+    <button type="button" class="btn btn-outline-light" onclick="closeCartDrawer()">Continue browsing</button>
+    <button type="button" class="btn btn-primary" onclick="submitCartCart()">Send enquiry</button>
+  </div>
+</div>
+<style>
+  #cartDrawer {
+    position:fixed; right:-420px; top:0; height:100%; width:380px; max-width:92vw;
+    background:rgba(17,17,17,0.98); color:white; box-shadow:-20px 0 80px rgba(0,0,0,0.45);
+    transition:right .32s ease; z-index:1100; display:flex; flex-direction:column;
+    border-left:1px solid rgba(255,255,255,0.08);
+  }
+  #cartDrawer.open { right:0; }
+  .cart-drawer-header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:26px 24px 14px; }
+  .cart-drawer-body { flex:1; overflow:auto; padding:0 24px 20px; }
+  .cart-item { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .cart-item:last-child { border-bottom:none; }
+  .cart-item-meta { flex:1; }
+  .cart-item-name { font-size:0.95rem; font-weight:700; margin-bottom:4px; }
+  .cart-item-type { font-size:0.78rem; color:rgba(255,255,255,0.6); }
+  .cart-qty { display:flex; gap:8px; align-items:center; margin-top:8px; }
+  .cart-qty button { width:28px; height:28px; border:none; background:rgba(255,255,255,0.06); color:white; border-radius:6px; cursor:pointer; }
+  .cart-drawer-footer { display:flex; gap:12px; align-items:center; justify-content:flex-end; padding:16px 24px 24px; border-top:1px solid rgba(255,255,255,0.08); }
+  .cart-drawer-footer .btn { min-width:120px; }
+  @media(max-width:700px) { #cartDrawer { width:100%; } }
+</style>
+<script>
+  const cartItems = [];
+  function addToCart(type, id, name) {
+    const existing = cartItems.find(item => item.type === type && item.id === id);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cartItems.push({ type, id, name, qty: 1 });
+    }
+    renderCartItems();
+    openCartDrawer();
+  }
+  function renderCartItems() {
+    const list = document.getElementById('cartItems');
+    if (!list) return;
+    if (!cartItems.length) {
+      list.innerHTML = '<p style="color:rgba(255,255,255,0.6);">No items added yet.</p>';
+      return;
+    }
+    list.innerHTML = cartItems.map(item => `
+      <div class="cart-item">
+        <div class="cart-item-meta">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-type">${item.type === 'service' ? 'Service' : 'Product'}</div>
+          <div class="cart-qty">
+            <button type="button" onclick="updateCartQty(${item.id}, '${item.type}', -1)">−</button>
+            <span style="min-width:24px;text-align:center;display:inline-block;">${item.qty}</span>
+            <button type="button" onclick="updateCartQty(${item.id}, '${item.type}', 1)">+</button>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" aria-label="Remove" onclick="removeCartItem(${item.id}, '${item.type}')"></button>
+      </div>
+    `).join('');
+  }
+  function updateCartQty(id, type, delta) {
+    const item = cartItems.find(i => i.id === id && i.type === type);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty < 1) {
+      removeCartItem(id, type);
+      return;
+    }
+    renderCartItems();
+  }
+  function removeCartItem(id, type) {
+    const index = cartItems.findIndex(i => i.id === id && i.type === type);
+    if (index !== -1) cartItems.splice(index, 1);
+    renderCartItems();
+  }
+  function openCartDrawer() {
+    const drawer = document.getElementById('cartDrawer');
+    if (drawer) drawer.classList.add('open');
+  }
+  function closeCartDrawer() {
+    const drawer = document.getElementById('cartDrawer');
+    if (drawer) drawer.classList.remove('open');
+  }
+  function submitCartCart() {
+    if (!cartItems.length) {
+      closeCartDrawer();
+      return;
+    }
+    const subjectInput = document.querySelector('input[name="subject"]');
+    const messageInput = document.querySelector('textarea[name="message"]');
+    const summary = cartItems.map(item => `${item.qty}× ${item.name}`).join(', ');
+    if (subjectInput) subjectInput.value = `Cart enquiry: ${summary}`;
+    if (messageInput) {
+      messageInput.value = `I am interested in the following items: ${summary}. Please share the next steps.`;
+      messageInput.focus();
+    }
+    closeCartDrawer();
+    const enquirySection = document.getElementById('enquiry');
+    if (enquirySection) enquirySection.scrollIntoView({ behavior: 'smooth' });
+  }
+</script>

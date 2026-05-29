@@ -342,13 +342,14 @@ class EnquiryForm(forms.ModelForm):
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['name', 'description', 'price', 'price_unit', 'icon', 'is_featured']
+        fields = ['name', 'description', 'price', 'price_unit', 'icon', 'image', 'is_featured']
         widgets = {
             'name':        forms.TextInput(attrs={'class': FC, 'placeholder': 'Service Name'}),
             'description': forms.Textarea(attrs={'class': FC, 'rows': 3}),
             'price':       forms.NumberInput(attrs={'class': FC, 'placeholder': '0.00'}),
             'price_unit':  forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. per visit'}),
             'icon':        forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. tools'}),
+            'image':       forms.ClearableFileInput(attrs={'class': FC}),
         }
 
 
