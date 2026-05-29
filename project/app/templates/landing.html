@@ -222,40 +222,6 @@ body::before {
   transition: border-color .2s, color .2s; display: inline-flex; align-items: center; gap: 8px;
 }
 .btn-hero-o:hover { border-color: var(--gold); color: var(--gold); }
-/* availability card */
-.avail-card {
-  background: var(--card-bg); border: 1px solid var(--border);
-  border-radius: 16px; padding: 28px; backdrop-filter: blur(20px);
-  border-top: 3px solid var(--gold);
-  position: relative; overflow: hidden;
-}
-.avail-card::before {
-  content: '⚡'; position: absolute; right: -8px; bottom: -20px;
-  font-size: 8rem; opacity: 0.04; line-height: 1; pointer-events: none;
-}
-.avail-title {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.2em;
-  text-transform: uppercase; color: var(--gold);
-  border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 18px;
-}
-.avail-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.avail-icon {
-  width: 36px; height: 36px; background: rgba(245,158,11,0.1);
-  border: 1px solid rgba(245,158,11,0.2); border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--gold); font-size: 0.95rem; flex-shrink: 0;
-}
-.avail-lbl { color: rgba(255,255,255,0.35); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.avail-val { color: var(--white); font-weight: 600; font-size: 0.85rem; }
-.btn-wa-hero {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; margin-top: 10px;
-  background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.3);
-  color: #25d366; border-radius: 8px; padding: 11px;
-  font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
-  font-family: var(--font-body); transition: background .2s;
-}
-.btn-wa-hero:hover { background: rgba(37,211,102,0.2); color: #25d366; }
 /* Technician image placeholder */
 .tech-image-wrap {
   position: relative; border-radius: 16px; overflow: hidden;
@@ -273,6 +239,20 @@ body::before {
 .verified-ring .vr-name { font-family: var(--font-head); font-size: 1rem; color: var(--white); }
 .verified-ring .vr-role { font-size: 0.65rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; }
 .verified-check { color: var(--gold); font-size: 1.4rem; }
+
+.wa-float {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  width: 60px; height: 60px; border-radius: 50%;
+  background: #25d366; color: white; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 1.6rem; text-decoration: none;
+  box-shadow: 0 8px 24px rgba(37,211,102,0.4);
+  animation: wa-pulse 2s infinite;
+}
+@keyframes wa-pulse {
+  0%,100% { box-shadow: 0 8px 24px rgba(37,211,102,0.4); }
+  50%      { box-shadow: 0 8px 32px rgba(37,211,102,0.7); }
+}
 
 /* ════════════════════════════════════════════════════════
    SECTION COMMON
@@ -602,6 +582,122 @@ body::before {
 .test-role { font-size:0.72rem; color:rgba(255,255,255,0.35); }
 
 /* ════════════════════════════════════════════════════════
+   PAYMENT SECTION
+════════════════════════════════════════════════════════ */
+#payment { background: var(--g0); }
+
+.payment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 28px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.pay-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 36px 24px 28px;
+  text-align: center;
+  transition: transform .3s, border-color .3s, box-shadow .3s;
+  position: relative;
+  overflow: visible;
+}
+.pay-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(245,158,11,0.45);
+  box-shadow: 0 24px 60px rgba(245,158,11,0.09);
+}
+.pay-card--primary {
+  border-top: 3px solid var(--gold);
+  border-color: rgba(245,158,11,0.4);
+}
+
+.pay-primary-badge {
+  position: absolute;
+  top: -13px; left: 50%; transform: translateX(-50%);
+  background: var(--gold); color: var(--g0);
+  font-size: 0.58rem; font-weight: 900;
+  padding: 4px 14px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  white-space: nowrap; font-family: var(--font-body);
+  box-shadow: 0 4px 12px rgba(245,158,11,0.35);
+}
+
+.pay-method-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 6px; padding: 4px 12px;
+  font-size: 0.65rem; font-weight: 700;
+  color: var(--gold); letter-spacing: 0.12em;
+  text-transform: uppercase; margin-bottom: 16px;
+}
+
+.pay-label {
+  font-family: var(--font-head);
+  font-size: 1.55rem;
+  color: var(--white); margin-bottom: 6px; line-height: 1;
+}
+
+.pay-upi {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 20px;
+  word-break: break-all;
+}
+
+.pay-qr-frame {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 22px;
+  box-shadow: 0 6px 24px rgba(5,15,8,0.5);
+}
+.pay-qr-frame img {
+  width: 180px; height: 180px;
+  object-fit: contain; border-radius: 6px; display: block;
+}
+.pay-qr-empty {
+  width: 180px; height: 180px;
+  background: var(--g3); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; color: var(--g5); margin: 0 auto 22px;
+}
+
+.btn-copy-upi {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%;
+  background: transparent; color: var(--gold);
+  border: 1px solid rgba(245,158,11,0.35); border-radius: 9px;
+  padding: 11px 16px; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--font-body); cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.btn-copy-upi:hover {
+  background: rgba(245,158,11,0.09);
+  border-color: var(--gold);
+}
+.btn-copy-upi.copied {
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.4);
+  color: #22c55e;
+}
+
+.payment-trust-note {
+  text-align: center;
+  margin-top: 36px;
+  color: rgba(255,255,255,0.2);
+  font-size: 0.72rem;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+/* ════════════════════════════════════════════════════════
    VISITING CARD
 ════════════════════════════════════════════════════════ */
 #visiting-card { background: var(--g0); padding: 80px 0; }
@@ -771,6 +867,8 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 .fade-up { opacity:0; transform:translateY(30px); transition:opacity .65s ease, transform .65s ease; }
 .fade-up.visible { opacity:1; transform:translateY(0); }
 
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ── prefill flash ── */
 @keyframes flash-border {
   0%  { box-shadow:0 0 0 0 rgba(245,158,11,0.5); }
@@ -782,16 +880,20 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 </head>
 <body>
 
+{% if org.whatsapp_config and org.whatsapp_config.show_float_button and org.whatsapp_config.is_active %}
+<a href="{{ org.whatsapp_config.get_wa_url }}"
+   target="_blank" rel="noopener"
+   class="wa-float">
+  <i class="bi bi-whatsapp"></i>
+</a>
+{% endif %}
+
 <!-- ════════════════════════════════════════
      TOPBAR
 ════════════════════════════════════════ -->
 <div class="topbar d-none d-md-block">
   <div class="container d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center flex-wrap gap-2">
-      {% if org.phone %}<i class="bi bi-telephone"></i><a href="tel:{{ org.phone }}">{{ org.phone }}</a>{% endif %}
-      {% if org.email %}<span class="sep">|</span><i class="bi bi-envelope"></i><a href="mailto:{{ org.email }}">{{ org.email }}</a>{% endif %}
-      {% if org.city %}<span class="sep">|</span><i class="bi bi-geo-alt"></i>{{ org.city }}, {{ org.state }}{% endif %}
-    </div>
+    {% include '_contact_inline.html' %}
     <div class="d-flex align-items-center gap-3">
       {% if org.is_verified %}<span class="live-badge"><span class="live-dot"></span> Verified Business</span>{% endif %}
       {% if org.facebook_url %}<a href="{{ org.facebook_url }}" target="_blank"><i class="bi bi-facebook"></i></a>{% endif %}
@@ -823,6 +925,7 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         {% if services %}<li class="nav-item"><a class="nav-link-item nav-link" href="#services">Services</a></li>{% endif %}
         {% if products %}<li class="nav-item"><a class="nav-link-item nav-link" href="#products">Products</a></li>{% endif %}
         {% if gallery %}<li class="nav-item"><a class="nav-link-item nav-link" href="#gallery">Projects</a></li>{% endif %}
+        {% if payment_qrs %}<li class="nav-item"><a class="nav-link-item nav-link" href="#payment"><i class="bi bi-qr-code me-1"></i>Pay</a></li>{% endif %}
         <li class="nav-item"><a class="nav-link-item nav-link" href="#enquiry">Contact</a></li>
       </ul>
       <a href="#enquiry" class="btn-quote"><i class="bi bi-lightning-charge-fill me-1"></i>Get Free Quote</a>
@@ -879,14 +982,20 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         <div class="hero-ctas">
           <a href="#enquiry" class="btn-hero-p"><i class="bi bi-lightning-charge-fill"></i>Get Free Quote</a>
           {% if org.phone %}<a href="tel:{{ org.phone }}" class="btn-hero-o"><i class="bi bi-telephone-fill"></i>Call Now</a>{% endif %}
+          {% if org.slug %}
+          <a href="{% url 'visiting_card' org.slug %}" class="btn btn-hero-o" target="_blank">
+            <i class="bi bi-person-badge"></i> Digital Card
+          </a>
+          {% endif %}
         </div>
       </div>
 
-      <!-- RIGHT: TECH IMAGE + AVAIL CARD -->
-      <div class="col-lg-3 d-none d-lg-block fade-up" style="transition-delay:.1s;">
+      <!-- RIGHT: TECH IMAGE (expanded to fill removed avail card space) -->
+      <div class="col-lg-6 d-none d-lg-block fade-up" style="transition-delay:.1s;">
         <div class="tech-image-wrap">
           {% if org.logo %}
-          <img src="{{ org.logo.url }}" alt="{{ org.name }}" style="width:100%;height:100%;object-fit:cover;">
+          <img src="{{ org.logo.url }}" alt="{{ org.name }}" style="width: 50%;
+    height: 50%;object-fit:cover;">
           {% else %}
           <div class="tech-placeholder"><i class="bi bi-person-badge-fill"></i></div>
           {% endif %}
@@ -900,41 +1009,27 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         </div>
       </div>
 
-      <div class="col-lg-3 fade-up" style="transition-delay:.2s;">
-        <div class="avail-card">
-          <div class="avail-title">Quick Info</div>
-          {% if org.working_hours %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-clock"></i></div>
-            <div><div class="avail-lbl">Hours</div><div class="avail-val">{{ org.working_hours }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.city %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-geo-alt"></i></div>
-            <div><div class="avail-lbl">Location</div><div class="avail-val">{{ org.city }}, {{ org.state }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.phone %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-telephone"></i></div>
-            <div><div class="avail-lbl">Phone</div><div class="avail-val">{{ org.phone }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.email %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-envelope"></i></div>
-            <div><div class="avail-lbl">Email</div><div class="avail-val" style="font-size:.75rem;">{{ org.email }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.whatsapp %}
-          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-wa-hero">
-            <i class="bi bi-whatsapp fs-5"></i> WhatsApp Chat
-          </a>
-          {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     CTA BANNER (top)
+════════════════════════════════════════ -->
+<section class="cta-banner">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2 class="cta-title">Need help fast? <span class="accent">Book a service or get a free quote</span></h2>
+        <p class="cta-sub">Certified technicians, quick response and transparent pricing. Reach out now via call or WhatsApp — or download our brochure.</p>
+        <div class="d-flex gap-3">
+          <a href="#enquiry" class="btn-cta-dark">Get Quote</a>
+          {% if org.pdf_catalog %}<a href="{{ org.pdf_catalog.url }}" class="btn btn-outline-dark" download>Download Catalog</a>{% endif %}
         </div>
       </div>
-
+      <div class="col-md-4 text-md-end">
+        {% include '_contact_inline.html' %}
+      </div>
     </div>
   </div>
 </section>
@@ -944,8 +1039,8 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 ════════════════════════════════════════ -->
 <section class="section" id="about" style="background:var(--g1);">
   <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-6 fade-up">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 fade-up">
         <div class="sec-eyebrow">Who We Are</div>
         <h2 class="sec-title">About {{ org.name }}</h2>
         <div class="sec-divider mb-4"></div>
@@ -956,14 +1051,14 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         </p>
         <div class="row g-3 mt-2">
           {% if org.established_year %}
-          <div class="col-6">
+          <div class="col-6 col-md-3">
             <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;">
               <div style="font-family:var(--font-head);font-size:2rem;color:var(--gold);">{{ org.established_year }}</div>
               <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;">Est. Year</div>
             </div>
           </div>
           {% endif %}
-          <div class="col-6">
+          <div class="col-6 col-md-3">
             <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;">
               <div style="font-family:var(--font-head);font-size:2rem;color:var(--gold);">{{ services.count }}</div>
               <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;">Services</div>
@@ -975,34 +1070,6 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
           {% if org.home_service_available %}<span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;"><i class="bi bi-house-fill"></i>Home Service</span>{% endif %}
           {% if org.accepts_online_payment %}<span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;"><i class="bi bi-credit-card-fill"></i>Online Payment</span>{% endif %}
           {% if org.is_open_sunday %}<span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;"><i class="bi bi-sun-fill"></i>Open Sunday</span>{% endif %}
-        </div>
-      </div>
-      <div class="col-lg-6 fade-up" style="transition-delay:.15s;">
-        <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;">
-          {% if org.gst_number %}
-          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-file-earmark-text"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">GST Number</div><div style="font-family:var(--font-mono);color:var(--white);font-size:0.88rem;font-weight:600;">{{ org.gst_number }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.address_line1 %}
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;"><i class="bi bi-geo-alt"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Address</div><div style="color:rgba(255,255,255,0.65);font-size:0.85rem;line-height:1.5;">{{ org.get_full_address }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.working_hours %}
-          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-clock"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Working Hours</div><div style="color:var(--white);font-size:0.88rem;font-weight:600;">{{ org.working_hours }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.phone %}
-          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-telephone"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Phone</div><a href="tel:{{ org.phone }}" style="color:var(--white);font-size:0.88rem;font-weight:700;">{{ org.phone }}</a></div>
-          </div>
-          {% endif %}
         </div>
       </div>
     </div>
@@ -1067,7 +1134,6 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
     <div class="prod-grid">
       {% for product in products %}
       <div class="prod-card fade-up" data-product-id="{{ product.pk }}" data-org-slug="{{ org.slug }}">
-        <!-- Image / carousel -->
         <div class="prod-img-wrap" onclick="openProductModal({{ product.pk }}, '{{ org.slug }}')">
           {% if product.image %}
           <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
@@ -1100,7 +1166,6 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
             </button>
           </div>
         </div>
-        <!-- Quick links shown on card -->
         {% if product.youtube_url or product.instagram_url or product.pdf_catalog %}
         <div class="prod-links-bar">
           {% if product.youtube_url %}
@@ -1220,6 +1285,78 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 {% endif %}
 
 <!-- ════════════════════════════════════════
+     PAYMENT SECTION
+════════════════════════════════════════ -->
+{% if payment_qrs %}
+<section class="section" id="payment">
+  <div class="container">
+    <div class="row align-items-end mb-5">
+      <div class="col-md-8 fade-up">
+        <div class="sec-eyebrow">
+          <i class="bi bi-shield-lock" style="font-size:0.8rem;"></i>Secure Payments
+        </div>
+        <h2 class="sec-title">Pay Us Securely</h2>
+        <div class="sec-divider"></div>
+      </div>
+      <div class="col-md-4 text-md-end fade-up">
+        <p style="color:rgba(255,255,255,0.3);font-size:0.8rem;line-height:1.6;">
+          Scan the QR code or copy<br>the UPI ID to pay instantly.
+        </p>
+      </div>
+    </div>
+    <div class="payment-grid">
+      {% for qr in payment_qrs %}
+      <div class="pay-card{% if qr.is_primary %} pay-card--primary{% endif %} fade-up">
+        {% if qr.is_primary %}
+        <div class="pay-primary-badge">
+          <i class="bi bi-star-fill me-1"></i>Primary
+        </div>
+        {% endif %}
+        <div class="pay-method-badge">
+          {% if qr.method == 'upi' %}
+            <i class="bi bi-phone-fill"></i>UPI
+          {% elif qr.method == 'bank' %}
+            <i class="bi bi-bank2"></i>Bank Transfer
+          {% elif qr.method == 'paypal' %}
+            <i class="bi bi-paypal"></i>PayPal
+          {% elif qr.method == 'razorpay' %}
+            <i class="bi bi-credit-card-2-front"></i>Razorpay
+          {% elif qr.method == 'stripe' %}
+            <i class="bi bi-credit-card-fill"></i>Stripe
+          {% else %}
+            <i class="bi bi-credit-card"></i>{{ qr.method|upper }}
+          {% endif %}
+        </div>
+        <div class="pay-label">{{ qr.label }}</div>
+        {% if qr.upi_id %}
+        <div class="pay-upi">{{ qr.upi_id }}</div>
+        {% endif %}
+        {% if qr.qr_image %}
+        <div class="pay-qr-frame">
+          <img src="{{ qr.qr_image.url }}" alt="{{ qr.label }} QR Code">
+        </div>
+        {% else %}
+        <div class="pay-qr-empty">
+          <i class="bi bi-qr-code"></i>
+        </div>
+        {% endif %}
+        {% if qr.upi_id %}
+        <button class="btn-copy-upi" data-upi="{{ qr.upi_id }}">
+          <i class="bi bi-clipboard"></i> Copy UPI ID
+        </button>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="payment-trust-note fade-up">
+      <i class="bi bi-shield-check text-success" style="font-size:0.9rem;"></i>
+      All payments are secure &nbsp;·&nbsp; Save your transaction ID for reference
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ════════════════════════════════════════
      VISITING CARD
 ════════════════════════════════════════ -->
 <section id="visiting-card">
@@ -1230,7 +1367,7 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         <h2 class="sec-title">Our Business Card</h2>
         <div class="sec-divider mb-4"></div>
         <p style="color:rgba(255,255,255,0.4);font-size:0.88rem;line-height:1.75;">
-          Scan or share our business card to save our contact details instantly. We're always available for your electrical needs.
+          Scan or share our business card to save our contact details instantly. We're always available for your needs.
         </p>
         <div class="mt-4 d-flex flex-column gap-3">
           {% if org.whatsapp %}
@@ -1293,7 +1430,6 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
                   {% endif %}
                 </div>
               </div>
-              <!-- QR code placeholder (integrate with qrcode lib if desired) -->
               <div class="vc-qr" title="QR Code" style="min-width:70px;">
                 <i class="bi bi-qr-code" style="font-size:1.8rem;color:var(--g0);"></i>
               </div>
@@ -1306,15 +1442,15 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 </section>
 
 <!-- ════════════════════════════════════════
-     CTA BANNER
+     CTA BANNER (bottom)
 ════════════════════════════════════════ -->
 <section class="cta-banner">
   <div class="container" style="position:relative;z-index:1;">
     <div class="row align-items-center">
       <div class="col-lg-8 fade-up">
         <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(5,15,8,0.5);margin-bottom:6px;">Limited Time Offer</div>
-        <h2 class="cta-title">Get a Free Electrical Inspection<br>for Your Home</h2>
-        <p class="cta-sub">Schedule today and our certified technician will visit and assess your electrical system at no charge.</p>
+        <h2 class="cta-title">Get a Free Inspection<br>for Your Home</h2>
+        <p class="cta-sub">Schedule today and our certified technician will visit and assess your system at no charge.</p>
         <div class="d-flex gap-3 flex-wrap">
           <a href="#enquiry" class="btn-cta-dark"><i class="bi bi-lightning-charge-fill"></i> Book Free Inspection</a>
           {% if org.phone %}<a href="tel:{{ org.phone }}" style="background:transparent;border:2px solid rgba(5,15,8,0.3);color:rgba(5,15,8,0.8);border-radius:8px;padding:14px 28px;font-weight:800;font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;font-family:var(--font-body);display:inline-flex;align-items:center;gap:8px;"><i class="bi bi-telephone"></i>{{ org.phone }}</a>{% endif %}
@@ -1464,7 +1600,7 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         </div>
         {% if org.tagline %}<div class="footer-sub">{{ org.tagline }}</div>{% endif %}
         <p style="color:rgba(255,255,255,0.3);font-size:0.8rem;line-height:1.75;margin-bottom:16px;">
-          {% if org.city %}Serving {{ org.city }} and surrounding areas with professional electrical solutions.{% endif %}
+          {% if org.city %}Serving {{ org.city }} and surrounding areas with professional solutions.{% endif %}
         </p>
         <div class="footer-soc">
           {% if org.phone %}<a href="tel:{{ org.phone }}" class="fsoc-btn"><i class="bi bi-telephone-fill"></i></a>{% endif %}
@@ -1492,20 +1628,16 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         <a href="#about" class="footer-link">About Us</a>
         {% if products %}<a href="#products" class="footer-link">Products</a>{% endif %}
         {% if gallery %}<a href="#gallery" class="footer-link">Projects</a>{% endif %}
+        {% if payment_qrs %}<a href="#payment" class="footer-link">Pay Us</a>{% endif %}
         <a href="#enquiry" class="footer-link">Contact</a>
       </div>
-      <!-- Contact + Newsletter -->
+      <!-- Newsletter only -->
       <div class="col-md-4">
         <div class="footer-heading">Stay Updated</div>
-        <div class="footer-newsletter mb-4">
+        <div class="footer-newsletter">
           <input type="email" placeholder="Your email address">
           <button>Subscribe</button>
         </div>
-        <div class="footer-heading">Contact</div>
-        {% if org.phone %}<a href="tel:{{ org.phone }}" class="footer-link"><i class="bi bi-telephone me-2"></i>{{ org.phone }}</a>{% endif %}
-        {% if org.email %}<a href="mailto:{{ org.email }}" class="footer-link"><i class="bi bi-envelope me-2"></i>{{ org.email }}</a>{% endif %}
-        {% if org.website %}<a href="{{ org.website }}" target="_blank" class="footer-link"><i class="bi bi-globe me-2"></i>{{ org.website }}</a>{% endif %}
-        {% if org.city %}<div class="footer-link" style="pointer-events:none;"><i class="bi bi-geo-alt me-2"></i>{{ org.city }}, {{ org.state }}</div>{% endif %}
       </div>
     </div>
     <div class="footer-copy">
@@ -1573,8 +1705,6 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
   </div>
 </div>
 
-
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // ── Scroll reveal ──────────────────────────────────────────────────────────────
@@ -1612,10 +1742,46 @@ function flash(el) {
   setTimeout(() => el.classList.remove('flash-field'), 1000);
 }
 
-// ── WhatsApp Admin Notification (called after POST redirect) ───────────────────
+// ── Copy UPI ID ────────────────────────────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.btn-copy-upi');
+  if (!btn) return;
+  var upi = btn.getAttribute('data-upi');
+  if (!upi) return;
+
+  var origHTML = btn.innerHTML;
+
+  function markCopied() {
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.innerHTML = origHTML;
+      btn.classList.remove('copied');
+    }, 2200);
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(upi).then(markCopied).catch(function() {
+      fallbackCopy(upi, markCopied);
+    });
+  } else {
+    fallbackCopy(upi, markCopied);
+  }
+});
+
+function fallbackCopy(text, cb) {
+  var el = document.createElement('textarea');
+  el.value = text;
+  el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(el);
+  el.focus(); el.select();
+  try { document.execCommand('copy'); cb(); } catch(e) {}
+  document.body.removeChild(el);
+}
+
+// ── WhatsApp Admin Notification ────────────────────────────────────────────────
 const waAdminUrl = "{{ wa_admin_url|escapejs }}";
 if (waAdminUrl) {
-  // Show notification bar
   const bar = document.createElement('div');
   bar.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;background:#1b4332;border:1px solid rgba(245,158,11,0.4);border-radius:12px;padding:16px 20px;max-width:320px;box-shadow:0 8px 32px rgba(5,15,8,0.5);';
   bar.innerHTML = `
@@ -1627,7 +1793,7 @@ if (waAdminUrl) {
     </div>
   `;
   document.body.appendChild(bar);
-  setTimeout(() => bar.style.transition = 'opacity .4s' , 4000);
+  setTimeout(() => bar.style.transition = 'opacity .4s', 4000);
   setTimeout(() => { bar.style.opacity = '0'; setTimeout(() => bar.remove(), 400); }, 8000);
 }
 
@@ -1641,7 +1807,6 @@ function openProductModal(productId, orgSlug) {
   document.body.style.overflow = 'hidden';
   document.getElementById('pmLoading').style.display = 'block';
   document.getElementById('pmContent').style.display  = 'none';
-  // Stop any existing YT
   document.getElementById('pmYtFrame').src = '';
 
   fetch(`/org/${orgSlug}/product/${productId}/json/`)
@@ -1654,14 +1819,12 @@ function openProductModal(productId, orgSlug) {
 }
 
 function renderProductModal(p) {
-  // Images
   const imgs = p.images && p.images.length ? p.images : [];
   const main = document.getElementById('pmImgMain');
   const ph   = document.getElementById('pmCarousel');
 
   if (imgs.length) {
     main.src = imgs[0]; main.style.display = 'block';
-    // Remove old placeholder
     const oldPh = ph.querySelector('.pm-img-ph');
     if (oldPh) oldPh.remove();
   } else {
@@ -1677,16 +1840,19 @@ function renderProductModal(p) {
   imgs.forEach((src, i) => {
     const t = document.createElement('img');
     t.src = src; t.className = 'pm-thumb' + (i === 0 ? ' active' : '');
-    t.onclick = () => { main.style.opacity = '0'; setTimeout(() => { main.src = src; main.style.opacity = '1'; }, 200); document.querySelectorAll('.pm-thumb').forEach(x => x.classList.remove('active')); t.classList.add('active'); };
+    t.onclick = () => {
+      main.style.opacity = '0';
+      setTimeout(() => { main.src = src; main.style.opacity = '1'; }, 200);
+      document.querySelectorAll('.pm-thumb').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    };
     thumbsEl.appendChild(t);
   });
 
-  // Text fields
   document.getElementById('pmBrand').textContent = p.brand || '';
   document.getElementById('pmName').textContent  = p.name;
   document.getElementById('pmDesc').textContent  = p.description || 'No description available.';
 
-  // Price
   const pr = document.getElementById('pmPriceRow');
   if (p.discount_price) {
     pr.innerHTML = `<span class="pm-price-sale">₹${p.discount_price}</span><span class="pm-price-orig">₹${p.price}</span><span class="pm-price-disc">−${p.discount_percent}%</span>`;
@@ -1695,14 +1861,12 @@ function renderProductModal(p) {
   }
   pr.innerHTML += `<span class="prod-unit"> / ${p.unit}</span>`;
 
-  // Stock
   const stk = document.getElementById('pmStock');
   stk.className = 'pm-stock-badge ' + (p.in_stock ? 'in' : 'out');
   stk.innerHTML = p.in_stock
     ? '<i class="bi bi-check-circle-fill"></i> In Stock'
     : '<i class="bi bi-x-circle-fill"></i> Out of Stock';
 
-  // Specs table
   const specsEl = document.getElementById('pmSpecs');
   const rows = [];
   if (p.sku)       rows.push(['SKU', p.sku]);
@@ -1715,17 +1879,14 @@ function renderProductModal(p) {
     ? rows.map(([k,v]) => `<div class="pm-spec-row"><span class="pm-spec-key">${k}</span><span class="pm-spec-val">${v}</span></div>`).join('')
     : '<div class="pm-spec-row" style="color:rgba(255,255,255,0.3);font-size:0.82rem;">No specifications listed.</div>';
 
-  // Tabs: Video
   const tabVideo = document.getElementById('tabVideo');
   if (p.youtube_url) {
     tabVideo.style.display = '';
-    // Convert watch URL to embed
     currentYt = p.youtube_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/');
   } else {
     tabVideo.style.display = 'none';
   }
 
-  // Tabs: Social
   const tabSocial = document.getElementById('tabSocial');
   const socialContent = document.getElementById('pmSocialContent');
   if (p.instagram_url) {
@@ -1739,13 +1900,11 @@ function renderProductModal(p) {
     tabSocial.style.display = 'none';
   }
 
-  // Tabs: reset to specs
   document.querySelectorAll('.pm-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.pm-tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector('.pm-tab[data-tab="specs"]').classList.add('active');
   document.querySelector('.pm-tab-content[data-content="specs"]').classList.add('active');
 
-  // Actions
   const wa = p.org_whatsapp;
   const waMsg = encodeURIComponent(`Hi! I'm interested in *${p.name}* (₹${p.discount_price || p.price}). Please share more details.`);
   const actions = document.getElementById('pmActions');
@@ -1783,7 +1942,6 @@ function closeProductModal() {
   setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = ''; }, 350);
 }
 
-// Tab switching
 document.querySelectorAll('.pm-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     const key = tab.dataset.tab;
@@ -1797,7 +1955,6 @@ document.querySelectorAll('.pm-tab').forEach(tab => {
   });
 });
 
-// Close on backdrop click
 modal.addEventListener('click', e => { if (e.target === modal) closeProductModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProductModal(); });
 </script>

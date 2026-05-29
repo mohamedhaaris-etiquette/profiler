@@ -140,31 +140,32 @@ def public_landing(request, slug):
     from .models import Organization
     from .forms import EnquiryForm
     from .notifications import notify_admin_whatsapp, notify_nearest_staff
- 
+
     org = get_object_or_404(Organization, slug=slug, is_active=True)
- 
+
     services          = org.get_services()
     featured_services = services.filter(is_featured=True)
     products          = org.products.filter(is_active=True)
     featured_products = products.filter(is_featured=True)
     gallery           = org.gallery.all()[:8]
     testimonials      = org.testimonials.filter(is_active=True)
- 
+    payment_qrs       = org.payment_qrs.filter(is_active=True)      # ← ADDED
+
     wa_admin_url = ''    # WhatsApp deep-link to notify admin (set after POST)
- 
+
     if request.method == 'POST':
         enquiry_form = EnquiryForm(organization=org, data=request.POST)
         if enquiry_form.is_valid():
             enquiry              = enquiry_form.save(commit=False)
             enquiry.organization = org
             enquiry.save()
- 
+
             # ── Notify admin ─────────────────────────────────────────────
             wa_admin_url = notify_admin_whatsapp(enquiry)
- 
+
             # ── Auto-notify backup staff if any is unavailable ────────────
             notify_nearest_staff(enquiry)
- 
+
             dj_messages.success(
                 request,
                 'Your enquiry has been submitted! We will contact you within 24 hours.'
@@ -176,19 +177,19 @@ def public_landing(request, slug):
         enquiry_form = EnquiryForm(organization=org)
         # Retrieve the admin url from session (after redirect)
         wa_admin_url = request.session.pop('wa_admin_url', '')
- 
+
     return render(request, 'landing.html', {
-        'org':              org,
-        'services':         services,
+        'org':               org,
+        'services':          services,
         'featured_services': featured_services,
-        'products':         products,
+        'products':          products,
         'featured_products': featured_products,
-        'gallery':          gallery,
-        'testimonials':     testimonials,
-        'enquiry_form':     enquiry_form,
-        'wa_admin_url':     wa_admin_url,   # ← used in JS after POST
+        'gallery':           gallery,
+        'testimonials':      testimonials,
+        'enquiry_form':      enquiry_form,
+        'wa_admin_url':      wa_admin_url,
+        'payment_qrs':       payment_qrs,                           # ← ADDED
     })
- 
 
 def product_detail(request, slug, pk):
     """Public-facing product detail page."""
@@ -906,4 +907,391 @@ def register_super_admin(request):
         'already_exists': already_exists,
     })
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db import transaction
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
+ 
+from .models import (
+    InvitationToken, Organization, CustomUser,
+    BusinessCategory, SubCategory, Plan, Service,
+    VisitingCard, WhatsAppConfig,
+)
 
+# Import feature-specific views (payment QR, visiting card, supply chain, etc.)
+from .views_features import (
+    visiting_card, download_vcard, edit_visiting_card,
+    manage_payment_qr, add_payment_qr, delete_payment_qr,
+    edit_whatsapp_config, supply_chain_view, link_supply_chain, update_chain_link,
+    discovery_home, discovery_category,
+)
+ 
+ 
+# ─────────────────────────────────────────────────────────────────────────────
+#  STEP 1 — Super Admin sends invitation
+# ─────────────────────────────────────────────────────────────────────────────
+ 
+@login_required
+def invite_member(request):
+    """Super Admin fills email + pre-assigns plan/category → invitation email sent."""
+    if not request.user.is_super_admin:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+ 
+    if request.method == 'POST':
+        email        = request.POST.get('email', '').strip().lower()
+        plan_id      = request.POST.get('plan')
+        cat_id       = request.POST.get('main_category')
+        subcat_id    = request.POST.get('sub_category') or None
+        subdomain    = request.POST.get('subdomain', '').strip() or None
+        site_title   = request.POST.get('site_title', '').strip()
+ 
+        # Basic validation
+        errors = []
+        if not email:
+            errors.append('Email is required.')
+        if InvitationToken.objects.filter(email=email, status='pending').exists():
+            errors.append(f'A pending invitation already exists for {email}.')
+        if Organization.objects.filter(email=email).exists():
+            errors.append(f'{email} is already a registered member.')
+        if subdomain and Organization.objects.filter(subdomain=subdomain).exists():
+            errors.append(f'Subdomain "{subdomain}" is already taken.')
+ 
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            plan    = Plan.objects.filter(pk=plan_id).first()
+            cat     = BusinessCategory.objects.filter(pk=cat_id).first()
+            subcat  = SubCategory.objects.filter(pk=subcat_id).first() if subcat_id else None
+ 
+            invite = InvitationToken.objects.create(
+                invited_by    = request.user,
+                email         = email,
+                plan          = plan,
+                main_category = cat,
+                sub_category  = subcat,
+                subdomain     = subdomain,
+                site_title    = site_title,
+            )
+            _send_invitation_email(invite, request)
+            messages.success(request, f'Invitation sent to {email} ✓')
+            return redirect('invitation_list')
+ 
+    context = {
+        'plans':      Plan.objects.filter(is_active=True).order_by('order'),
+        'categories': BusinessCategory.objects.all(),
+    }
+    return render(request, 'invite_member.html', context)
+ 
+ 
+def _send_invitation_email(invite: InvitationToken, request):
+    """Send the magic-link email to the invited person."""
+    onboard_url = invite.get_onboard_url(request)
+    subject = f"You're invited to join OrgPortal — Complete your profile"
+ 
+    # Plain-text body (also send HTML version below)
+    body = (
+        f"Hello,\n\n"
+        f"You have been invited to join OrgPortal by {invite.invited_by.get_full_name() or invite.invited_by.username}.\n\n"
+        f"Click the link below to complete your profile and set your password:\n\n"
+        f"{onboard_url}\n\n"
+        f"This link expires in 7 days.\n\n"
+        f"If you did not expect this invitation, you can ignore this email.\n\n"
+        f"— OrgPortal Team"
+    )
+ 
+    # Try HTML template first; fall back to plain text
+    try:
+        html_body = render_to_string('emails/invitation.html', {
+            'invite':      invite,
+            'onboard_url': onboard_url,
+        })
+    except Exception:
+        html_body = None
+ 
+    send_mail(
+        subject      = subject,
+        message      = body,
+        from_email   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@orgportal.com'),
+        recipient_list = [invite.email],
+        html_message = html_body,
+        fail_silently = False,
+    )
+ 
+ 
+# ─────────────────────────────────────────────────────────────────────────────
+#  STEP 2 — Invited person accepts & fills in details
+# ─────────────────────────────────────────────────────────────────────────────
+ 
+def onboard_accept(request, token):
+    """
+    Public view — the magic link from the email.
+    The user completes their org profile and sets a password.
+    """
+    invite = get_object_or_404(InvitationToken, token=token)
+ 
+    # Guard: token must be valid
+    if not invite.is_valid:
+        return render(request, 'onboard_invalid.html', {
+            'reason': 'expired' if invite.status == 'pending' else invite.status
+        })
+ 
+    if request.method == 'POST':
+        errors = _validate_onboard_form(request.POST)
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            try:
+                with transaction.atomic():
+                    org, user = _create_org_and_user_from_onboard(request.POST, request.FILES, invite)
+ 
+                    # Mark invitation accepted
+                    invite.status       = 'accepted'
+                    invite.accepted_at  = timezone.now()
+                    invite.organization = org
+                    invite.save()
+ 
+                    from django.contrib.auth import login as auth_login
+                    auth_login(request, user)
+                    messages.success(
+                        request,
+                        f'Welcome to OrgPortal, {org.name}! Your account is ready.'
+                    )
+                    return redirect('onboard_done', token=token)
+ 
+            except Exception as exc:
+                messages.error(request, f'Setup failed: {exc}')
+ 
+    context = {
+        'invite':  invite,
+        'plan':    invite.plan,
+        'cat':     invite.main_category,
+        'subcat':  invite.sub_category,
+    }
+    return render(request, 'onboard_accept.html', context)
+ 
+ 
+def onboard_done(request, token):
+    """Success page after onboarding."""
+    invite = get_object_or_404(InvitationToken, token=token)
+    return render(request, 'onboard_done.html', {'invite': invite, 'org': invite.organization})
+ 
+ 
+def _validate_onboard_form(data: dict) -> list:
+    errors = []
+    required = [
+        ('company_name', 'Company / Business name'),
+        ('contact_name', 'Your full name'),
+        ('mobile',       'Mobile number'),
+        ('address',      'Address'),
+        ('city',         'City'),
+        ('state',        'State'),
+        ('pincode',      'Pincode'),
+        ('password',     'Password'),
+        ('password2',    'Confirm password'),
+    ]
+    for field, label in required:
+        if not data.get(field, '').strip():
+            errors.append(f'{label} is required.')
+ 
+    if data.get('password') and data.get('password2'):
+        if data['password'] != data['password2']:
+            errors.append('Passwords do not match.')
+        if len(data['password']) < 8:
+            errors.append('Password must be at least 8 characters.')
+ 
+    if data.get('pincode') and not data['pincode'].strip().isdigit():
+        errors.append('Pincode must be numeric.')
+ 
+    return errors
+ 
+ 
+def _create_org_and_user_from_onboard(data, files, invite: InvitationToken):
+    """Create Organization + CustomUser from the onboarding form POST data."""
+    from django.utils.text import slugify
+ 
+    # ── Organisation ─────────────────────────────────────
+    org = Organization.objects.create(
+        name          = data['company_name'].strip(),
+        subdomain     = invite.subdomain or slugify(data['company_name']),
+        category      = invite.main_category,
+        sub_category  = invite.sub_category,
+        plan          = invite.plan,
+        plan_start_date = timezone.now().date(),
+        plan_end_date   = (
+            timezone.now().date() + timezone.timedelta(days=invite.plan.duration_days)
+            if invite.plan else None
+        ),
+        email         = invite.email,
+        phone         = data.get('mobile', '').strip(),
+        whatsapp      = data.get('whatsapp', '').strip(),
+        landline      = data.get('landline', '').strip(),
+        website       = data.get('website', '').strip(),
+        tagline       = data.get('tagline', '').strip(),
+        description   = data.get('description', '').strip(),
+        address_line1 = data.get('address', '').strip(),
+        address_line2 = data.get('address2', '').strip(),
+        city          = data.get('city', '').strip(),
+        district      = data.get('district', '').strip(),
+        state         = data.get('state', '').strip(),
+        pincode       = data.get('pincode', '').strip(),
+        status        = 'active',
+        is_active     = True,
+    )
+ 
+    # Upload logo if provided
+    if files.get('logo'):
+        org.logo = files['logo']
+        org.save(update_fields=['logo'])
+ 
+    # ── Default services from category template ───────────
+    if invite.main_category:
+        for i, svc_name in enumerate(invite.main_category.default_services):
+            Service.objects.create(
+                organization = org,
+                name         = svc_name,
+                icon         = invite.main_category.icon,
+                order        = i,
+                is_featured  = (i < 3),
+            )
+ 
+    # ── Auto-create visiting card & WhatsApp config ───────
+    VisitingCard.objects.create(
+        organization = org,
+        contact_name = data.get('contact_name', '').strip(),
+        designation  = data.get('designation', '').strip(),
+    )
+    whatsapp_number = data.get('whatsapp', '') or data.get('mobile', '')
+    if whatsapp_number:
+        WhatsAppConfig.objects.create(
+            organization    = org,
+            whatsapp_number = whatsapp_number.strip().replace('+', '').replace(' ', ''),
+        )
+ 
+    # ── User account ──────────────────────────────────────
+    email_local = invite.email.split('@')[0].replace('.', '_').replace('+', '_')
+    username = email_local
+    counter  = 1
+    while CustomUser.objects.filter(username=username).exists():
+        username = f"{email_local}{counter}"
+        counter += 1
+ 
+    name_parts = data.get('contact_name', '').strip().split(' ', 1)
+    user = CustomUser.objects.create_user(
+        username     = username,
+        email        = invite.email,
+        password     = data['password'],
+        first_name   = name_parts[0],
+        last_name    = name_parts[1] if len(name_parts) > 1 else '',
+        phone        = data.get('mobile', '').strip(),
+        landline     = data.get('landline', '').strip(),
+        gender       = data.get('gender', 'male'),
+        organization = org,
+        role         = 'org_admin',
+    )
+ 
+    if files.get('profile_photo'):
+        user.profile_pic = files['profile_photo']
+        user.save(update_fields=['profile_pic'])
+ 
+    return org, user
+ 
+ 
+# ─────────────────────────────────────────────────────────────────────────────
+#  INVITATION MANAGEMENT (Super Admin)
+# ─────────────────────────────────────────────────────────────────────────────
+ 
+@login_required
+def invitation_list(request):
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+ 
+    from django.core.paginator import Paginator
+    invites = InvitationToken.objects.select_related(
+        'invited_by', 'plan', 'main_category', 'organization'
+    ).order_by('-created_at')
+ 
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        invites = invites.filter(status=status_filter)
+ 
+    paginator = Paginator(invites, 20)
+    page = paginator.get_page(request.GET.get('page'))
+ 
+    return render(request, 'invitation_list.html', {
+        'page_obj': page,
+        'status_filter': status_filter,
+        'status_choices': InvitationToken.STATUS_CHOICES,
+    })
+ 
+ 
+@login_required
+def resend_invitation(request, pk):
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+    invite = get_object_or_404(InvitationToken, pk=pk)
+    if invite.status == 'pending':
+        invite.expires_at = timezone.now() + timezone.timedelta(days=7)
+        invite.save(update_fields=['expires_at'])
+        _send_invitation_email(invite, request)
+        messages.success(request, f'Invitation resent to {invite.email}.')
+    else:
+        messages.warning(request, 'Only pending invitations can be resent.')
+    return redirect('invitation_list')
+ 
+ 
+@login_required
+def revoke_invitation(request, pk):
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+    invite = get_object_or_404(InvitationToken, pk=pk)
+    invite.status = 'revoked'
+    invite.save(update_fields=['status'])
+    messages.success(request, f'Invitation for {invite.email} revoked.')
+    return redirect('invitation_list')
+
+
+# Visiting card edit (dashboard)
+@login_required
+def edit_visiting_card(request):
+    """Edit or create the organization's visiting card (handles POST updates).
+
+    For GET requests this redirects to the organization settings page to avoid
+    introducing a new template during the quick fix.
+    """
+    org = getattr(request.user, 'organization', None)
+    if not org:
+        return redirect('dashboard')
+
+    card, _ = VisitingCard.objects.get_or_create(organization=org)
+
+    if request.method == 'POST':
+        # Accept common card fields from the form
+        fields = [
+            'contact_name', 'designation', 'tagline',
+            'direct_phone', 'direct_whatsapp', 'direct_email',
+            'linkedin_url', 'instagram_url', 'twitter_url', 'youtube_url',
+            'theme',
+        ]
+        for f in fields:
+            if f in request.POST:
+                setattr(card, f, request.POST.get(f) or '')
+
+        if request.FILES.get('profile_photo'):
+            card.profile_photo = request.FILES.get('profile_photo')
+
+        # Toggle active if provided
+        if 'is_active' in request.POST:
+            card.is_active = request.POST.get('is_active') in ['1', 'true', 'True', 'on']
+
+        card.save()
+        messages.success(request, 'Visiting card updated.')
+        return redirect('org_settings')
+
+    return redirect('org_settings')

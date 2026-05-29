@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate
 from .models import (
     CustomUser, Organization, Enquiry, Service,
     BusinessCategory, SubCategory, Plan, Product
@@ -282,11 +283,43 @@ class OrganizationSignupForm(forms.ModelForm):
 # ── Login ──────────────────────────────────────────────────────────────────────
 class CustomLoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'Username', 'class': FC_LG
+        'placeholder': 'Username or email', 'class': FC_LG
     }))
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'placeholder': 'Password', 'class': FC_LG
     }))
+
+    def clean(self):
+        """Allow authentication with either username or email.
+
+        Tries normal username authentication first; if that fails and the
+        entered identifier looks like an email (contains @), it will look up
+        the user by email and attempt authentication with that user's
+        username.
+        """
+        cleaned_data = super().clean()
+        username_or_email = cleaned_data.get('username')
+        password = cleaned_data.get('password')
+
+        if username_or_email and password:
+            # Try authenticate as given (username)
+            user = authenticate(self.request, username=username_or_email, password=password)
+            if user is None and '@' in username_or_email:
+                # Try lookup by email (case-insensitive)
+                try:
+                    user_obj = CustomUser.objects.get(email__iexact=username_or_email)
+                except CustomUser.DoesNotExist:
+                    user_obj = None
+                if user_obj:
+                    user = authenticate(self.request, username=user_obj.username, password=password)
+
+            if user is None:
+                raise forms.ValidationError('Invalid username/email or password.')
+
+            self.user_cache = user
+            self.confirm_login_allowed(user)
+
+        return cleaned_data
 
 class EnquiryForm(forms.ModelForm):
     class Meta:

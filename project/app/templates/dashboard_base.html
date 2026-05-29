@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load app_filters %}
 {% block title %}Super Admin — OrgPortal{% endblock %}
 {% block extra_css %}
 <style>
@@ -219,6 +220,49 @@ body { background: #f1f5f9; }
   {% endif %}
 
   {% endif %}
+
+
+  <!-- Org-specific tools -->
+  {% if user.organization %}
+  <div class="sidebar-section">System</div>
+  <a href="{% url 'edit_visiting_card' %}" class="nav-link {% if request.resolver_match.url_name == 'edit_visiting_card' %}active{% endif %}">
+    <i class="bi bi-person-badge"></i> My Card
+  </a>
+
+  <a href="{% url 'manage_payment_qr' %}" class="nav-link {% if request.resolver_match.url_name == 'manage_payment_qr' %}active{% endif %}">
+    <i class="bi bi-qr-code"></i> Payment QR
+  </a>
+
+  <a href="{% url 'edit_whatsapp_config' %}" class="nav-link {% if request.resolver_match.url_name == 'edit_whatsapp_config' %}active{% endif %}">
+    <i class="bi bi-whatsapp"></i> WhatsApp
+  </a>
+
+  <a href="{% url 'supply_chain' %}" class="nav-link {% if request.resolver_match.url_name == 'supply_chain' %}active{% endif %}">
+    <i class="bi bi-diagram-3"></i> Supply Chain
+  </a>
+
+  <a href="{% url 'referral_dashboard' %}" class="nav-link {% if 'referral' in request.resolver_match.url_name %}active{% endif %}">
+    <i class="bi bi-gift"></i> Referrals
+  </a>
+
+  <a href="{% url 'org_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'org_settings' %}active{% endif %}">
+    <i class="bi bi-sliders"></i> Settings
+  </a>
+
+  {% endif %}
+
+  <!-- Super Admin only -->
+{% if user.is_super_admin %}
+<a href="{% url 'invite_member' %}">
+  <i class="bi bi-envelope-plus"></i> Invite Member
+</a>
+<a href="{% url 'invitation_list' %}">
+  <i class="bi bi-send"></i> Invitations
+</a>
+<a href="{% url 'member_list' %}">
+  <i class="bi bi-people"></i> Members
+</a>
+{% endif %}
 
   <!-- ── ACCOUNT (common to all roles) ─────────── -->
   <div class="sidebar-section">Account</div>
