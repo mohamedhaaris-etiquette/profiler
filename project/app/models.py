@@ -108,6 +108,10 @@ class Organization(models.Model):
         help_text='Subdomain name assigned by Admin (e.g. "johns-electricals")'
     )
 
+    supply_chain_role = models.ForeignKey(
+    'SupplyChainRole', on_delete=models.SET_NULL, null=True, blank=True,
+    related_name='organizations')
+
     category = models.ForeignKey(
         BusinessCategory, on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -205,6 +209,22 @@ class Organization(models.Model):
             parts.append(self.district)
         parts += [self.state, self.pincode]
         return ', '.join(parts)
+
+    @property
+    def visiting_card_person(self):
+        try:
+            vc = self.visiting_card
+            return vc.contact_name or self.name
+        except Exception:
+            return self.name
+
+    @property
+    def visiting_card_designation(self):
+        try:
+            vc = self.visiting_card
+            return vc.designation or (self.category.name if self.category else '')
+        except Exception:
+            return self.category.name if self.category else ''
 
     @property
     def is_plan_active(self):
@@ -343,10 +363,10 @@ class Product(models.Model):
     image3 = models.ImageField(upload_to='products/', blank=True, null=True)
     icon = models.CharField(max_length=50, default='box-seam')
     is_featured = models.BooleanField(default=False)
-    youtube_url   = "models.URLField(blank=True, help_text='YouTube demo video URL')"
-    instagram_url = "models.URLField(blank=True, help_text='Instagram post URL')"
-    pdf_catalog   = "models.FileField(upload_to='catalogs/', blank=True, null=True, help_text='Downloadable PDF catalog')"
-    specs_json    = "models.JSONField(default=dict, blank=True, help_text='Key-value product specifications')"
+    youtube_url = models.URLField(blank=True, help_text='YouTube demo video URL')
+    instagram_url = models.URLField(blank=True, help_text='Instagram post URL')
+    pdf_catalog = models.FileField(upload_to='catalogs/', blank=True, null=True, help_text='Downloadable PDF catalog')
+    specs_json = models.JSONField(default=dict, blank=True, help_text='Key-value product specifications')
     is_active = models.BooleanField(default=True)
     in_stock = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
@@ -479,3 +499,457 @@ class ReferralBonus(models.Model):
         from django.db.models import Sum
         result = cls.objects.filter(organization=organization).aggregate(total=Sum('points'))
         return result['total'] or 0
+
+
+"""
+models_additions.py
+===================
+Add these new models to your existing models.py.
+They extend the current structure to support:
+  1. Email-only invitation flow (admin sends invite → user self-onboards)
+  2. Supply chain hierarchy (Manufacturer → Distributor → Dealer → Seller → Customer)
+  3. Digital visiting card
+  4. Payment QR code
+  5. WhatsApp enquiry config
+"""
+
+import uuid
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+
+# ── 1. INVITATION TOKEN ───────────────────────────────────────────────────────
+class InvitationToken(models.Model):
+    """
+    Created by Super Admin when adding a new member via email only.
+    The invited person clicks the link and completes their profile.
+    """
+    STATUS_CHOICES = [
+        ('pending',  'Pending'),
+        ('accepted', 'Accepted'),
+        ('expired',  'Expired'),
+        ('revoked',  'Revoked'),
+    ]
+
+    # Who sent it and to which email
+    invited_by   = models.ForeignKey(
+        'CustomUser', on_delete=models.SET_NULL, null=True, related_name='sent_invitations'
+    )
+    email        = models.EmailField(db_index=True)
+
+    # Pre-assigned plan / category so they land on the right onboarding
+    plan         = models.ForeignKey('Plan', on_delete=models.SET_NULL, null=True, blank=True)
+    main_category = models.ForeignKey('BusinessCategory', on_delete=models.SET_NULL, null=True, blank=True)
+    sub_category  = models.ForeignKey('SubCategory', on_delete=models.SET_NULL, null=True, blank=True)
+    subdomain     = models.SlugField(max_length=100, blank=True, null=True,
+                                     help_text='Pre-assigned subdomain (optional)')
+    site_title    = models.CharField(max_length=200, blank=True)
+
+    # Token
+    token  = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Timestamps
+    created_at  = models.DateTimeField(auto_now_add=True)
+    expires_at  = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+
+    # The org/user created after acceptance
+    organization = models.OneToOneField(
+        'Organization', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='invitation'
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Invite → {self.email} [{self.status}]"
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timezone.timedelta(days=7)
+        super().save(*args, **kwargs)
+
+    @property
+    def is_valid(self):
+        return self.status == 'pending' and self.expires_at > timezone.now()
+
+    def get_onboard_url(self, request=None):
+        from django.urls import reverse
+        path = reverse('onboard_accept', args=[str(self.token)])
+        if request:
+            return request.build_absolute_uri(path)
+        return path
+
+
+# ── 2. SUPPLY CHAIN ROLE & HIERARCHY ─────────────────────────────────────────
+class SupplyChainRole(models.Model):
+    """
+    Defines a node-type in the supply chain.
+    Examples: Manufacturer, Distributor, Dealer, Wholesaler, Retailer,
+              Service Provider, Agency, Technician, Freelancer, Customer
+    """
+    ROLE_TYPE_CHOICES = [
+        ('manufacturer',    'Manufacturer'),
+        ('distributor',     'Distributor'),
+        ('dealer',          'Dealer / Wholesaler'),
+        ('retailer',        'Retailer / Reseller'),
+        ('service_agency',  'Service Agency'),
+        ('technician',      'Technician'),
+        ('freelancer',      'Freelancer'),
+        ('customer',        'Customer'),
+    ]
+
+    name        = models.CharField(max_length=100)
+    role_type   = models.CharField(max_length=30, choices=ROLE_TYPE_CHOICES, unique=True)
+    description = models.TextField(blank=True)
+    icon        = models.CharField(max_length=50, default='diagram-3')
+    order       = models.PositiveIntegerField(default=0)
+    color       = models.CharField(max_length=7, default='#2563eb')
+    is_active   = models.BooleanField(default=True)
+
+    # Which roles can be a parent of this role
+    # e.g. Distributor's allowed parents = [Manufacturer]
+    allowed_parent_roles = models.ManyToManyField(
+        'self', symmetrical=False, blank=True,
+        related_name='allowed_child_roles',
+        help_text='Which roles are allowed as parent of this role'
+    )
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
+
+class SupplyChainLink(models.Model):
+    """
+    Connects two Organizations in the supply chain.
+    e.g.  parent=Manufacturer  ←→  child=Distributor
+          parent=Distributor   ←→  child=Dealer
+    """
+    STATUS_CHOICES = [
+        ('pending',  'Pending'),
+        ('active',   'Active'),
+        ('inactive', 'Inactive'),
+        ('rejected', 'Rejected'),
+    ]
+
+    parent    = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='supply_chain_children'
+    )
+    child     = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='supply_chain_parents'
+    )
+    status    = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    note      = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('parent', 'child')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.parent.name} → {self.child.name} [{self.status}]"
+
+
+# ── Add to Organization model (as a migration addition) ───────────────────────
+# Add these fields to your existing Organization model:
+#
+#   supply_chain_role = models.ForeignKey(
+#       SupplyChainRole, on_delete=models.SET_NULL, null=True, blank=True,
+#       related_name='organizations'
+#   )
+#
+# Then run:  python manage.py makemigrations && python manage.py migrate
+
+
+# ── 3. DIGITAL VISITING CARD ──────────────────────────────────────────────────
+class VisitingCard(models.Model):
+    """
+    A shareable digital business card for an Organization.
+    Accessible at /card/<org_slug>/  — renders a mobile-first card page.
+    """
+    THEME_CHOICES = [
+        ('classic',   'Classic'),
+        ('modern',    'Modern'),
+        ('bold',      'Bold'),
+        ('minimal',   'Minimal'),
+        ('gradient',  'Gradient'),
+    ]
+
+    organization  = models.OneToOneField(
+        'Organization', on_delete=models.CASCADE, related_name='visiting_card'
+    )
+    theme         = models.CharField(max_length=20, choices=THEME_CHOICES, default='modern')
+
+    # Card owner details (may differ from org defaults)
+    contact_name  = models.CharField(max_length=100, blank=True)
+    designation   = models.CharField(max_length=100, blank=True)
+    tagline       = models.CharField(max_length=200, blank=True)
+    profile_photo = models.ImageField(upload_to='visiting_cards/', blank=True, null=True)
+
+    # Optional override links
+    direct_phone     = models.CharField(max_length=20, blank=True)
+    direct_whatsapp  = models.CharField(max_length=20, blank=True)
+    direct_email     = models.EmailField(blank=True)
+
+    # Social links (can reuse org ones or override)
+    linkedin_url  = models.URLField(blank=True)
+    instagram_url = models.URLField(blank=True)
+    twitter_url   = models.URLField(blank=True)
+    youtube_url   = models.URLField(blank=True)
+
+    # QR + analytics
+    total_views   = models.PositiveIntegerField(default=0)
+    total_saves   = models.PositiveIntegerField(default=0)  # .vcf downloads
+
+    is_active     = models.BooleanField(default=True)
+    created_at    = models.DateTimeField(auto_now_add=True)
+    updated_at    = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Card — {self.organization.name}"
+
+    def get_vcard_text(self):
+        """Generate a .vcf vCard string for download."""
+        org  = self.organization
+        name = self.contact_name or org.name
+        phone = self.direct_phone or org.phone
+        email = self.direct_email or org.email
+
+        lines = [
+            "BEGIN:VCARD",
+            "VERSION:3.0",
+            f"FN:{name}",
+            f"ORG:{org.name}",
+        ]
+        if self.designation:
+            lines.append(f"TITLE:{self.designation}")
+        if phone:
+            lines.append(f"TEL;TYPE=CELL:{phone}")
+        if email:
+            lines.append(f"EMAIL:{email}")
+        if org.website:
+            lines.append(f"URL:{org.website}")
+        if org.address_line1:
+            addr = f"{org.address_line1}, {org.city}, {org.state} {org.pincode}"
+            lines.append(f"ADR;TYPE=WORK:;;{addr};;;;")
+        lines.append("END:VCARD")
+        return "\n".join(lines)
+
+
+# ── 4. PAYMENT QR CODE ────────────────────────────────────────────────────────
+class PaymentQR(models.Model):
+    """
+    Stores one or more payment QR codes / UPI IDs for an Organization.
+    Displayed on the landing page for quick payments / advance bookings.
+    """
+    METHOD_CHOICES = [
+        ('upi',        'UPI (GPay / PhonePe / Paytm)'),
+        ('bank',       'Bank Transfer'),
+        ('paypal',     'PayPal'),
+        ('stripe',     'Stripe'),
+        ('razorpay',   'Razorpay'),
+        ('other',      'Other'),
+    ]
+
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='payment_qrs'
+    )
+    label        = models.CharField(max_length=100, default='Pay Now')
+    method       = models.CharField(max_length=20, choices=METHOD_CHOICES, default='upi')
+    upi_id       = models.CharField(max_length=100, blank=True,
+                                    help_text='e.g. business@okicici')
+    qr_image     = models.ImageField(upload_to='payment_qr/', blank=True, null=True,
+                                     help_text='Upload QR image from your payment app')
+    is_primary   = models.BooleanField(default=False)
+    is_active    = models.BooleanField(default=True)
+    order        = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', '-is_primary']
+
+    def __str__(self):
+        return f"{self.organization.name} — {self.label} ({self.method})"
+
+
+# ── 5. WHATSAPP ENQUIRY CONFIG ────────────────────────────────────────────────
+class WhatsAppConfig(models.Model):
+    """
+    Controls the WhatsApp enquiry button behaviour on the landing page.
+    """
+    organization     = models.OneToOneField(
+        'Organization', on_delete=models.CASCADE, related_name='whatsapp_config'
+    )
+    whatsapp_number  = models.CharField(max_length=20,
+                                        help_text='With country code, e.g. 919876543210')
+    greeting_message = models.TextField(
+        default="Hi! I found your business on OrgPortal and I'd like to enquire.",
+        help_text='Pre-filled WhatsApp message when customer taps the button'
+    )
+    show_float_button = models.BooleanField(default=True,
+                                            help_text='Floating WhatsApp button on landing page')
+    show_in_enquiry_form = models.BooleanField(default=True,
+                                               help_text='Show WA button after form submission')
+    business_hours_only  = models.BooleanField(default=False,
+                                               help_text='Only show button during working hours')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"WA Config — {self.organization.name}"
+
+    def get_wa_url(self, custom_message: str = '') -> str:
+        import urllib.parse
+        msg = custom_message or self.greeting_message
+        return f"https://wa.me/{self.whatsapp_number}?text={urllib.parse.quote(msg)}"
+
+
+class Cart(models.Model):
+    """
+    Session-scoped cart — works for anonymous visitors.
+    Created lazily when first item is added.
+    Linked to an Organization so items can only come from one org at a time.
+    """
+    STATUS_CHOICES = [
+        ('active',    'Active'),
+        ('checkout',  'Checked Out'),
+        ('abandoned', 'Abandoned'),
+    ]
+ 
+    session_key  = models.CharField(max_length=64, db_index=True)
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='carts'
+    )
+    status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+ 
+    # Optional: if the visitor later submits an enquiry we link it here
+    enquiry = models.OneToOneField(
+        'Enquiry', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='cart'
+    )
+ 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['-updated_at']
+ 
+    def __str__(self):
+        return f"Cart [{self.session_key[:8]}] — {self.organization.name} ({self.item_count} items)"
+ 
+    # ── Computed helpers ──────────────────────────────────────────────────────
+ 
+    @property
+    def item_count(self):
+        return sum(i.quantity for i in self.items.all())
+ 
+    @property
+    def total(self):
+        return sum(i.line_total for i in self.items.all())
+ 
+    @property
+    def items_list(self):
+        return self.items.select_related('product', 'service').all()
+ 
+    def get_whatsapp_summary(self, org_name: str = '') -> str:
+        """
+        Build a WhatsApp-ready order summary string.
+        Used by the "Enquire via WhatsApp" button on checkout.
+        """
+        import urllib.parse
+        lines = [f"Hi! I'd like to enquire about the following from *{org_name or self.organization.name}*:"]
+        lines.append("")
+        for item in self.items.select_related('product', 'service'):
+            label = item.product.name if item.product else (item.service.name if item.service else item.custom_label)
+            price = f"₹{item.unit_price}" if item.unit_price else ""
+            lines.append(f"• {label} × {item.quantity} {price}")
+        lines.append(f"\n*Total: ₹{self.total}*")
+        return urllib.parse.quote("\n".join(lines))
+ 
+ 
+class CartItem(models.Model):
+    """
+    A line-item in a Cart.
+    Can reference a Product OR a Service (or neither for custom entries).
+    """
+    cart        = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+ 
+    # One of these should be set, or custom_label for custom items
+    product     = models.ForeignKey(
+        'Product', on_delete=models.CASCADE, null=True, blank=True, related_name='cart_items'
+    )
+    service     = models.ForeignKey(
+        'Service', on_delete=models.CASCADE, null=True, blank=True, related_name='cart_items'
+    )
+    custom_label = models.CharField(max_length=200, blank=True)
+ 
+    quantity    = models.PositiveIntegerField(default=1)
+    unit_price  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+ 
+    # Snapshot of item name/price at time of adding (protects against edits)
+    name_snapshot  = models.CharField(max_length=200, blank=True)
+    price_snapshot = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+ 
+    note       = models.CharField(max_length=300, blank=True,
+                                  help_text='Customer note for this line item')
+    added_at   = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['added_at']
+        unique_together = [('cart', 'product'), ('cart', 'service')]
+ 
+    def __str__(self):
+        return f"{self.display_name} × {self.quantity}"
+ 
+    def save(self, *args, **kwargs):
+        # Snapshot name & price on first save
+        if not self.name_snapshot:
+            if self.product:
+                self.name_snapshot  = self.product.name
+                self.price_snapshot = self.product.effective_price
+                if not self.unit_price:
+                    self.unit_price = self.product.effective_price
+            elif self.service:
+                self.name_snapshot  = self.service.name
+                self.price_snapshot = self.service.price
+                if not self.unit_price:
+                    self.unit_price = self.service.price
+            else:
+                self.name_snapshot = self.custom_label
+        super().save(*args, **kwargs)
+ 
+    @property
+    def display_name(self):
+        return self.name_snapshot or (
+            self.product.name if self.product else
+            self.service.name if self.service else
+            self.custom_label
+        )
+ 
+    @property
+    def display_image(self):
+        """Return the primary image field for cart display."""
+        if self.product and self.product.image:
+            return self.product.image
+        if self.service and self.service.image:
+            return self.service.image
+        return None
+ 
+    @property
+    def line_total(self):
+        if self.unit_price:
+            return self.unit_price * self.quantity
+        return 0
+ 
+    @property
+    def item_type(self):
+        if self.product:
+            return 'product'
+        if self.service:
+            return 'service'
+        return 'custom'

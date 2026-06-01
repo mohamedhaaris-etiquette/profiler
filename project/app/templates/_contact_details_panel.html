@@ -1,0 +1,25 @@
+{% comment %} Detailed contact panel (used in About column). {% endcomment %}
+{% if org.gst_number %}
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+  <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-file-earmark-text"></i></div>
+  <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">GST Number</div><div style="font-family:var(--font-mono);color:var(--white);font-size:0.88rem;font-weight:600;">{{ org.gst_number }}</div></div>
+</div>
+{% endif %}
+{% if org.address_line1 %}
+<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+  <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;"><i class="bi bi-geo-alt"></i></div>
+  <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Address</div><div style="color:rgba(255,255,255,0.65);font-size:0.85rem;line-height:1.5;">{{ org.get_full_address }}</div></div>
+</div>
+{% endif %}
+{% if org.working_hours %}
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+  <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-clock"></i></div>
+  <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Working Hours</div><div style="color:var(--white);font-size:0.88rem;font-weight:600;">{{ org.working_hours }}</div></div>
+</div>
+{% endif %}
+{% if org.phone %}
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;">
+  <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-telephone"></i></div>
+  <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Phone</div><a href="tel:{{ org.phone }}" style="color:var(--white);font-size:0.88rem;font-weight:700;">{{ org.phone }}</a></div>
+</div>
+{% endif %}

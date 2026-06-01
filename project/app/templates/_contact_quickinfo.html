@@ -1,0 +1,30 @@
+{% comment %} Quick info rows for hero/avail card. Expects `org` in context. {% endcomment %}
+{% if org.working_hours %}
+<div class="avail-row">
+  <div class="avail-icon"><i class="bi bi-clock"></i></div>
+  <div><div class="avail-lbl">Hours</div><div class="avail-val">{{ org.working_hours }}</div></div>
+</div>
+{% endif %}
+{% if org.city %}
+<div class="avail-row">
+  <div class="avail-icon"><i class="bi bi-geo-alt"></i></div>
+  <div><div class="avail-lbl">Location</div><div class="avail-val">{{ org.city }}, {{ org.state }}</div></div>
+</div>
+{% endif %}
+{% if org.phone %}
+<div class="avail-row">
+  <div class="avail-icon"><i class="bi bi-telephone"></i></div>
+  <div><div class="avail-lbl">Phone</div><div class="avail-val">{{ org.phone }}</div></div>
+</div>
+{% endif %}
+{% if org.email %}
+<div class="avail-row">
+  <div class="avail-icon"><i class="bi bi-envelope"></i></div>
+  <div><div class="avail-lbl">Email</div><div class="avail-val" style="font-size:.75rem;">{{ org.email }}</div></div>
+</div>
+{% endif %}
+{% if org.whatsapp %}
+<a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-wa-hero">
+  <i class="bi bi-whatsapp fs-5"></i> WhatsApp Chat
+</a>
+{% endif %}

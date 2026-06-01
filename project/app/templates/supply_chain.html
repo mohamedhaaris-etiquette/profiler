@@ -1,0 +1,95 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Supply Chain — {{ org.name }}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1><i class="bi bi-diagram-3"></i> Supply Chain</h1>
+    <div class="text-muted small">Manage parent and child organisation links.</div>
+  </div>
+  <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card-modern p-4">
+      <h5 class="mb-3">Parents (organisations that supply to you)</h5>
+      {% if parents %}
+        <ul class="list-group">
+        {% for link in parents %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ link.parent.name }}</strong>
+              <div class="small text-muted">Role: {% if link.parent.supply_chain_role %}{{ link.parent.supply_chain_role.name }}{% else %}—{% endif %}</div>
+            </div>
+            <div class="text-end">
+              <span class="{% if link.status == 'active' %}badge bg-success{% else %}badge bg-secondary{% endif %}">{{ link.status|capfirst }}</span>
+              {% if link.status == 'pending' %}
+                <form method="post" action="{% url 'update_chain_link' link.pk %}" style="display:inline">{% csrf_token %}
+                  <input type="hidden" name="status" value="active">
+                  <button class="btn btn-sm btn-primary ms-2">Approve</button>
+                </form>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <div class="text-muted">No parent organisations linked.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-modern p-4">
+      <h5 class="mb-3">Children (organisations you supply to)</h5>
+      {% if children %}
+        <ul class="list-group">
+        {% for link in children %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ link.child.name }}</strong>
+              <div class="small text-muted">Role: {% if link.child.supply_chain_role %}{{ link.child.supply_chain_role.name }}{% else %}—{% endif %}</div>
+            </div>
+            <div class="text-end">
+              <span class="{% if link.status == 'active' %}badge bg-success{% else %}badge bg-secondary{% endif %}">{{ link.status|capfirst }}</span>
+            </div>
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <div class="text-muted">No child organisations linked.</div>
+      {% endif %}
+
+      <hr class="my-4">
+      <h6>Request a new connection</h6>
+      <form method="post" action="{% url 'link_supply_chain' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Target organisation</label>
+          <select name="target_org" class="form-select" required>
+            <option value="">Select organisation</option>
+            {% for o in other_orgs %}
+              <option value="{{ o.pk }}">{{ o.name }} — {{ o.city }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Direction</label>
+          <select name="direction" class="form-select">
+            <option value="child">Add as Child (you supply them)</option>
+            <option value="parent">Add as Parent (they supply you)</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Note (optional)</label>
+          <input type="text" name="note" class="form-control">
+        </div>
+        <button class="btn btn-primary">Send Request</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

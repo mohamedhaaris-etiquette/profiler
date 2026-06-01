@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate
 from .models import (
     CustomUser, Organization, Enquiry, Service,
     BusinessCategory, SubCategory, Plan, Product
@@ -282,11 +283,43 @@ class OrganizationSignupForm(forms.ModelForm):
 # ── Login ──────────────────────────────────────────────────────────────────────
 class CustomLoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={
-        'placeholder': 'Username', 'class': FC_LG
+        'placeholder': 'Username or email', 'class': FC_LG
     }))
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'placeholder': 'Password', 'class': FC_LG
     }))
+
+    def clean(self):
+        """Allow authentication with either username or email.
+
+        Tries normal username authentication first; if that fails and the
+        entered identifier looks like an email (contains @), it will look up
+        the user by email and attempt authentication with that user's
+        username.
+        """
+        cleaned_data = super().clean()
+        username_or_email = cleaned_data.get('username')
+        password = cleaned_data.get('password')
+
+        if username_or_email and password:
+            # Try authenticate as given (username)
+            user = authenticate(self.request, username=username_or_email, password=password)
+            if user is None and '@' in username_or_email:
+                # Try lookup by email (case-insensitive)
+                try:
+                    user_obj = CustomUser.objects.get(email__iexact=username_or_email)
+                except CustomUser.DoesNotExist:
+                    user_obj = None
+                if user_obj:
+                    user = authenticate(self.request, username=user_obj.username, password=password)
+
+            if user is None:
+                raise forms.ValidationError('Invalid username/email or password.')
+
+            self.user_cache = user
+            self.confirm_login_allowed(user)
+
+        return cleaned_data
 
 class EnquiryForm(forms.ModelForm):
     class Meta:
@@ -309,13 +342,14 @@ class EnquiryForm(forms.ModelForm):
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['name', 'description', 'price', 'price_unit', 'icon', 'is_featured']
+        fields = ['name', 'description', 'price', 'price_unit', 'icon', 'image', 'is_featured']
         widgets = {
             'name':        forms.TextInput(attrs={'class': FC, 'placeholder': 'Service Name'}),
             'description': forms.Textarea(attrs={'class': FC, 'rows': 3}),
             'price':       forms.NumberInput(attrs={'class': FC, 'placeholder': '0.00'}),
             'price_unit':  forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. per visit'}),
             'icon':        forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. tools'}),
+            'image':       forms.ClearableFileInput(attrs={'class': FC}),
         }
 
 
@@ -327,6 +361,7 @@ class ProductForm(forms.ModelForm):
             'name', 'description', 'sku', 'category', 'brand',
             'price', 'discount_price', 'stock_quantity', 'unit',
             'condition', 'icon', 'image', 'image2', 'image3',
+            'youtube_url', 'instagram_url', 'pdf_catalog', 'specs_json',
             'is_featured', 'in_stock', 'is_active',
         ]
         widgets = {
@@ -341,6 +376,10 @@ class ProductForm(forms.ModelForm):
             'unit':           forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. piece, kg, box'}),
             'condition':      forms.Select(attrs={'class': FS}),
             'icon':           forms.TextInput(attrs={'class': FC, 'placeholder': 'e.g. box-seam'}),
+            'youtube_url':    forms.URLInput(attrs={'class': FC, 'placeholder': 'https://youtu.be/...'}),
+            'instagram_url':  forms.URLInput(attrs={'class': FC, 'placeholder': 'https://instagram.com/...'}),
+            'pdf_catalog':    forms.ClearableFileInput(attrs={'class': FC}),
+            'specs_json':     forms.Textarea(attrs={'class': FC, 'rows': 3, 'placeholder': '{"color": "red", "size": "large"}'}),
         }
 
 
