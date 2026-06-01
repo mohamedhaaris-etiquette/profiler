@@ -14,8 +14,26 @@ from .forms import (
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+
     categories = BusinessCategory.objects.all()
-    return render(request, 'home.html', {'categories': categories})
+    steps = [
+        ('Register your business', 'Sign up, choose a category, and create your business profile in minutes.'),
+        ('Get discovered locally', 'Appear in search results when customers look for services nearby.'),
+        ('Manage enquiries', 'Receive customer leads and reply directly from your dashboard.'),
+        ('Grow online', 'Update services, add photos, and build trust with better listings.'),
+    ]
+    default_cats = [
+        ('Electrician', 'lightning-charge-fill'),
+        ('Plumber', 'droplet-fill'),
+        ('Mechanic', 'gear-fill'),
+        ('Carpenter', 'hammer'),
+    ]
+
+    return render(request, 'home.html', {
+        'categories': categories,
+        'steps': steps,
+        'default_cats': default_cats,
+    })
 
 
 def signup_view(request):
@@ -339,23 +357,40 @@ def delete_service(request, pk):
 
 @login_required
 def enquiries_list(request):
-    org = request.user.organization
+    user = request.user
     status_filter = request.GET.get('status', '')
-    enquiries = org.enquiries.all()
+
+    if user.is_super_admin:
+        enquiries = Enquiry.objects.select_related('organization').all()
+        org = None
+        page_org_name = 'All organizations'
+    else:
+        org = user.organization
+        enquiries = org.enquiries.all() if org else Enquiry.objects.none()
+        page_org_name = org.name if org else ''
+
     if status_filter:
         enquiries = enquiries.filter(status=status_filter)
+
     return render(request, 'enquiries.html', {
         'enquiries': enquiries,
         'org': org,
+        'org_name': page_org_name,
         'status_filter': status_filter,
         'enquiry_statuses': Enquiry.STATUS_CHOICES,
+        'show_org_column': user.is_super_admin,
     })
 
 
 @login_required
 def update_enquiry_status(request, pk):
-    org = request.user.organization
-    enq = get_object_or_404(Enquiry, pk=pk, organization=org)
+    user = request.user
+    if user.is_super_admin:
+        enq = get_object_or_404(Enquiry, pk=pk)
+    else:
+        org = user.organization
+        enq = get_object_or_404(Enquiry, pk=pk, organization=org)
+
     if request.method == 'POST':
         enq.status = request.POST.get('status', enq.status)
         enq.notes = request.POST.get('notes', enq.notes)

@@ -17,3 +17,14 @@ def split(value, sep=None):
         return [s.strip() for s in str(value).split(sep)]
     except Exception:
         return []
+
+
+@register.filter(name='strip')
+def strip(value):
+    """Trim whitespace from the start and end of a string."""
+    if value is None:
+        return ''
+    try:
+        return str(value).strip()
+    except Exception:
+        return value
