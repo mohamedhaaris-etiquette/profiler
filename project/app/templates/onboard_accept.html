@@ -1,0 +1,640 @@
+{% load app_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete Your Profile — OrgPortal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0f0f14;
+  --paper:  #f8f7f2;
+  --cream:  #fffef9;
+  --accent: #e8410c;
+  --accent2:#f5a623;
+  --muted:  #6b6b7a;
+  --border: #e2e0d8;
+  --card:   #ffffff;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --radius: 16px;
+}
+*,*::before,*::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* ── HEADER STRIP ── */
+.ob-header {
+  background: var(--ink);
+  color: white;
+  padding: 14px 0;
+  position: sticky; top: 0; z-index: 100;
+}
+.ob-logo { font-family: var(--font-head); font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; color: white; }
+.ob-logo span { color: var(--accent); }
+
+/* ── HERO WELCOME ── */
+.ob-welcome {
+  background: linear-gradient(135deg, var(--ink) 0%, #1a1a2e 100%);
+  color: white;
+  padding: 60px 0 40px;
+  overflow: hidden;
+  position: relative;
+}
+.ob-welcome::after {
+  content: '';
+  position: absolute; right: -60px; top: -60px;
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, rgba(232,65,12,0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.ob-welcome h1 {
+  font-family: var(--font-head);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.ob-welcome h1 em { color: var(--accent2); font-style: normal; }
+.ob-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 100px; padding: 6px 16px;
+  font-size: 0.78rem; font-weight: 500; color: rgba(255,255,255,0.8);
+  margin-bottom: 20px;
+}
+.ob-badge .dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; animation: pulse-dot 1.4s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── PLAN CHIP ── */
+.plan-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.35);
+  color: var(--accent2); border-radius: 8px; padding: 8px 14px;
+  font-size: 0.82rem; font-weight: 600;
+}
+
+/* ── STEPS INDICATOR ── */
+.steps-bar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky; top: 57px; z-index: 90;
+}
+.step-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.82rem; font-weight: 500; color: var(--muted);
+  padding: 6px 0;
+}
+.step-item.active { color: var(--accent); font-weight: 700; }
+.step-item.done   { color: #16a34a; }
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--border); color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+}
+.step-item.active .step-num { background: var(--accent); color: white; }
+.step-item.done .step-num   { background: #16a34a; color: white; }
+.step-line { flex: 1; height: 2px; background: var(--border); border-radius: 2px; }
+.step-item.done + .step-line,
+.step-item.active + .step-line { background: linear-gradient(90deg, #16a34a, var(--border)); }
+
+/* ── MAIN FORM AREA ── */
+.ob-body { padding: 48px 0 80px; }
+.form-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+.section-title {
+  font-family: var(--font-head);
+  font-size: 1.15rem; font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title .icon-wrap {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(232,65,12,0.08); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+}
+.section-sub { font-size: 0.83rem; color: var(--muted); margin-bottom: 28px; margin-top: 2px; }
+
+/* ── FORM CONTROLS ── */
+.form-label { font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 5px; }
+.form-label .req { color: var(--accent); margin-left: 2px; }
+.form-control, .form-select {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--cream);
+  transition: border-color .2s, box-shadow .2s;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(232,65,12,0.12);
+  outline: none;
+  background: white;
+}
+.form-control::placeholder { color: #b0aeb8; }
+textarea.form-control { resize: vertical; min-height: 90px; }
+.input-group-text {
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: var(--muted);
+}
+.input-group .form-control { border-left: none; border-radius: 0 10px 10px 0; }
+.input-group .form-control:focus { border-left: none; }
+
+/* ── OPTIONAL BADGE ── */
+.opt-badge {
+  font-size: 0.7rem; font-weight: 600; padding: 2px 7px;
+  border-radius: 4px; background: #f1f0eb; color: var(--muted);
+  vertical-align: middle; margin-left: 6px;
+}
+
+/* ── SUBMIT BUTTON ── */
+.btn-submit {
+  background: var(--accent);
+  color: white; border: none;
+  padding: 14px 40px; border-radius: 12px;
+  font-family: var(--font-head); font-size: 1.05rem; font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer; transition: all .25s;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.btn-submit:hover { background: #c9350a; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,65,12,0.3); }
+.btn-submit:active { transform: translateY(0); }
+
+/* ── PHOTO UPLOAD ── */
+.photo-upload-wrap {
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 24px; text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.photo-upload-wrap:hover { border-color: var(--accent); background: rgba(232,65,12,0.03); }
+.photo-upload-wrap input { display: none; }
+.photo-preview {
+  width: 80px; height: 80px; border-radius: 50%;
+  object-fit: cover; display: none; margin: 0 auto 10px;
+  border: 3px solid var(--accent);
+}
+
+/* ── PASSWORD STRENGTH ── */
+.pw-strength { height: 4px; border-radius: 4px; margin-top: 8px; transition: all .3s; }
+.pw-weak   { background: #ef4444; width: 33%; }
+.pw-medium { background: #f59e0b; width: 66%; }
+.pw-strong { background: #22c55e; width: 100%; }
+.pw-hint { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+/* ── ALERTS ── */
+.alert { border-radius: 10px; font-size: 0.88rem; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .form-section { padding: 20px 16px; }
+  .ob-welcome { padding: 40px 0 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="ob-header">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="ob-logo">Org<span>Portal</span></div>
+      <div style="font-size:0.8rem; color:rgba(255,255,255,0.5);">
+        <i class="bi bi-lock-fill me-1"></i> Secure Onboarding
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Welcome Hero -->
+<section class="ob-welcome">
+  <div class="container">
+    <div class="ob-badge"><span class="dot"></span> You've been invited</div>
+    <h1>
+      Complete your<br>
+      <em>business profile</em> &amp;<br>
+      go live today.
+    </h1>
+    <p style="color:rgba(255,255,255,0.65); max-width:480px; margin-top:16px; font-size:0.95rem;">
+      Invited by <strong style="color:white;">{{ invite.invited_by.get_full_name }}</strong>
+      &nbsp;·&nbsp; Fill in your details below to create your account.
+    </p>
+
+    {% if invite.plan or invite.main_category %}
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      {% if invite.plan %}
+      <div class="plan-chip">
+        <i class="bi bi-gem"></i> {{ invite.plan.name }} Plan
+      </div>
+      {% endif %}
+      {% if invite.main_category %}
+      <div class="plan-chip" style="background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.2); color:rgba(255,255,255,0.85);">
+        <i class="bi bi-grid-3x3-gap"></i> {{ invite.main_category.name }}
+        {% if invite.sub_category %} / {{ invite.sub_category.name }}{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Steps bar -->
+<div class="steps-bar">
+  <div class="container">
+    <div class="d-flex align-items-center gap-0" id="stepsBar">
+      <div class="step-item active" data-step="1">
+        <div class="step-num" id="sn1">1</div>
+        <span class="d-none d-sm-inline">Business</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" data-step="2">
+        <div class="step-num" id="sn2">2</div>
+        <span class="d-none d-sm-inline">Contact</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" data-step="3">
+        <div class="step-num" id="sn3">3</div>
+        <span class="d-none d-sm-inline">Account</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Messages -->
+<div class="container mt-3">
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show" role="alert">
+    {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- MAIN FORM -->
+<section class="ob-body">
+  <div class="container">
+    <form method="POST" enctype="multipart/form-data" id="onboardForm" novalidate>
+      {% csrf_token %}
+      <div class="row g-4">
+        <div class="col-lg-8">
+
+          <!-- ── SECTION 1: Business Info ── -->
+          <div class="form-section" id="sec1">
+            <div class="section-title">
+              <div class="icon-wrap"><i class="bi bi-building"></i></div>
+              Business Information
+            </div>
+            <p class="section-sub">Tell us about your business — this appears on your public profile.</p>
+
+            <div class="row g-3">
+              <div class="col-sm-8">
+                <label class="form-label">Business / Company Name <span class="req">*</span></label>
+                <input type="text" name="company_name" class="form-control" placeholder="e.g. John's Electrical Services" required value="{{ request.POST.company_name|default:'' }}">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">Est. Year <span class="opt-badge">Optional</span></label>
+                <input type="text" name="established_year" class="form-control" placeholder="e.g. 2015" value="{{ request.POST.established_year|default:'' }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Tagline <span class="opt-badge">Optional</span></label>
+                <input type="text" name="tagline" class="form-control" placeholder="One line that describes your business" value="{{ request.POST.tagline|default:'' }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Business Description <span class="opt-badge">Optional</span></label>
+                <textarea name="description" class="form-control" placeholder="Describe your services, expertise, and what makes you unique...">{{ request.POST.description|default:'' }}</textarea>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Business Logo <span class="opt-badge">Optional</span></label>
+                <label class="photo-upload-wrap d-block" for="logoInput">
+                  <img id="logoPreview" class="photo-preview" src="#" alt="logo preview">
+                  <i class="bi bi-image" style="font-size:1.4rem; color:var(--muted);"></i>
+                  <div style="margin-top:8px; font-size:0.82rem; color:var(--muted);">Click to upload logo</div>
+                  <div style="font-size:0.72rem; color:#b0aeb8; margin-top:2px;">PNG / JPG, max 5 MB</div>
+                </label>
+                <input type="file" id="logoInput" name="logo" accept="image/*">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Website <span class="opt-badge">Optional</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-globe2"></i></span>
+                  <input type="url" name="website" class="form-control" placeholder="https://yourbusiness.com" value="{{ request.POST.website|default:'' }}">
+                </div>
+                <label class="form-label mt-3">GST Number <span class="opt-badge">Optional</span></label>
+                <input type="text" name="gst_number" class="form-control" placeholder="22AAAAA0000A1Z5" value="{{ request.POST.gst_number|default:'' }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 2: Address ── -->
+          <div class="form-section" id="sec2">
+            <div class="section-title">
+              <div class="icon-wrap"><i class="bi bi-geo-alt"></i></div>
+              Business Address
+            </div>
+            <p class="section-sub">Where is your business located?</p>
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Address Line 1 <span class="req">*</span></label>
+                <input type="text" name="address" class="form-control" placeholder="Door / Flat no., Street name" required value="{{ request.POST.address|default:'' }}">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address Line 2 <span class="opt-badge">Optional</span></label>
+                <input type="text" name="address2" class="form-control" placeholder="Area / Landmark" value="{{ request.POST.address2|default:'' }}">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">City <span class="req">*</span></label>
+                <input type="text" name="city" class="form-control" placeholder="City" required value="{{ request.POST.city|default:'' }}">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">District <span class="opt-badge">Optional</span></label>
+                <input type="text" name="district" class="form-control" placeholder="District" value="{{ request.POST.district|default:'' }}">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">State <span class="req">*</span></label>
+                <select name="state" class="form-select" required>
+                  <option value="">Select State</option>
+                  {% for s in "Andhra Pradesh,Assam,Bihar,Delhi,Goa,Gujarat,Haryana,Himachal Pradesh,Jammu & Kashmir,Jharkhand,Karnataka,Kerala,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttar Pradesh,Uttarakhand,West Bengal"|split:"," %}
+                  <option value="{{ s }}" {% if request.POST.state == s %}selected{% endif %}>{{ s }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">Pincode <span class="req">*</span></label>
+                <input type="text" name="pincode" class="form-control" placeholder="6-digit pincode" maxlength="6" required value="{{ request.POST.pincode|default:'' }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 3: Contact Info ── -->
+          <div class="form-section" id="sec3">
+            <div class="section-title">
+              <div class="icon-wrap"><i class="bi bi-telephone"></i></div>
+              Contact Details
+            </div>
+            <p class="section-sub">How should customers reach you?</p>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Mobile Number <span class="req">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text">+91</span>
+                  <input type="tel" name="mobile" class="form-control" placeholder="9876543210" required maxlength="10" value="{{ request.POST.mobile|default:'' }}">
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">WhatsApp Number <span class="opt-badge">Optional</span></label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
+                  <input type="tel" name="whatsapp" class="form-control" placeholder="Same or different?" value="{{ request.POST.whatsapp|default:'' }}">
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Landline <span class="opt-badge">Optional</span></label>
+                <input type="tel" name="landline" class="form-control" placeholder="044-12345678" value="{{ request.POST.landline|default:'' }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 4: Your Profile ── -->
+          <div class="form-section" id="sec4">
+            <div class="section-title">
+              <div class="icon-wrap"><i class="bi bi-person-circle"></i></div>
+              Your Personal Details
+            </div>
+            <p class="section-sub">For your account — this is your admin login for the dashboard.</p>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Full Name <span class="req">*</span></label>
+                <input type="text" name="contact_name" class="form-control" placeholder="Your full name" required value="{{ request.POST.contact_name|default:'' }}">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Designation <span class="opt-badge">Optional</span></label>
+                <input type="text" name="designation" class="form-control" placeholder="e.g. Owner, Manager" value="{{ request.POST.designation|default:'' }}">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">Gender</label>
+                <select name="gender" class="form-select">
+                  <option value="male" {% if request.POST.gender != 'female' and request.POST.gender != 'other' %}selected{% endif %}>Male</option>
+                  <option value="female" {% if request.POST.gender == 'female' %}selected{% endif %}>Female</option>
+                  <option value="other" {% if request.POST.gender == 'other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">Date of Birth <span class="opt-badge">Optional</span></label>
+                <input type="date" name="date_of_birth" class="form-control" value="{{ request.POST.date_of_birth|default:'' }}">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label">Profile Photo <span class="opt-badge">Optional</span></label>
+                <label class="photo-upload-wrap d-flex align-items-center gap-3 p-3" for="profilePhotoInput" style="cursor:pointer;">
+                  <img id="profilePreview" style="width:44px;height:44px;border-radius:50%;object-fit:cover;display:none;" src="#" alt="">
+                  <div>
+                    <div style="font-size:0.8rem; color:var(--muted);">Upload photo</div>
+                    <div style="font-size:0.72rem; color:#b0aeb8;">JPG/PNG</div>
+                  </div>
+                </label>
+                <input type="file" id="profilePhotoInput" name="profile_photo" accept="image/*">
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION 5: Set Password ── -->
+          <div class="form-section" id="sec5">
+            <div class="section-title">
+              <div class="icon-wrap"><i class="bi bi-shield-lock"></i></div>
+              Set Your Password
+            </div>
+            <p class="section-sub">Login email: <strong>{{ invite.email }}</strong></p>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="form-label">Password <span class="req">*</span></label>
+                <div class="input-group">
+                  <input type="password" name="password" id="pwField" class="form-control" placeholder="At least 8 characters" required>
+                  <button class="btn btn-outline-secondary" type="button" id="togglePw" style="border-radius:0 10px 10px 0; border:1.5px solid var(--border);"><i class="bi bi-eye"></i></button>
+                </div>
+                <div class="pw-strength" id="pwBar"></div>
+                <div class="pw-hint" id="pwHint">Enter password to check strength</div>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Confirm Password <span class="req">*</span></label>
+                <input type="password" name="password2" id="pw2Field" class="form-control" placeholder="Repeat password" required>
+                <div class="pw-hint" id="pw2Hint" style="display:none;"></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /col-lg-8 -->
+
+        <!-- ── SIDEBAR ── -->
+        <div class="col-lg-4">
+          <div class="form-section" style="position:sticky; top:130px;">
+            <div class="section-title" style="margin-bottom:16px;">
+              <div class="icon-wrap"><i class="bi bi-info-circle"></i></div>
+              Your Package
+            </div>
+
+            {% if invite.plan %}
+            <div style="background:linear-gradient(135deg,#0f0f14,#1a1a2e); color:white; border-radius:12px; padding:20px; margin-bottom:20px;">
+              <div style="font-size:0.75rem; opacity:0.6; margin-bottom:4px; letter-spacing:0.05em; text-transform:uppercase;">Plan Assigned</div>
+              <div style="font-family:var(--font-head); font-size:1.4rem; font-weight:700;">{{ invite.plan.name }}</div>
+              {% if invite.plan.features %}
+              <ul style="margin:12px 0 0; padding:0; list-style:none;">
+                {% for feat in invite.plan.features %}
+                <li style="font-size:0.8rem; color:rgba(255,255,255,0.75); padding:4px 0; display:flex; gap:8px; align-items:flex-start;">
+                  <i class="bi bi-check-circle-fill text-success" style="flex-shrink:0; margin-top:1px;"></i>
+                  {{ feat }}
+                </li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <div style="font-size:0.82rem; color:var(--muted); line-height:1.7;">
+              <div class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle text-success"></i> Free public landing page</div>
+              <div class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle text-success"></i> Digital visiting card</div>
+              <div class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle text-success"></i> WhatsApp enquiry button</div>
+              <div class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle text-success"></i> Products &amp; services showcase</div>
+              <div class="d-flex gap-2"><i class="bi bi-check2-circle text-success"></i> Payment QR code display</div>
+            </div>
+
+            <hr style="margin:20px 0; border-color:var(--border);">
+
+            <div style="font-size:0.78rem; color:var(--muted); margin-bottom:20px;">
+              <i class="bi bi-lock-fill me-1"></i> Your data is encrypted &amp; secure.<br>
+              <i class="bi bi-clock me-1 mt-1 d-inline-block"></i> Invitation expires {{ invite.expires_at|date:"d M Y" }}.
+            </div>
+
+            <button type="submit" class="btn-submit w-100 justify-content-center">
+              <i class="bi bi-lightning-charge-fill"></i>
+              Activate My Account
+            </button>
+            <p style="font-size:0.75rem; color:var(--muted); text-align:center; margin-top:10px;">
+              By continuing you agree to OrgPortal's terms of service.
+            </p>
+          </div>
+        </div>
+
+      </div><!-- /row -->
+    </form>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Logo preview
+document.getElementById('logoInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const prev = document.getElementById('logoPreview');
+      prev.src = e.target.result;
+      prev.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// ── Profile photo preview
+document.getElementById('profilePhotoInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const prev = document.getElementById('profilePreview');
+      prev.src = e.target.result;
+      prev.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// ── Password toggle
+document.getElementById('togglePw').addEventListener('click', function() {
+  const input = document.getElementById('pwField');
+  const icon  = this.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+});
+
+// ── Password strength
+document.getElementById('pwField').addEventListener('input', function() {
+  const val = this.value;
+  const bar  = document.getElementById('pwBar');
+  const hint = document.getElementById('pwHint');
+  if (!val) { bar.className = 'pw-strength'; hint.textContent = 'Enter password to check strength'; return; }
+  const strong = val.length >= 10 && /[A-Z]/.test(val) && /[0-9]/.test(val) && /[^a-zA-Z0-9]/.test(val);
+  const medium = val.length >= 8 && (/[A-Z]/.test(val) || /[0-9]/.test(val));
+  if (strong) { bar.className = 'pw-strength pw-strong'; hint.textContent = '✓ Strong password'; }
+  else if (medium) { bar.className = 'pw-strength pw-medium'; hint.textContent = '↑ Add symbols or uppercase for stronger password'; }
+  else { bar.className = 'pw-strength pw-weak'; hint.textContent = '! Weak — use 8+ characters'; }
+  checkMatch();
+});
+
+// ── Password match
+document.getElementById('pw2Field').addEventListener('input', checkMatch);
+function checkMatch() {
+  const p1 = document.getElementById('pwField').value;
+  const p2 = document.getElementById('pw2Field').value;
+  const hint = document.getElementById('pw2Hint');
+  if (!p2) { hint.style.display = 'none'; return; }
+  hint.style.display = 'block';
+  hint.style.color = p1 === p2 ? '#16a34a' : '#ef4444';
+  hint.textContent = p1 === p2 ? '✓ Passwords match' : '✗ Passwords do not match';
+}
+
+// ── Scroll-based step highlighting
+const sections = [
+  { id: 'sec1', step: 1 }, { id: 'sec2', step: 1 },
+  { id: 'sec3', step: 2 }, { id: 'sec4', step: 3 }, { id: 'sec5', step: 3 }
+];
+const stepMap = { 1: ['sn1'], 2: ['sn1','sn2'], 3: ['sn1','sn2','sn3'] };
+
+window.addEventListener('scroll', () => {
+  let active = 1;
+  sections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el && el.getBoundingClientRect().top < 200) active = s.step;
+  });
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.toggle('active', i + 1 === active);
+    el.classList.toggle('done', i + 1 < active);
+  });
+});
+
+// ── Copy WhatsApp from mobile on blur
+document.querySelector('[name="mobile"]').addEventListener('blur', function() {
+  const wa = document.querySelector('[name="whatsapp"]');
+  if (!wa.value && this.value) wa.placeholder = `Same as mobile (${this.value})`;
+});
+</script>
+</body>
+</html>

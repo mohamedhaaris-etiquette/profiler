@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}You're Live — OrgPortal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-xl-7 col-lg-9">
+      <div class="card-modern p-5 text-center">
+        <div class="mb-4" style="font-size:3rem; line-height:1;">🎉</div>
+        <h1 class="mb-3">You're Live!</h1>
+        <p class="lead text-muted mb-4">
+          Your organization <strong>{{ org.name }}</strong> is now set up.
+          You can manage your dashboard, update your public listing, and start receiving enquiries.
+        </p>
+        <div class="d-flex justify-content-center flex-wrap gap-3">
+          <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+          {% if org.slug %}
+          <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-outline-primary btn-lg">View Public Page</a>
+          {% endif %}
+        </div>
+        <div class="mt-4 text-muted" style="font-size:0.95rem;">
+          {% if request.user.is_authenticated %}
+          <div><strong>Your login username:</strong> {{ request.user.username }}</div>
+          <div class="mt-2">You can use this username (or your email) to sign in later.</div>
+          {% else %}
+          If you need to make changes later, visit Settings or the WhatsApp/QR tools from your dashboard.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
