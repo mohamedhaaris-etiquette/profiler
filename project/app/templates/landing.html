@@ -1042,15 +1042,21 @@ textarea.form-ctrl-e { resize: vertical; min-height: 88px; }
 
         <h1 class="hero-title">
           {% if org.tagline %}
-            {{ org.tagline|truncatewords:3|upper }}
+            {{ org.tagline }}
           {% else %}
-            POWERING<br>YOUR <span class="accent">WORLD,</span><br><span class="stroke">SAFELY.</span>
+            Trusted {{ org.category.name|default:'service' }} for {{ org.city|default:'your area' }}
           {% endif %}
         </h1>
 
         <p class="hero-sub">
-          {% if org.description %}{{ org.description|truncatechars:140 }}{% else %}Professional electrical services you can trust. Licensed technicians, certified workmanship, guaranteed results.{% endif %}
+          {% if org.description %}{{ org.description|truncatechars:160 }}{% else %}Reliable service, fast response, and transparent pricing for all your home and business needs.{% endif %}
         </p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span class="tbadge">Fast response</span>
+          <span class="tbadge">Certified technicians</span>
+          <span class="tbadge">Guaranteed workmanship</span>
+        </div>
 
         <div class="trust-strip">
           {% if org.is_verified %}
@@ -1080,8 +1086,12 @@ textarea.form-ctrl-e { resize: vertical; min-height: 88px; }
         </div>
 
         <div class="hero-ctas">
-          <a href="#enquiry" class="btn-hp"><i class="bi bi-lightning-charge-fill"></i>Get Free Quote</a>
-          {% if org.phone %}<a href="tel:{{ org.phone }}" class="btn-ho"><i class="bi bi-telephone-fill"></i>Call Now</a>{% endif %}
+          <a href="#enquiry" class="btn-hp"><i class="bi bi-lightning-charge-fill"></i>Book a Service</a>
+          {% if org.whatsapp %}
+          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-ho"><i class="bi bi-whatsapp"></i>WhatsApp Now</a>
+          {% elif org.phone %}
+          <a href="tel:{{ org.phone }}" class="btn-ho"><i class="bi bi-telephone-fill"></i>Call Now</a>
+          {% endif %}
           {% if org.slug %}
           <a href="{% url 'visiting_card' org.slug %}" class="btn-ho" target="_blank">
             <i class="bi bi-person-badge"></i>Digital Card
@@ -1185,6 +1195,50 @@ textarea.form-ctrl-e { resize: vertical; min-height: 88px; }
     </div>
   </div>
 </div>
+
+<!-- ════════ FEATURED SERVICES ════════ -->
+<section class="section" id="featured-services" style="background:var(--ink2);">
+  <div class="container">
+    <div class="sec-head fade-up">
+      <div>
+        <div class="sec-eyebrow">Featured Services</div>
+        <h2 class="sec-title">Popular solutions customers book first</h2>
+        <div class="sec-line"></div>
+      </div>
+      <a href="#services" class="btn-see-all">View All Services <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="svc-grid">
+      {% with featured_services|default:services as highlight_services %}
+      {% for svc in highlight_services|slice:":4" %}
+      <div class="svc-card fade-up" style="transition-delay:{{ forloop.counter0 }}00ms;">
+        {% if svc.is_featured %}<span class="svc-featured-tag">Top Choice</span>{% endif %}
+        <div class="svc-img-wrap">
+          {% if svc.image %}
+          <img src="{{ svc.image.url }}" alt="{{ svc.name }}" loading="lazy">
+          {% else %}
+          <div class="svc-img-ph"><i class="bi bi-{{ svc.icon|default:'lightning-charge' }}"></i></div>
+          {% endif %}
+        </div>
+        <div class="svc-body">
+          <div class="svc-name">{{ svc.name }}</div>
+          {% if svc.description %}<p class="svc-desc">{{ svc.description|truncatechars:80 }}</p>{% endif %}
+          <div class="svc-footer">
+            {% if svc.price %}
+            <div class="svc-price"><i class="bi bi-currency-rupee"></i>{{ svc.price }}</div>
+            {% else %}<div></div>{% endif %}
+            <div class="svc-actions">
+              <button type="button" class="btn-svc" onclick="prefillEnquiry('{{ svc.pk }}','service','{{ svc.name|escapejs }}')">
+                <i class="bi bi-clipboard-check"></i>Book Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% endwith %}
+    </div>
+  </div>
+</section>
 
 <!-- ════════ CTA BANNER TOP ════════ -->
 <section class="cta-banner">
@@ -1621,17 +1675,31 @@ textarea.form-ctrl-e { resize: vertical; min-height: 88px; }
   <div class="container" style="padding:44px 12px;">
     <div class="row g-4 align-items-start">
       <div class="col-lg-4 fade-up">
-        <div class="sec-eyebrow">Contact</div>
-        <h2 class="sec-title">Send Us an Enquiry</h2>
+        <div class="sec-eyebrow">Why book us</div>
+        <h2 class="sec-title">Trusted service with fast response</h2>
         <div class="sec-line mb-3"></div>
         <p style="color:rgba(255,255,255,0.38);font-size:12.5px;line-height:1.7;">
-          Fill the form and we'll respond within 24 hours. For urgent needs, call or WhatsApp directly.
+          Get skilled support quickly, with no hidden charges and a satisfaction guarantee on every job.
         </p>
-        <div class="d-flex flex-column gap-2 mt-3">
-          {% if org.phone %}<a href="tel:{{ org.phone }}" class="contact-row" style="text-decoration:none;"><div class="cr-icon"><i class="bi bi-telephone-fill"></i></div><div><div class="cr-label">Call Us</div><div class="cr-value">{{ org.phone }}</div></div></a>{% endif %}
-          {% if org.email %}<a href="mailto:{{ org.email }}" class="contact-row" style="text-decoration:none;"><div class="cr-icon"><i class="bi bi-envelope-fill"></i></div><div><div class="cr-label">Email Us</div><div class="cr-value">{{ org.email }}</div></div></a>{% endif %}
-          {% if org.working_hours %}<div class="contact-row"><div class="cr-icon"><i class="bi bi-clock-fill"></i></div><div><div class="cr-label">Working Hours</div><div class="cr-value">{{ org.working_hours }}</div></div></div>{% endif %}
+        <div class="d-grid gap-3 mt-3">
+          <div class="contact-row">
+            <div class="cr-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div><div class="cr-label">Free estimate</div><div class="cr-value">No callout fee</div></div>
+          </div>
+          <div class="contact-row">
+            <div class="cr-icon"><i class="bi bi-clock-fill"></i></div>
+            <div><div class="cr-label">Fast response</div><div class="cr-value">Same-day visits available</div></div>
+          </div>
+          <div class="contact-row">
+            <div class="cr-icon"><i class="bi bi-award-fill"></i></div>
+            <div><div class="cr-label">Quality guarantee</div><div class="cr-value">Work backed by warranty</div></div>
+          </div>
+          <div class="contact-row">
+            <div class="cr-icon"><i class="bi bi-stars"></i></div>
+            <div><div class="cr-label">Top-rated</div><div class="cr-value">Loved by local customers</div></div>
+          </div>
         </div>
+        <div class="vc-note mt-3">Need faster help? Use the WhatsApp button in the hero or submit the enquiry form on the right.</div>
       </div>
       <div class="col-lg-8 fade-up" style="transition-delay:.12s;">
         <div class="enq-card">
