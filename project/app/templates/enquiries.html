@@ -1,10 +1,10 @@
 {% extends 'dashboard_base.html' %}
-{% block title %}Enquiries — {{ org.name }}{% endblock %}
+{% block title %}Enquiries — {{ org_name }}{% endblock %}
 {% block dash_content %}
 <div class="page-header">
   <div>
     <h1><i class="bi bi-chat-left-dots me-2"></i>Enquiries</h1>
-    <div class="text-muted small">Manage customer enquiries for {{ org.name }}</div>
+    <div class="text-muted small">Manage customer enquiries for {{ org_name }}</div>
   </div>
   <div class="d-flex gap-2">
     {% for status, label in enquiry_statuses %}
@@ -21,6 +21,7 @@
       <thead>
         <tr>
           <th>Customer</th>
+          {% if show_org_column %}<th>Organization</th>{% endif %}
           <th>Subject / Service</th>
           <th>Message</th>
           <th>Status</th>
@@ -36,6 +37,12 @@
           <div class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ enq.phone }}</div>
           <div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ enq.email }}</div>
         </td>
+        {% if show_org_column %}
+        <td>
+          <div class="fw-500">{{ enq.organization.name }}</div>
+          <div class="text-muted small">{{ enq.organization.city }}, {{ enq.organization.state }}</div>
+        </td>
+        {% endif %}
         <td>
           <div class="fw-500">{{ enq.subject }}</div>
           {% if enq.service %}<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>{{ enq.service.name }}</div>{% endif %}
@@ -60,10 +67,14 @@
     <div class="text-center py-5">
       <i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i>
       <h5 class="text-muted">No enquiries yet</h5>
+      {% if show_org_column %}
+      <p class="text-muted small">There are currently no enquiries across any organization.</p>
+      {% else %}
       <p class="text-muted small">Share your public page to start receiving enquiries!</p>
       <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-primary btn-sm">
         <i class="bi bi-box-arrow-up-right me-1"></i>View Public Page
       </a>
+      {% endif %}
     </div>
     {% endif %}
   </div>

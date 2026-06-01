@@ -5,795 +5,976 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ org.name }}{% if org.tagline %} — {{ org.tagline }}{% endif %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
 /* ════════════════════════════════════════════════════════
-   ROOT & RESET
+   ROOT TOKENS
 ════════════════════════════════════════════════════════ */
 :root {
-  --g0:   #050f08;
-  --g1:   #0b1f12;
-  --g2:   #132b1a;
-  --g3:   #1b4332;
-  --g4:   #2d6a4f;
-  --g5:   #40916c;
-  --g6:   #74c69d;
-  --gold:       #f59e0b;
-  --gold-dark:  #b45309;
-  --gold-light: #fcd34d;
-  --white: #ffffff;
-  --off:   #f0fdf4;
-  --muted: #6b7a6b;
-  --border: rgba(45,106,79,0.35);
-  --shadow: 0 8px 40px rgba(5,15,8,0.55);
-  --card-bg: rgba(11,31,18,0.88);
-  --font-head: 'Bebas Neue', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  letter-spacing: 0.01em;
+  --ink:    #0a0f0d;
+  --ink2:   #111a15;
+  --ink3:   #182a1e;
+  --ink4:   #1e3828;
+  --pine:   #2d6a4f;
+  --leaf:   #40916c;
+  --mint:   #74c69d;
+  --gold:   #f59e0b;
+  --gold-d: #b45309;
+  --gold-l: #fde68a;
+  --fire:   #ef4444;
+  --go:     #22c55e;
+  --white:  #ffffff;
+  --off:    #f8fff9;
+  --fog:    rgba(255,255,255,0.06);
+  --fog2:   rgba(255,255,255,0.03);
+  --border: rgba(45,106,79,0.28);
+  --border2:rgba(245,158,11,0.18);
+
+  --fh: 'Syne', sans-serif;
+  --fb: 'Plus Jakarta Sans', sans-serif;
+  --fm: 'JetBrains Mono', monospace;
+
+  --r4: 4px; --r8: 8px; --r12: 12px; --r16: 16px; --r24: 24px;
+  --sh: 0 4px 20px rgba(5,15,8,0.45);
+  --sh2: 0 12px 40px rgba(5,15,8,0.6);
 }
+
 *,*::before,*::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-  font-family: var(--font-body);
-  background: var(--g0);
+  font-family: var(--fb);
+  background: var(--ink);
   color: var(--white);
-  margin: 0; line-height: 1.6;
+  margin: 0; line-height: 1.5;
   overflow-x: hidden;
+  font-size: 14px;
 }
-h1,h2,h3,h4 { font-family: var(--font-head); letter-spacing: 0.04em; margin: 0; }
+h1,h2,h3,h4,h5 { font-family: var(--fh); margin: 0; }
 a { text-decoration: none; color: inherit; }
 img { display: block; }
 
-/* ── NOISE TEXTURE OVERLAY ────────────────────────── */
+/* ── GRAIN TEXTURE ── */
 body::before {
   content: '';
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ════════════════════════════════════════════════════════
-   TOPBAR
+   TOPBAR — ultra compact info strip
 ════════════════════════════════════════════════════════ */
 .topbar {
-  background: var(--g1);
+  background: var(--ink2);
   border-bottom: 1px solid var(--border);
-  padding: 6px 0;
-  font-size: 0.72rem;
+  padding: 5px 0;
+  font-size: 11px;
   font-weight: 500;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.45);
   position: relative; z-index: 300;
 }
-.topbar a { color: rgba(255,255,255,0.55); transition: color .2s; }
+.topbar a { color: rgba(255,255,255,0.45); transition: color .15s; }
 .topbar a:hover { color: var(--gold); }
-.topbar .sep { margin: 0 8px; opacity: 0.25; }
-.topbar .live-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25);
-  color: var(--gold); border-radius: 20px; padding: 2px 10px;
-  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em;
+.topbar .sep { margin: 0 6px; opacity: 0.2; }
+
+.vbadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.22);
+  color: var(--gold); border-radius: 20px; padding: 1px 8px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
 }
-.topbar .live-dot {
-  width: 6px; height: 6px; background: #22c55e;
-  border-radius: 50%; animation: pulse-dot 1.4s infinite;
+.live-dot {
+  width: 5px; height: 5px; background: var(--go);
+  border-radius: 50%; animation: blink 1.4s infinite;
 }
-@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
 
 /* ════════════════════════════════════════════════════════
    NAVBAR
 ════════════════════════════════════════════════════════ */
 .main-nav {
-  background: rgba(5,15,8,0.95);
+  background: rgba(10,15,13,0.97);
   border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 200;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
   padding: 0;
 }
-.brand-wrap { display: flex; align-items: center; gap: 12px; }
 .brand-bolt {
-  width: 46px; height: 46px;
+  width: 34px; height: 34px;
   background: var(--gold);
   clip-path: polygon(50% 0%,80% 20%,60% 50%,90% 50%,35% 100%,50% 60%,20% 60%);
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 12px rgba(245,158,11,0.6));
+  flex-shrink: 0; filter: drop-shadow(0 0 8px rgba(245,158,11,0.55));
+  transition: transform .2s;
 }
-.brand-name {
-  font-family: var(--font-head);
-  font-size: 1.35rem;
-  letter-spacing: 0.08em;
-  color: var(--white);
-  line-height: 1;
-}
-.brand-sub {
-  font-size: 0.58rem;
-  color: var(--gold);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-top: 1px;
-}
+.brand-wrap:hover .brand-bolt { transform: scale(1.1) rotate(-5deg); }
+.brand-name { font-family: var(--fh); font-size: 1.15rem; letter-spacing: 0.06em; line-height: 1; }
+.brand-sub  { font-size: 9px; color: var(--gold); letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; margin-top: 1px; }
+
 .nav-link-item {
-  color: rgba(255,255,255,0.65) !important;
-  font-size: 0.72rem; font-weight: 600;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 24px 14px !important; position: relative;
-  transition: color .2s;
+  color: rgba(255,255,255,0.55) !important;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.11em; text-transform: uppercase;
+  padding: 20px 12px !important; position: relative;
+  transition: color .15s;
 }
 .nav-link-item::after {
   content: ''; position: absolute;
-  bottom: 0; left: 14px; right: 14px;
+  bottom: 0; left: 12px; right: 12px;
   height: 2px; background: var(--gold);
-  border-radius: 2px 2px 0 0;
-  transform: scaleX(0) ; transition: transform .25s;
+  transform: scaleX(0); transition: transform .2s;
 }
 .nav-link-item:hover { color: var(--gold) !important; }
 .nav-link-item:hover::after { transform: scaleX(1); }
+
 .btn-quote {
-  background: var(--gold);
-  color: var(--g0) !important;
-  border-radius: 6px; font-weight: 800;
-  font-size: 0.7rem; letter-spacing: 0.1em;
-  text-transform: uppercase; padding: 10px 20px;
-  border: none; transition: box-shadow .25s, transform .2s;
-  font-family: var(--font-body);
+  background: var(--gold); color: var(--ink) !important;
+  border-radius: var(--r8); font-weight: 800; font-size: 11px;
+  letter-spacing: 0.09em; text-transform: uppercase; padding: 8px 18px;
+  border: none; transition: box-shadow .2s, transform .15s; font-family: var(--fb);
+  display: inline-flex; align-items: center; gap: 5px;
 }
-.btn-quote:hover {
-  box-shadow: 0 0 24px rgba(245,158,11,0.5);
-  transform: translateY(-1px);
-  color: var(--g0) !important;
-}
+.btn-quote:hover { box-shadow: 0 0 20px rgba(245,158,11,0.5); transform: translateY(-1px); }
 
 /* ════════════════════════════════════════════════════════
-   HERO
+   HERO — compact, info-dense layout
 ════════════════════════════════════════════════════════ */
 .hero {
   position: relative;
-  background: linear-gradient(135deg, var(--g0) 0%, var(--g2) 60%, #112a1a 100%);
-  padding: 80px 0 60px; overflow: hidden; min-height: 88vh;
-  display: flex; align-items: center;
+  background: linear-gradient(140deg, var(--ink) 0%, var(--ink3) 55%, var(--ink2) 100%);
+  padding: 36px 0 28px; overflow: hidden;
 }
 .hero-grid-bg {
-  position: absolute; inset: 0; z-index: 0; opacity: 0.06;
+  position: absolute; inset: 0; z-index: 0; opacity: 0.04;
   background-image:
-    linear-gradient(var(--g5) 1px, transparent 1px),
-    linear-gradient(90deg, var(--g5) 1px, transparent 1px);
-  background-size: 60px 60px;
+    linear-gradient(var(--leaf) 1px, transparent 1px),
+    linear-gradient(90deg, var(--leaf) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 .hero-glow {
-  position: absolute; top: -40%; right: -10%;
-  width: 70vw; height: 70vw; max-width: 700px;
-  background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 65%);
+  position: absolute; top: -20%; right: -5%;
+  width: 55vw; height: 55vw; max-width: 500px;
+  background: radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 65%);
   z-index: 0; pointer-events: none;
 }
-.hero-eyebrow {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
-  border-radius: 4px; padding: 4px 12px;
-  font-size: 0.65rem; font-weight: 700; color: var(--gold);
-  letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 20px;
+.hero-glow2 {
+  position: absolute; bottom: -20%; left: 5%;
+  width: 40vw; height: 40vw; max-width: 380px;
+  background: radial-gradient(circle, rgba(45,106,79,0.1) 0%, transparent 65%);
+  z-index: 0; pointer-events: none;
 }
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);
+  border-radius: var(--r4); padding: 3px 10px;
+  font-size: 10px; font-weight: 800; color: var(--gold);
+  letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px;
+}
+
 .hero-title {
-  font-family: var(--font-head);
-  font-size: clamp(3.5rem, 8vw, 6rem);
-  line-height: 0.95; color: var(--white);
-  margin-bottom: 6px;
+  font-family: var(--fh);
+  font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+  line-height: 1; color: var(--white); font-weight: 800;
+  margin-bottom: 0;
 }
 .hero-title .accent { color: var(--gold); }
+.hero-title .stroke {
+  -webkit-text-stroke: 1px rgba(255,255,255,0.35);
+  color: transparent;
+}
+
 .hero-sub {
-  color: rgba(255,255,255,0.55);
-  font-size: 0.95rem; max-width: 480px; line-height: 1.75;
-  margin: 16px 0 32px;
+  color: rgba(255,255,255,0.45);
+  font-size: 12.5px; max-width: 440px; line-height: 1.7;
+  margin: 12px 0 18px;
 }
-/* trust badges */
-.trust-bar {
-  display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 36px;
+
+/* TRUST STRIP — horizontal compact badges */
+.trust-strip {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;
 }
-.trust-badge {
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 16px;
+.tbadge {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--fog); border: 1px solid var(--border);
+  border-radius: var(--r8); padding: 5px 10px;
 }
-.trust-badge .tval {
-  font-family: var(--font-head); font-size: 1.3rem; color: var(--gold); line-height: 1;
+.tbadge .tv { font-family: var(--fh); font-size: 1.1rem; color: var(--gold); line-height: 1; font-weight: 800; }
+.tbadge .tl { font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.09em; }
+
+.hero-ctas { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-hp {
+  background: var(--gold); color: var(--ink);
+  border: none; border-radius: var(--r8); padding: 11px 22px;
+  font-weight: 800; font-size: 11.5px; letter-spacing: 0.07em;
+  text-transform: uppercase; font-family: var(--fb);
+  transition: box-shadow .2s, transform .15s;
+  display: inline-flex; align-items: center; gap: 6px;
 }
-.trust-badge .tlbl {
-  font-size: 0.65rem; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em;
-}
-.hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
-.btn-hero-p {
-  background: var(--gold); color: var(--g0);
-  border: none; border-radius: 8px; padding: 14px 28px;
-  font-weight: 800; font-size: 0.8rem; letter-spacing: 0.08em;
-  text-transform: uppercase; font-family: var(--font-body);
-  transition: box-shadow .25s, transform .2s; display: inline-flex; align-items: center; gap: 8px;
-}
-.btn-hero-p:hover {
-  box-shadow: 0 0 30px rgba(245,158,11,0.5); transform: translateY(-2px); color: var(--g0);
-}
-.btn-hero-o {
+.btn-hp:hover { box-shadow: 0 0 24px rgba(245,158,11,0.5); transform: translateY(-2px); color: var(--ink); }
+.btn-ho {
   background: transparent; color: var(--white);
-  border: 1px solid var(--border); border-radius: 8px; padding: 14px 28px;
-  font-weight: 600; font-size: 0.8rem; letter-spacing: 0.06em;
-  text-transform: uppercase; font-family: var(--font-body);
-  transition: border-color .2s, color .2s; display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(255,255,255,0.15); border-radius: var(--r8); padding: 11px 22px;
+  font-weight: 600; font-size: 11.5px; letter-spacing: 0.05em;
+  text-transform: uppercase; font-family: var(--fb);
+  transition: border-color .2s, color .2s, background .2s;
+  display: inline-flex; align-items: center; gap: 6px;
 }
-.btn-hero-o:hover { border-color: var(--gold); color: var(--gold); }
-/* availability card */
-.avail-card {
-  background: var(--card-bg); border: 1px solid var(--border);
-  border-radius: 16px; padding: 28px; backdrop-filter: blur(20px);
-  border-top: 3px solid var(--gold);
-  position: relative; overflow: hidden;
-}
-.avail-card::before {
-  content: '⚡'; position: absolute; right: -8px; bottom: -20px;
-  font-size: 8rem; opacity: 0.04; line-height: 1; pointer-events: none;
-}
-.avail-title {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.2em;
-  text-transform: uppercase; color: var(--gold);
-  border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 18px;
-}
-.avail-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.avail-icon {
-  width: 36px; height: 36px; background: rgba(245,158,11,0.1);
-  border: 1px solid rgba(245,158,11,0.2); border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--gold); font-size: 0.95rem; flex-shrink: 0;
-}
-.avail-lbl { color: rgba(255,255,255,0.35); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.avail-val { color: var(--white); font-weight: 600; font-size: 0.85rem; }
-.btn-wa-hero {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; margin-top: 10px;
-  background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.3);
-  color: #25d366; border-radius: 8px; padding: 11px;
-  font-weight: 700; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
-  font-family: var(--font-body); transition: background .2s;
-}
-.btn-wa-hero:hover { background: rgba(37,211,102,0.2); color: #25d366; }
-/* Technician image placeholder */
-.tech-image-wrap {
-  position: relative; border-radius: 16px; overflow: hidden;
-  aspect-ratio: 4/5; background: linear-gradient(180deg, var(--g2), var(--g1));
+.btn-ho:hover { border-color: var(--gold); color: var(--gold); background: rgba(245,158,11,0.05); }
+
+/* HERO RIGHT — compact card with logo + quick info */
+.hero-right-card {
+  background: var(--fog2);
   border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r16);
+  overflow: hidden; position: relative;
 }
-.tech-placeholder { font-size: 6rem; color: var(--g4); opacity: 0.5; }
-.verified-ring {
-  position: absolute; bottom: 12px; left: 12px; right: 12px;
-  background: rgba(5,15,8,0.85); border: 1px solid var(--gold);
-  border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(10px);
-  display: flex; align-items: center; justify-content: space-between;
+.hero-logo-area {
+  width: 100%; aspect-ratio: 3/2;
+  background: linear-gradient(145deg, var(--ink3), var(--ink4));
+  display: flex; align-items: center; justify-content: center; position: relative;
+  overflow: hidden;
 }
-.verified-ring .vr-name { font-family: var(--font-head); font-size: 1rem; color: var(--white); }
-.verified-ring .vr-role { font-size: 0.65rem; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; }
-.verified-check { color: var(--gold); font-size: 1.4rem; }
+.hero-logo-area img { width: 55%; height: 55%; object-fit: contain; }
+.hero-logo-ph { font-size: 4rem; color: var(--pine); opacity: 0.5; }
+
+.hero-card-info {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+}
+.hci-name { font-family: var(--fh); font-size: 1.05rem; color: var(--white); font-weight: 700; }
+.hci-role { font-size: 10px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; }
+.hci-badge { display: flex; align-items: center; gap: 4px; color: var(--gold); font-size: 1.1rem; }
+
+/* QUICK STATS ROW below hero */
+.stats-ribbon {
+  background: var(--ink2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.stats-ribbon-inner {
+  display: flex; align-items: stretch; overflow-x: auto;
+  scrollbar-width: none;
+}
+.stats-ribbon-inner::-webkit-scrollbar { display: none; }
+.stat-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 24px; border-right: 1px solid var(--border);
+  flex-shrink: 0; cursor: default; transition: background .15s;
+}
+.stat-item:hover { background: var(--fog); }
+.stat-item:last-child { border-right: none; }
+.stat-icon { font-size: 1.3rem; color: var(--gold); }
+.stat-val  { font-family: var(--fh); font-size: 1.3rem; color: var(--white); line-height: 1; }
+.stat-lbl  { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* MARQUEE TICKER */
+.ticker-wrap {
+  background: var(--gold);
+  padding: 5px 0; overflow: hidden; position: relative;
+}
+.ticker-inner {
+  display: flex; gap: 0;
+  animation: marquee 32s linear infinite;
+  width: max-content;
+}
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; color: var(--ink);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0 28px; white-space: nowrap;
+}
+.ticker-sep { color: var(--gold-d); opacity: 0.5; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ════════════════════════════════════════════════════════
    SECTION COMMON
 ════════════════════════════════════════════════════════ */
-.section { padding: 80px 0; position: relative; z-index: 1; }
+.section { padding: 44px 0; position: relative; z-index: 1; }
+.sec-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+}
 .sec-eyebrow {
-  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.22em;
-  text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
-  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 4px;
+  display: flex; align-items: center; gap: 6px;
 }
-.sec-eyebrow::before {
-  content: ''; width: 24px; height: 2px; background: var(--gold); border-radius: 2px;
-}
-.sec-title { font-family: var(--font-head); font-size: clamp(2rem,4vw,3.2rem); color: var(--white); line-height: 1.05; }
-.sec-divider {
-  width: 40px; height: 3px; background: var(--gold); border-radius: 3px; margin: 16px 0 0;
-}
+.sec-eyebrow::before { content: ''; width: 16px; height: 2px; background: var(--gold); border-radius: 2px; }
+.sec-title { font-family: var(--fh); font-size: clamp(1.4rem, 3vw, 2rem); color: var(--white); font-weight: 800; line-height: 1.05; }
+.sec-line { width: 28px; height: 2.5px; background: var(--gold); border-radius: 3px; margin-top: 8px; }
 
 /* ════════════════════════════════════════════════════════
-   SERVICES SECTION
+   CTA PILL BUTTON  
 ════════════════════════════════════════════════════════ */
-#services { background: var(--g1); }
-.svc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-@media(max-width:900px){ .svc-grid { grid-template-columns: repeat(2,1fr); } }
-@media(max-width:560px){ .svc-grid { grid-template-columns: 1fr; } }
+.btn-see-all {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--fog); border: 1px solid var(--border2);
+  color: var(--gold); border-radius: 20px; padding: 5px 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; transition: background .15s;
+  white-space: nowrap;
+}
+.btn-see-all:hover { background: rgba(245,158,11,0.1); color: var(--gold); }
+
+/* ════════════════════════════════════════════════════════
+   SERVICES — compact 4-col grid with pill-style cards
+════════════════════════════════════════════════════════ */
+#services { background: var(--ink2); }
+
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+}
+@media(max-width:1024px){ .svc-grid { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:700px) { .svc-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:420px) { .svc-grid { grid-template-columns: 1fr; } }
 
 .svc-card {
-  background: var(--card-bg); border: 1px solid var(--border);
-  border-radius: 14px; overflow: hidden;
-  transition: transform .3s, border-color .3s, box-shadow .3s;
-  position: relative;
+  background: var(--fog2);
+  border: 1px solid var(--border);
+  border-radius: var(--r12);
+  overflow: hidden;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  position: relative; cursor: pointer;
 }
 .svc-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(245,158,11,0.5);
-  box-shadow: 0 20px 60px rgba(245,158,11,0.08);
+  transform: translateY(-4px);
+  border-color: rgba(245,158,11,0.4);
+  box-shadow: 0 12px 32px rgba(245,158,11,0.07);
 }
-.svc-img { width:100%; aspect-ratio:16/9; object-fit:cover; background: var(--g3); }
-.svc-icon-ph {
-  width:100%; aspect-ratio:16/9;
-  background: linear-gradient(135deg, var(--g2), var(--g3));
-  display:flex; align-items:center; justify-content:center;
-  font-size: 3rem; color: var(--gold); opacity: 0.7;
+.svc-img-wrap {
+  width: 100%; aspect-ratio: 16/9; overflow: hidden;
+  background: linear-gradient(135deg, var(--ink3), var(--ink4));
+  display: flex; align-items: center; justify-content: center; position: relative;
 }
-.svc-body { padding: 18px; }
-.svc-name { font-family: var(--font-head); font-size: 1.25rem; color: var(--white); margin-bottom: 6px; }
-.svc-desc { color: rgba(255,255,255,0.45); font-size: 0.8rem; line-height: 1.7; margin-bottom: 14px; }
-.svc-price { color: var(--gold); font-weight: 700; font-size: 0.82rem; margin-bottom: 14px; }
-.btn-book {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: transparent; color: var(--gold);
-  border: 1px solid rgba(245,158,11,0.4); border-radius: 6px;
-  padding: 8px 16px; font-size: 0.72rem; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--font-body);
-  cursor: pointer; transition: background .2s, border-color .2s;
-}
-.btn-book:hover { background: rgba(245,158,11,0.1); border-color: var(--gold); }
+.svc-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.svc-card:hover .svc-img-wrap img { transform: scale(1.06); }
+.svc-img-ph { font-size: 2.2rem; color: var(--gold); opacity: 0.55; }
+
 .svc-featured-tag {
-  position: absolute; top: 10px; right: 10px;
-  background: var(--gold); color: var(--g0);
-  font-size: 0.58rem; font-weight: 800; padding: 3px 10px;
-  border-radius: 20px; text-transform: uppercase; letter-spacing: 0.08em;
+  position: absolute; top: 7px; left: 7px;
+  background: var(--gold); color: var(--ink);
+  font-size: 9px; font-weight: 900; padding: 2px 8px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; z-index: 2;
 }
+.svc-body { padding: 11px 13px 13px; }
+.svc-name {
+  font-family: var(--fh); font-size: 0.9rem; color: var(--white);
+  font-weight: 700; margin-bottom: 4px; line-height: 1.2;
+}
+.svc-desc { color: rgba(255,255,255,0.38); font-size: 11px; line-height: 1.55; margin-bottom: 9px; }
+.svc-footer { display: flex; align-items: center; justify-content: space-between; }
+.svc-price { color: var(--gold); font-weight: 800; font-size: 11.5px; }
+.svc-actions { display: flex; gap: 5px; }
+.btn-svc {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: transparent; color: var(--gold);
+  border: 1px solid rgba(245,158,11,0.35); border-radius: var(--r4);
+  padding: 5px 10px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase; font-family: var(--fb);
+  cursor: pointer; transition: background .15s; white-space: nowrap;
+}
+.btn-svc:hover { background: rgba(245,158,11,0.1); border-color: var(--gold); }
+.btn-svc-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(245,158,11,0.08); color: var(--gold);
+  border: 1px solid rgba(245,158,11,0.25); border-radius: var(--r4);
+  width: 28px; height: 28px; font-size: 13px; cursor: pointer;
+  transition: background .15s;
+}
+.btn-svc-icon:hover { background: rgba(245,158,11,0.18); }
 
 /* ════════════════════════════════════════════════════════
-   PRODUCTS SECTION
+   PRODUCTS — compact marketplace cards
 ════════════════════════════════════════════════════════ */
-#products { background: var(--g0); }
-.prod-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-@media(max-width:900px){ .prod-grid { grid-template-columns: repeat(2,1fr); } }
-@media(max-width:560px){ .prod-grid { grid-template-columns: 1fr; } }
+#products { background: var(--ink); }
+
+.prod-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+}
+@media(max-width:1024px){ .prod-grid { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:700px) { .prod-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:380px) { .prod-grid { grid-template-columns: 1fr; } }
 
 .prod-card {
-  background: var(--card-bg); border: 1px solid var(--border);
-  border-radius: 14px; overflow: hidden;
-  cursor: pointer;
-  transition: transform .3s, border-color .3s, box-shadow .3s;
+  background: var(--fog2);
+  border: 1px solid var(--border);
+  border-radius: var(--r12);
+  overflow: hidden; cursor: pointer;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
   position: relative;
 }
 .prod-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  border-color: rgba(245,158,11,0.6);
-  box-shadow: 0 20px 60px rgba(245,158,11,0.12);
+  transform: translateY(-4px) scale(1.008);
+  border-color: rgba(245,158,11,0.45);
+  box-shadow: 0 14px 36px rgba(245,158,11,0.09);
 }
-.prod-card .prod-img-wrap {
-  width:100%; aspect-ratio:1/1; overflow:hidden;
-  background: linear-gradient(135deg, var(--g2), var(--g3));
-  display:flex; align-items:center; justify-content:center; position:relative;
+.prod-img-wrap {
+  width: 100%; aspect-ratio: 1/1; overflow: hidden;
+  background: linear-gradient(145deg, var(--ink3), var(--ink4));
+  display: flex; align-items: center; justify-content: center; position: relative;
 }
-.prod-card .prod-img-wrap img { width:100%; height:100%; object-fit:cover; transition: transform .5s; }
-.prod-card:hover .prod-img-wrap img { transform: scale(1.06); }
-.prod-ph-icon { font-size: 3rem; color: var(--g5); }
+.prod-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .45s; }
+.prod-card:hover .prod-img-wrap img { transform: scale(1.07); }
+.prod-ph-icon { font-size: 2.5rem; color: var(--leaf); }
+
 .prod-badge-disc {
-  position:absolute; top:8px; left:8px;
-  background:#dc2626; color:#fff; font-size:0.6rem;
-  font-weight:800; padding:3px 9px; border-radius:20px;
-  text-transform:uppercase; font-family: var(--font-body);
+  position: absolute; top: 6px; left: 6px; z-index: 2;
+  background: var(--fire); color: #fff; font-size: 9px;
+  font-weight: 900; padding: 2px 7px; border-radius: 20px;
+  text-transform: uppercase;
 }
 .prod-badge-feat {
-  position:absolute; top:8px; right:8px;
-  background: var(--gold); color: var(--g0); font-size:0.6rem;
-  font-weight:800; padding:3px 9px; border-radius:20px;
-  text-transform:uppercase; font-family: var(--font-body);
+  position: absolute; top: 6px; right: 6px; z-index: 2;
+  background: var(--gold); color: var(--ink); font-size: 9px;
+  font-weight: 900; padding: 2px 7px; border-radius: 20px;
+  text-transform: uppercase;
 }
 .prod-oos-overlay {
-  position:absolute; inset:0; background:rgba(5,15,8,0.7);
-  display:flex; align-items:center; justify-content:center;
+  position: absolute; inset: 0; background: rgba(10,15,13,0.72);
+  display: flex; align-items: center; justify-content: center; z-index: 1;
 }
 .prod-oos-overlay span {
-  background: var(--g0); color: rgba(255,255,255,0.7);
-  font-size:0.7rem; font-weight:800; padding:6px 14px;
-  border-radius:6px; text-transform:uppercase; border: 1px solid var(--border);
+  background: var(--ink); color: rgba(255,255,255,0.6);
+  font-size: 10px; font-weight: 800; padding: 5px 12px;
+  border-radius: var(--r4); text-transform: uppercase; border: 1px solid var(--border);
 }
-.prod-body { padding: 16px; }
-.prod-brand { color: var(--gold); font-size:0.62rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:4px; }
-.prod-name { font-family: var(--font-head); font-size:1.15rem; color:var(--white); margin-bottom:8px; line-height:1.15; }
-.stars { color: var(--gold); font-size:0.75rem; letter-spacing:2px; margin-bottom:10px; }
-.prod-price-sale { font-weight:900; font-size:1.1rem; color:#ef4444; }
-.prod-price-orig { text-decoration:line-through; color:rgba(255,255,255,0.3); font-size:0.78rem; margin-left:4px; }
-.prod-price-reg  { font-weight:900; font-size:1.1rem; color:var(--white); }
-.prod-unit { color:rgba(255,255,255,0.35); font-size:0.7rem; }
-.prod-footer { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
-.stock-in  { font-size:0.62rem; font-weight:700; padding:3px 9px; background:rgba(34,197,94,0.1); color:#22c55e; border:1px solid rgba(34,197,94,0.3); border-radius:20px; }
-.stock-out { font-size:0.62rem; font-weight:700; padding:3px 9px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:20px; }
-.btn-view-prod {
+
+.prod-body { padding: 10px 12px 12px; }
+.prod-brand { color: var(--gold); font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+.prod-name { font-family: var(--fh); font-size: 0.85rem; color: var(--white); font-weight: 700; line-height: 1.2; margin-bottom: 5px; }
+.stars { color: var(--gold); font-size: 10px; letter-spacing: 1px; margin-bottom: 6px; }
+.prod-price-sale { font-weight: 900; font-size: 1rem; color: var(--fire); }
+.prod-price-orig { text-decoration: line-through; color: rgba(255,255,255,0.28); font-size: 10.5px; margin-left: 4px; }
+.prod-price-reg  { font-weight: 900; font-size: 1rem; color: var(--white); }
+.prod-unit { color: rgba(255,255,255,0.3); font-size: 10px; }
+
+.prod-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.stock-in  { font-size: 9px; font-weight: 700; padding: 2px 8px; background: rgba(34,197,94,0.1); color: var(--go); border: 1px solid rgba(34,197,94,0.25); border-radius: 20px; }
+.stock-out { font-size: 9px; font-weight: 700; padding: 2px 8px; background: rgba(239,68,68,0.1); color: var(--fire); border: 1px solid rgba(239,68,68,0.25); border-radius: 20px; }
+
+.prod-foot-actions { display: flex; gap: 4px; align-items: center; }
+.btn-vprod {
   background: transparent; color: var(--gold);
-  border: 1px solid rgba(245,158,11,0.4); border-radius:6px;
-  padding:6px 14px; font-size:0.68rem; font-weight:700;
-  text-transform:uppercase; letter-spacing:0.08em;
-  font-family: var(--font-body); transition: background .2s;
+  border: 1px solid rgba(245,158,11,0.3); border-radius: var(--r4);
+  padding: 4px 10px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--fb);
+  cursor: pointer; transition: background .15s;
 }
-.btn-view-prod:hover { background: rgba(245,158,11,0.12); border-color: var(--gold); }
-.prod-links-bar {
-  display:flex; gap:6px; padding:0 16px 14px; flex-wrap:wrap;
+.btn-vprod:hover { background: rgba(245,158,11,0.1); }
+.btn-cart-sm {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: var(--r4);
+  background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.22);
+  color: var(--gold); font-size: 12px; cursor: pointer; transition: background .15s;
 }
+.btn-cart-sm:hover { background: rgba(245,158,11,0.18); }
+
+.prod-links-bar { display: flex; gap: 5px; padding: 0 12px 10px; flex-wrap: wrap; }
 .prod-link-btn {
-  display:inline-flex; align-items:center; gap:4px;
-  font-size:0.6rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
-  border-radius:5px; padding:4px 10px; font-family: var(--font-body);
-  transition: opacity .2s; border: 1px solid;
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  border-radius: var(--r4); padding: 3px 8px; font-family: var(--fb);
+  transition: opacity .15s; border: 1px solid;
 }
-.prod-link-yt  { color:#ff0000; border-color:rgba(255,0,0,0.3); background:rgba(255,0,0,0.07); }
-.prod-link-ig  { color:#e1306c; border-color:rgba(225,48,108,0.3); background:rgba(225,48,108,0.07); }
-.prod-link-pdf { color:var(--gold); border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.07); }
-.prod-link-btn:hover { opacity:0.75; }
+.prod-link-yt  { color: #ff0000; border-color: rgba(255,0,0,0.25); background: rgba(255,0,0,0.07); }
+.prod-link-ig  { color: #e1306c; border-color: rgba(225,48,108,0.25); background: rgba(225,48,108,0.07); }
+.prod-link-pdf { color: var(--gold); border-color: rgba(245,158,11,0.25); background: rgba(245,158,11,0.07); }
+.prod-link-btn:hover { opacity: 0.7; }
+
+/* ════════════════════════════════════════════════════════
+   WHY CHOOSE US — horizontal stat bar
+════════════════════════════════════════════════════════ */
+#why-us {
+  background: linear-gradient(135deg, var(--ink2) 0%, var(--ink3) 100%);
+  padding: 36px 0;
+}
+.why-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border); border-radius: var(--r12); overflow: hidden;
+}
+@media(max-width:700px){ .why-grid { grid-template-columns: repeat(2,1fr); } }
+.why-card {
+  text-align: center; padding: 24px 16px;
+  background: var(--fog2);
+  transition: background .2s;
+}
+.why-card:hover { background: var(--fog); }
+.why-icon { font-size: 1.6rem; color: var(--gold); margin-bottom: 8px; }
+.why-stat { font-family: var(--fh); font-size: 2rem; color: var(--white); line-height: 1; margin-bottom: 2px; font-weight: 800; }
+.why-lbl  { font-size: 10px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.09em; }
+
+/* ════════════════════════════════════════════════════════
+   GALLERY — asymmetric dense grid
+════════════════════════════════════════════════════════ */
+#gallery { background: var(--ink); }
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  grid-auto-rows: 140px;
+  gap: 8px;
+}
+@media(max-width:700px){ .gallery-grid { grid-template-columns: repeat(2,1fr); grid-auto-rows: 120px; } }
+.g-item {
+  border-radius: var(--r8); overflow: hidden;
+  position: relative; background: var(--ink3);
+}
+.g-item:first-child { grid-column: span 2; grid-row: span 2; }
+.g-item:nth-child(4) { grid-column: span 2; }
+.g-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.g-item:hover img { transform: scale(1.07); }
+.g-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+}
+.g-placeholder i { font-size: 1.4rem; color: var(--pine); }
+
+/* ════════════════════════════════════════════════════════
+   TESTIMONIALS — compact horizontal scroll cards
+════════════════════════════════════════════════════════ */
+#testimonials { background: var(--ink2); }
+.test-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+}
+@media(max-width:900px){ .test-grid { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:560px){ .test-grid { grid-template-columns: 1fr; } }
+
+.test-card {
+  background: var(--fog2); border: 1px solid var(--border);
+  border-radius: var(--r12); padding: 18px; position: relative;
+  transition: border-color .2s;
+}
+.test-card:hover { border-color: rgba(245,158,11,0.3); }
+.test-quote-icon {
+  position: absolute; top: 10px; right: 14px;
+  font-family: var(--fh); font-size: 3.5rem; color: var(--gold);
+  opacity: 0.07; line-height: 1; pointer-events: none; font-weight: 900;
+}
+.test-stars { color: var(--gold); letter-spacing: 1.5px; font-size: 12px; margin-bottom: 8px; }
+.test-text  { color: rgba(255,255,255,0.45); font-size: 12px; line-height: 1.65; margin-bottom: 14px; }
+.test-av {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--pine), var(--leaf));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-size: 0.95rem; color: var(--white); flex-shrink: 0;
+}
+.test-name { font-weight: 700; font-size: 12.5px; color: var(--white); }
+.test-role { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+/* ════════════════════════════════════════════════════════
+   PAYMENT SECTION
+════════════════════════════════════════════════════════ */
+#payment { background: var(--ink); }
+.payment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; max-width: 800px; margin: 0 auto;
+}
+.pay-card {
+  background: var(--fog2); border: 1px solid var(--border);
+  border-radius: var(--r12); padding: 22px 18px 18px;
+  text-align: center;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  position: relative; overflow: visible;
+}
+.pay-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245,158,11,0.4);
+  box-shadow: 0 16px 40px rgba(245,158,11,0.08);
+}
+.pay-card--primary { border-top: 2px solid var(--gold); border-color: rgba(245,158,11,0.35); }
+.pay-primary-badge {
+  position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+  background: var(--gold); color: var(--ink);
+  font-size: 9px; font-weight: 900; padding: 3px 12px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(245,158,11,0.3);
+}
+.pay-method-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.18);
+  border-radius: var(--r4); padding: 3px 9px;
+  font-size: 10px; font-weight: 700; color: var(--gold);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px;
+}
+.pay-label { font-family: var(--fh); font-size: 1.2rem; color: var(--white); margin-bottom: 4px; font-weight: 800; }
+.pay-upi { font-family: var(--fm); font-size: 10.5px; color: rgba(255,255,255,0.35); margin-bottom: 14px; word-break: break-all; }
+.pay-qr-frame {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border-radius: var(--r12); padding: 8px; margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(5,15,8,0.4);
+}
+.pay-qr-frame img { width: 150px; height: 150px; object-fit: contain; border-radius: 4px; }
+.pay-qr-empty {
+  width: 150px; height: 150px; background: var(--ink3); border-radius: var(--r8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem; color: var(--leaf); margin: 0 auto 14px;
+}
+.btn-copy-upi {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; background: transparent; color: var(--gold);
+  border: 1px solid rgba(245,158,11,0.3); border-radius: var(--r8);
+  padding: 9px 14px; font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  font-family: var(--fb); cursor: pointer; transition: background .15s;
+}
+.btn-copy-upi:hover { background: rgba(245,158,11,0.08); border-color: var(--gold); }
+.btn-copy-upi.copied { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.35); color: var(--go); }
+.payment-trust-note {
+  text-align: center; margin-top: 24px;
+  color: rgba(255,255,255,0.18); font-size: 11px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+/* ════════════════════════════════════════════════════════
+   VISITING CARD — compact redesign
+════════════════════════════════════════════════════════ */
+#visiting-card { background: var(--ink2); padding: 44px 0; }
+.vc-card {
+  max-width: 440px;
+  background: linear-gradient(135deg, var(--ink3) 0%, #162d21 50%, var(--ink3) 100%);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: var(--r16); padding: 26px 24px;
+  position: relative; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(5,15,8,0.7), 0 0 0 1px rgba(245,158,11,0.1) inset;
+  transition: transform .3s;
+}
+.vc-card:hover { transform: rotateY(-2deg) rotateX(1deg) translateY(-3px); }
+.vc-card::before {
+  content:''; position:absolute; top:-30%; right:-10%;
+  width:200px; height:200px;
+  background:radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 65%);
+  pointer-events:none;
+}
+.vc-card::after {
+  content:'⚡'; position:absolute; right:14px; bottom:14px;
+  font-size:4rem; opacity:0.04; line-height:1; pointer-events:none;
+}
+.vc-logo-row { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.vc-bolt {
+  width:34px; height:34px; background:var(--gold);
+  clip-path:polygon(50% 0%,80% 20%,60% 50%,90% 50%,35% 100%,50% 60%,20% 60%);
+  flex-shrink:0;
+}
+.vc-org-name { font-family:var(--fh); font-size:1.1rem; color:var(--white); line-height:1.1; font-weight:800; }
+.vc-org-tag  { font-size:9px; color:var(--gold); text-transform:uppercase; letter-spacing:0.15em; }
+.vc-divider  { width:100%; height:1px; background:linear-gradient(90deg,transparent,rgba(245,158,11,0.3),transparent); margin:14px 0; }
+.vc-person-name { font-family:var(--fh); font-size:1.5rem; color:var(--white); line-height:1; font-weight:800; }
+.vc-designation { font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:0.15em; margin:3px 0 14px; }
+.vc-contacts { display:flex; flex-direction:column; gap:7px; }
+.vc-contact-row { display:flex; align-items:center; gap:8px; }
+.vc-ci { width:24px; height:24px; background:rgba(245,158,11,0.1); border-radius:5px; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:11px; flex-shrink:0; }
+.vc-cv { color:rgba(255,255,255,0.6); font-size:12px; }
+.vc-cv a { color:rgba(255,255,255,0.6); }
+.vc-qr { width:58px; height:58px; background:var(--white); border-radius:7px; display:flex; align-items:center; justify-content:center; }
+.vc-footer-row { display:flex; justify-content:space-between; align-items:flex-end; }
+
+/* ════════════════════════════════════════════════════════
+   CTA BANNER — compact
+════════════════════════════════════════════════════════ */
+.cta-banner {
+  background: linear-gradient(135deg, var(--gold-d) 0%, var(--gold) 60%, var(--gold-l) 100%);
+  padding: 36px 0; position:relative; overflow:hidden;
+}
+.cta-banner::before {
+  content:'⚡'; position:absolute; right:3%; top:50%;
+  transform:translateY(-50%);
+  font-size:10rem; opacity:0.07; line-height:1; pointer-events:none;
+}
+.cta-title { font-family:var(--fh); font-size:clamp(1.5rem,4vw,2.6rem); color:var(--ink); line-height:1.05; font-weight:800; }
+.cta-sub { color:rgba(5,15,8,0.55); font-size:12.5px; margin:6px 0 20px; }
+.btn-cta-dark {
+  background:var(--ink); color:var(--white);
+  border:none; border-radius:var(--r8); padding:11px 22px;
+  font-weight:800; font-size:11.5px; letter-spacing:0.07em; text-transform:uppercase;
+  font-family:var(--fb); transition:box-shadow .2s;
+  display:inline-flex; align-items:center; gap:7px;
+}
+.btn-cta-dark:hover { box-shadow:0 0 24px rgba(5,15,8,0.4); color:var(--white); }
+
+/* ════════════════════════════════════════════════════════
+   ABOUT SECTION
+════════════════════════════════════════════════════════ */
+#about { background: var(--ink2); }
+.about-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); gap: 8px; margin: 16px 0;
+}
+.about-stat-box {
+  background: var(--fog2); border: 1px solid var(--border);
+  border-radius: var(--r8); padding: 12px 14px;
+}
+.asv { font-family: var(--fh); font-size: 1.6rem; color: var(--gold); font-weight: 800; }
+.asl { font-size: 9.5px; color: rgba(255,255,255,0.32); text-transform: uppercase; letter-spacing: 0.09em; }
+
+.feat-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+  border: 1px solid; margin: 3px 4px 3px 0;
+}
+.feat-tag-gold { color: var(--gold); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.06); }
+.feat-tag-muted { color: rgba(255,255,255,0.45); border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
+
+/* ════════════════════════════════════════════════════════
+   ENQUIRY SECTION
+════════════════════════════════════════════════════════ */
+#enquiry { background: var(--ink2); padding: 44px 0; }
+.enq-card {
+  background: var(--fog2); border: 1px solid var(--border);
+  border-radius: var(--r16); padding: 28px;
+  border-top: 2px solid var(--gold);
+}
+.form-label-e {
+  display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 4px;
+}
+.form-ctrl-e {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: var(--r8); padding: 9px 12px;
+  font-family: var(--fb); font-size: 13px; color: var(--white);
+  transition: border-color .15s, box-shadow .15s;
+}
+.form-ctrl-e:focus {
+  border-color: var(--gold); box-shadow: 0 0 0 2px rgba(245,158,11,0.1);
+  outline: none; background: rgba(255,255,255,0.06);
+}
+.form-ctrl-e option { background: var(--ink2); color: var(--white); }
+textarea.form-ctrl-e { resize: vertical; min-height: 88px; }
+.btn-submit-e {
+  width: 100%; background: var(--gold); color: var(--ink); border: none;
+  border-radius: var(--r8); padding: 12px; font-weight: 900; font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase; font-family: var(--fb);
+  transition: box-shadow .2s, transform .15s; cursor: pointer;
+}
+.btn-submit-e:hover { box-shadow: 0 0 24px rgba(245,158,11,0.4); transform: translateY(-1px); }
+
+.contact-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: var(--fog2); border: 1px solid var(--border);
+  border-radius: var(--r8); margin-bottom: 8px;
+  transition: border-color .15s;
+}
+.contact-row:hover { border-color: rgba(245,158,11,0.3); }
+.cr-icon {
+  width: 36px; height: 36px; background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.18); border-radius: var(--r8);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gold); font-size: 1rem; flex-shrink: 0;
+}
+.cr-label { font-size: 9.5px; color: rgba(255,255,255,0.28); text-transform: uppercase; letter-spacing: 0.08em; }
+.cr-value { color: var(--white); font-weight: 700; font-size: 13px; }
+
+/* ════════════════════════════════════════════════════════
+   MAP SECTION
+════════════════════════════════════════════════════════ */
+#map-section { background: var(--ink); padding: 0 0 44px; }
+.map-wrap {
+  border-radius: var(--r12); overflow: hidden;
+  border: 1px solid var(--border); height: 300px; background: var(--ink3);
+  display: flex; align-items: center; justify-content: center;
+}
+.map-wrap iframe { width: 100%; height: 100%; border: none; filter: invert(0.9) hue-rotate(175deg); }
+.map-placeholder { text-align: center; color: rgba(255,255,255,0.2); padding: 30px; }
+.map-placeholder i { font-size: 2.5rem; color: var(--pine); margin-bottom: 10px; }
+
+/* ════════════════════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════════════════════ */
+.site-footer { background: var(--ink2); border-top: 1px solid var(--border); padding: 40px 0 20px; }
+.footer-brand { font-family: var(--fh); font-size: 1.2rem; color: var(--white); font-weight: 800; }
+.footer-sub   { color: rgba(255,255,255,0.28); font-size: 11px; margin: 3px 0 14px; }
+.footer-soc   { display: flex; gap: 6px; }
+.fsoc-btn {
+  width: 32px; height: 32px; border-radius: var(--r8); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.4); font-size: 13px;
+  transition: border-color .15s, color .15s;
+}
+.fsoc-btn:hover { border-color: var(--gold); color: var(--gold); }
+.footer-heading { font-size: 9.5px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.18); margin-bottom: 12px; }
+.footer-link { display: block; color: rgba(255,255,255,0.4); font-size: 12px; margin-bottom: 6px; transition: color .15s; }
+.footer-link:hover { color: var(--gold); }
+.footer-newsletter { display: flex; border-radius: var(--r8); overflow: hidden; }
+.footer-newsletter input {
+  flex: 1; background: var(--fog); border: 1px solid var(--border);
+  border-right: none; border-radius: var(--r8) 0 0 var(--r8);
+  padding: 8px 12px; color: var(--white); font-family: var(--fb); font-size: 12px; outline: none;
+}
+.footer-newsletter input::placeholder { color: rgba(255,255,255,0.2); }
+.footer-newsletter button {
+  background: var(--gold); color: var(--ink); border: none;
+  padding: 8px 14px; font-weight: 800; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  border-radius: 0 var(--r8) var(--r8) 0; cursor: pointer; font-family: var(--fb);
+  transition: box-shadow .15s;
+}
+.footer-newsletter button:hover { box-shadow: 0 0 14px rgba(245,158,11,0.35); }
+.footer-copy {
+  color: rgba(255,255,255,0.18); font-size: 11px; text-align: center;
+  margin-top: 28px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ════════════════════════════════════════════════════════
+   WHATSAPP FLOAT
+════════════════════════════════════════════════════════ */
+.wa-float {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #25d366; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 6px 20px rgba(37,211,102,0.4);
+  animation: wa-pulse 2s infinite;
+}
+@keyframes wa-pulse {
+  0%,100% { box-shadow: 0 6px 20px rgba(37,211,102,0.4); }
+  50%      { box-shadow: 0 6px 28px rgba(37,211,102,0.65); }
+}
 
 /* ════════════════════════════════════════════════════════
    PRODUCT DETAIL MODAL
 ════════════════════════════════════════════════════════ */
 .prod-modal-overlay {
-  position:fixed; inset:0; z-index:1000;
-  background: rgba(5,15,8,0.96); backdrop-filter: blur(16px);
-  display:none; opacity:0; transition: opacity .35s;
-  overflow-y:auto;
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10,15,13,0.97); backdrop-filter: blur(18px);
+  display: none; opacity: 0; transition: opacity .3s;
+  overflow-y: auto;
 }
-.prod-modal-overlay.open { display:flex; }
-.prod-modal-overlay.visible { opacity:1; }
+.prod-modal-overlay.open { display: flex; }
+.prod-modal-overlay.visible { opacity: 1; }
 .prod-modal {
-  width:100%; max-width: 1100px; margin: auto; padding: 20px;
-  position: relative;
+  width: 100%; max-width: 960px; margin: auto; padding: 16px; position: relative;
 }
 .pm-close {
-  position: fixed; top:20px; right:20px; z-index:1001;
-  width:44px; height:44px; border-radius:50%;
-  background: rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4);
-  color: var(--gold); font-size:1.2rem;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; transition: background .2s, transform .2s;
+  position: fixed; top: 16px; right: 16px; z-index: 1001;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35);
+  color: var(--gold); font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s, transform .2s;
 }
-.pm-close:hover { background: rgba(245,158,11,0.3); transform:rotate(90deg); }
-.pm-grid { display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:start; }
-@media(max-width:700px){ .pm-grid { grid-template-columns:1fr; } }
-/* image carousel */
-.pm-carousel { border-radius:14px; overflow:hidden; position:relative; }
+.pm-close:hover { background: rgba(245,158,11,0.25); transform: rotate(90deg); }
+.pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+@media(max-width:700px){ .pm-grid { grid-template-columns: 1fr; } }
+
+.pm-carousel { border-radius: var(--r12); overflow: hidden; position: relative; }
 .pm-img-main {
-  width:100%; aspect-ratio:1/1; object-fit:cover;
-  background: var(--g2); display:block;
-  transition: opacity .3s;
+  width: 100%; aspect-ratio: 1/1; object-fit: cover;
+  background: var(--ink3); display: block; transition: opacity .25s;
 }
-.pm-img-ph { width:100%; aspect-ratio:1/1; background: var(--g2); display:flex; align-items:center; justify-content:center; font-size:5rem; color:var(--g5); }
-.pm-thumbs { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.pm-img-ph { width: 100%; aspect-ratio: 1/1; background: var(--ink3); display: flex; align-items: center; justify-content: center; font-size: 4rem; color: var(--leaf); }
+.pm-thumbs { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .pm-thumb {
-  width:60px; height:60px; border-radius:8px; object-fit:cover;
-  cursor:pointer; border:2px solid transparent; transition: border-color .2s;
+  width: 52px; height: 52px; border-radius: var(--r8); object-fit: cover;
+  cursor: pointer; border: 2px solid transparent; transition: border-color .15s;
 }
 .pm-thumb.active,.pm-thumb:hover { border-color: var(--gold); }
-/* info panel */
-.pm-info { display:flex; flex-direction:column; gap:18px; }
-.pm-brand { color:var(--gold); font-size:0.65rem; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; }
-.pm-name  { font-family:var(--font-head); font-size:2.2rem; color:var(--white); line-height:1.05; }
-.pm-price-row { display:flex; align-items:baseline; gap:10px; }
-.pm-price-sale { font-family:var(--font-head); font-size:2rem; color:#ef4444; }
-.pm-price-orig { font-size:1rem; color:rgba(255,255,255,0.3); text-decoration:line-through; }
-.pm-price-reg  { font-family:var(--font-head); font-size:2rem; color:var(--white); }
-.pm-price-disc { background:#dc2626; color:#fff; font-size:0.65rem; font-weight:800; padding:3px 10px; border-radius:20px; }
-.pm-desc { color:rgba(255,255,255,0.55); font-size:0.9rem; line-height:1.75; }
-/* specs table */
-.pm-specs {
-  background:rgba(255,255,255,0.03); border:1px solid var(--border);
-  border-radius:10px; overflow:hidden;
-}
-.pm-spec-row {
-  display:flex; align-items:baseline;
-  padding:8px 14px; border-bottom:1px solid var(--border);
-  font-size:0.82rem;
-}
-.pm-spec-row:last-child { border-bottom:none; }
-.pm-spec-key { color:rgba(255,255,255,0.35); min-width:110px; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; }
-.pm-spec-val { color:var(--white); font-weight:600; }
-/* tabs */
-.pm-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-top:4px; }
+
+.pm-info { display: flex; flex-direction: column; gap: 14px; }
+.pm-brand { color: var(--gold); font-size: 10px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
+.pm-name  { font-family: var(--fh); font-size: 1.8rem; color: var(--white); line-height: 1.05; font-weight: 800; }
+.pm-price-row { display: flex; align-items: baseline; gap: 8px; }
+.pm-price-sale { font-family: var(--fh); font-size: 1.7rem; color: var(--fire); }
+.pm-price-orig { font-size: 0.95rem; color: rgba(255,255,255,0.28); text-decoration: line-through; }
+.pm-price-reg  { font-family: var(--fh); font-size: 1.7rem; color: var(--white); }
+.pm-price-disc { background: var(--fire); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; }
+.pm-desc { color: rgba(255,255,255,0.45); font-size: 12.5px; line-height: 1.7; }
+
+.pm-specs { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--r8); overflow: hidden; }
+.pm-spec-row { display: flex; align-items: baseline; padding: 7px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.pm-spec-row:last-child { border-bottom: none; }
+.pm-spec-key { color: rgba(255,255,255,0.3); min-width: 95px; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+.pm-spec-val { color: var(--white); font-weight: 700; }
+
+.pm-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-top: 2px; }
 .pm-tab {
-  padding:10px 16px; font-size:0.7rem; font-weight:700; letter-spacing:0.1em;
-  text-transform:uppercase; color:rgba(255,255,255,0.35); cursor:pointer;
-  border-bottom:2px solid transparent; transition: color .2s, border-color .2s;
-  font-family:var(--font-body);
+  padding: 8px 14px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: rgba(255,255,255,0.3); cursor: pointer;
+  border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; font-family: var(--fb);
 }
-.pm-tab.active { color:var(--gold); border-color:var(--gold); }
-.pm-tab-content { display:none; padding:16px 0; }
-.pm-tab-content.active { display:block; }
-.pm-yt-frame {
-  width:100%; aspect-ratio:16/9; border-radius:10px;
-  border:none; background:var(--g2);
-}
+.pm-tab.active { color: var(--gold); border-color: var(--gold); }
+.pm-tab-content { display: none; padding: 12px 0; }
+.pm-tab-content.active { display: block; }
+.pm-yt-frame { width: 100%; aspect-ratio: 16/9; border-radius: var(--r8); border: none; background: var(--ink3); }
 .pm-ig-link {
-  display:inline-flex; align-items:center; gap:8px;
-  background:rgba(225,48,108,0.1); border:1px solid rgba(225,48,108,0.3);
-  color:#e1306c; border-radius:8px; padding:10px 20px;
-  font-weight:700; font-size:0.82rem; transition: background .2s;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(225,48,108,0.08); border: 1px solid rgba(225,48,108,0.25);
+  color: #e1306c; border-radius: var(--r8); padding: 9px 18px;
+  font-weight: 700; font-size: 12px; transition: background .15s;
 }
-.pm-ig-link:hover { background:rgba(225,48,108,0.2); color:#e1306c; }
-/* actions */
-.pm-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
-.btn-pm-wa {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
-  background:rgba(37,211,102,0.1); border:1px solid rgba(37,211,102,0.4);
-  color:#25d366; border-radius:8px; padding:12px 16px;
-  font-weight:800; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase;
-  font-family:var(--font-body); transition: background .2s;
-}
-.btn-pm-wa:hover { background:rgba(37,211,102,0.2); color:#25d366; }
-.btn-pm-enq {
-  flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
-  background:var(--gold); color:var(--g0); border:none; border-radius:8px;
-  padding:12px 16px; font-weight:800; font-size:0.78rem; letter-spacing:0.08em;
-  text-transform:uppercase; font-family:var(--font-body); transition: box-shadow .2s;
-}
-.btn-pm-enq:hover { box-shadow:0 0 24px rgba(245,158,11,0.4); color:var(--g0); }
-.btn-pm-pdf {
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3);
-  color:var(--gold); border-radius:8px; padding:12px 16px;
-  font-weight:700; font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase;
-  font-family:var(--font-body); transition: background .2s; white-space:nowrap;
-}
-.btn-pm-pdf:hover { background:rgba(245,158,11,0.15); color:var(--gold); }
+.pm-ig-link:hover { background: rgba(225,48,108,0.18); color: #e1306c; }
 .pm-stock-badge {
-  display:inline-flex; align-items:center; gap:6px;
-  font-size:0.7rem; font-weight:700; padding:5px 12px;
-  border-radius:20px;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
 }
-.pm-stock-badge.in { background:rgba(34,197,94,0.1); color:#22c55e; border:1px solid rgba(34,197,94,0.3); }
-.pm-stock-badge.out { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); }
+.pm-stock-badge.in  { background: rgba(34,197,94,0.08); color: var(--go); border: 1px solid rgba(34,197,94,0.25); }
+.pm-stock-badge.out { background: rgba(239,68,68,0.08); color: var(--fire); border: 1px solid rgba(239,68,68,0.25); }
+
+.pm-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.btn-pm-wa {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(37,211,102,0.08); border: 1px solid rgba(37,211,102,0.3);
+  color: #25d366; border-radius: var(--r8); padding: 10px 14px;
+  font-weight: 800; font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase;
+  font-family: var(--fb); transition: background .15s;
+}
+.btn-pm-wa:hover { background: rgba(37,211,102,0.18); color: #25d366; }
+.btn-pm-enq {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--gold); color: var(--ink); border: none; border-radius: var(--r8);
+  padding: 10px 14px; font-weight: 800; font-size: 11.5px; letter-spacing: 0.07em;
+  text-transform: uppercase; font-family: var(--fb); transition: box-shadow .15s;
+}
+.btn-pm-enq:hover { box-shadow: 0 0 20px rgba(245,158,11,0.4); color: var(--ink); }
+.btn-pm-pdf {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.25);
+  color: var(--gold); border-radius: var(--r8); padding: 10px 14px;
+  font-weight: 700; font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase;
+  font-family: var(--fb); transition: background .15s; white-space: nowrap;
+}
+.btn-pm-pdf:hover { background: rgba(245,158,11,0.14); color: var(--gold); }
 
 /* ════════════════════════════════════════════════════════
-   WHY CHOOSE US
+   ANIMATIONS & UTILITIES
 ════════════════════════════════════════════════════════ */
-#why-us { background: linear-gradient(135deg, var(--g1) 0%, var(--g2) 100%); }
-.why-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
-@media(max-width:900px){ .why-grid { grid-template-columns:repeat(2,1fr); } }
-@media(max-width:500px){ .why-grid { grid-template-columns:1fr; } }
-.why-card {
-  text-align:center; padding:32px 20px;
-  background:rgba(255,255,255,0.02); border:1px solid var(--border);
-  border-radius:14px; transition: border-color .3s, transform .3s;
-}
-.why-card:hover { border-color:rgba(245,158,11,0.4); transform:translateY(-4px); }
-.why-icon { font-size:2.2rem; color:var(--gold); margin-bottom:12px; }
-.why-stat { font-family:var(--font-head); font-size:2.5rem; color:var(--white); line-height:1; margin-bottom:4px; }
-.why-lbl  { font-size:0.75rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em; }
-
-/* ════════════════════════════════════════════════════════
-   GALLERY
-════════════════════════════════════════════════════════ */
-#gallery { background: var(--g0); }
-.gallery-grid {
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  grid-template-rows: auto;
-  gap:12px;
-}
-@media(max-width:700px){ .gallery-grid { grid-template-columns:repeat(2,1fr); } }
-.gallery-grid .g-item { border-radius:10px; overflow:hidden; }
-.gallery-grid .g-item:first-child { grid-column:span 2; grid-row:span 2; }
-.gallery-grid .g-item img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
-.gallery-grid .g-item:hover img { transform:scale(1.05); }
-.g-placeholder { background:var(--g3); aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }
-.g-placeholder i { font-size:2rem; color:var(--g5); }
-
-/* ════════════════════════════════════════════════════════
-   TESTIMONIALS
-════════════════════════════════════════════════════════ */
-#testimonials { background: var(--g1); }
-.test-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-@media(max-width:900px){ .test-grid { grid-template-columns:repeat(2,1fr); } }
-@media(max-width:560px){ .test-grid { grid-template-columns:1fr; } }
-.test-card {
-  background:var(--card-bg); border:1px solid var(--border);
-  border-radius:14px; padding:28px; position:relative;
-  transition: border-color .3s;
-}
-.test-card:hover { border-color:rgba(245,158,11,0.35); }
-.test-card::before {
-  content:'\201C'; position:absolute; top:12px; left:20px;
-  font-family:var(--font-head); font-size:5rem; color:var(--gold);
-  opacity:0.08; line-height:1; pointer-events:none;
-}
-.test-stars { color:var(--gold); letter-spacing:2px; font-size:0.85rem; }
-.test-text { color:rgba(255,255,255,0.5); font-size:0.88rem; line-height:1.75; margin:12px 0 20px; }
-.test-av {
-  width:38px; height:38px; border-radius:50%;
-  background: linear-gradient(135deg, var(--g4), var(--g5));
-  display:flex; align-items:center; justify-content:center;
-  font-family:var(--font-head); font-size:1rem; color:var(--white); flex-shrink:0;
-}
-.test-name { font-weight:700; font-size:0.88rem; color:var(--white); }
-.test-role { font-size:0.72rem; color:rgba(255,255,255,0.35); }
-
-/* ════════════════════════════════════════════════════════
-   VISITING CARD
-════════════════════════════════════════════════════════ */
-#visiting-card { background: var(--g0); padding: 80px 0; }
-.vc-wrap {
-  display:flex; justify-content:center; perspective:1000px;
-}
-.vc-card {
-  width:100%; max-width:500px;
-  background: linear-gradient(135deg, var(--g2) 0%, #183827 50%, var(--g2) 100%);
-  border: 1px solid rgba(245,158,11,0.3);
-  border-radius:18px; padding:36px 32px;
-  position:relative; overflow:hidden;
-  box-shadow: 0 30px 80px rgba(5,15,8,0.8), 0 0 0 1px rgba(245,158,11,0.15) inset;
-  transition: transform .4s;
-}
-.vc-card:hover { transform: rotateY(-3deg) rotateX(2deg) translateY(-4px); }
-.vc-card::before {
-  content:''; position:absolute; top:-30%; right:-10%;
-  width:250px; height:250px;
-  background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 65%);
-  pointer-events:none;
-}
-.vc-card::after {
-  content:'⚡'; position:absolute; right:20px; bottom:20px;
-  font-size:5rem; opacity:0.05; line-height:1; pointer-events:none;
-}
-.vc-logo-row { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
-.vc-bolt {
-  width:44px; height:44px; background:var(--gold);
-  clip-path:polygon(50% 0%,80% 20%,60% 50%,90% 50%,35% 100%,50% 60%,20% 60%);
-  flex-shrink:0;
-}
-.vc-org-name { font-family:var(--font-head); font-size:1.3rem; color:var(--white); line-height:1.1; }
-.vc-org-tag  { font-size:0.65rem; color:var(--gold); text-transform:uppercase; letter-spacing:0.15em; }
-.vc-divider  { width:100%; height:1px; background:linear-gradient(90deg,transparent,rgba(245,158,11,0.4),transparent); margin:20px 0; }
-.vc-person-name { font-family:var(--font-head); font-size:1.8rem; color:var(--white); line-height:1; }
-.vc-designation { font-size:0.72rem; color:var(--gold); text-transform:uppercase; letter-spacing:0.15em; margin:4px 0 20px; }
-.vc-contacts { display:flex; flex-direction:column; gap:10px; }
-.vc-contact-row { display:flex; align-items:center; gap:10px; }
-.vc-ci { width:28px; height:28px; background:rgba(245,158,11,0.12); border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:0.8rem; flex-shrink:0; }
-.vc-cv { color:rgba(255,255,255,0.65); font-size:0.82rem; }
-.vc-cv a { color:rgba(255,255,255,0.65); }
-.vc-qr {
-  width:70px; height:70px; background:var(--white);
-  border-radius:8px; display:flex; align-items:center; justify-content:center;
-  margin-top:20px; align-self:flex-end;
-}
-.vc-footer-row { display:flex; justify-content:space-between; align-items:flex-end; }
-
-/* ════════════════════════════════════════════════════════
-   CTA BANNER
-════════════════════════════════════════════════════════ */
-.cta-banner {
-  background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 60%, var(--gold-light) 100%);
-  padding: 60px 0; position:relative; overflow:hidden;
-}
-.cta-banner::before {
-  content:'⚡'; position:absolute; right:5%; top:50%;
-  transform:translateY(-50%);
-  font-size:12rem; opacity:0.08; line-height:1;
-}
-.cta-title { font-family:var(--font-head); font-size:clamp(2rem,5vw,3.5rem); color:var(--g0); line-height:1.05; }
-.cta-sub { color:rgba(5,15,8,0.6); font-size:0.95rem; margin:10px 0 28px; }
-.btn-cta-dark {
-  background:var(--g0); color:var(--white);
-  border:none; border-radius:8px; padding:14px 28px;
-  font-weight:800; font-size:0.8rem; letter-spacing:0.08em; text-transform:uppercase;
-  font-family:var(--font-body); transition:box-shadow .2s; display:inline-flex; align-items:center; gap:8px;
-}
-.btn-cta-dark:hover { box-shadow:0 0 30px rgba(5,15,8,0.3); color:var(--white); }
-
-/* ════════════════════════════════════════════════════════
-   ENQUIRY SECTION
-════════════════════════════════════════════════════════ */
-#enquiry {
-  background: linear-gradient(135deg, var(--g1) 0%, var(--g0) 100%);
-  padding: 80px 0;
-}
-.enq-card {
-  background:var(--card-bg); border:1px solid var(--border);
-  border-radius:16px; padding:36px;
-  border-top:3px solid var(--gold);
-}
-.form-label-e {
-  display:block; font-size:0.65rem; font-weight:700; letter-spacing:0.1em;
-  text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:5px;
-}
-.form-ctrl-e {
-  width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border);
-  border-radius:8px; padding:11px 14px;
-  font-family:var(--font-body); font-size:0.88rem; color:var(--white);
-  transition:border-color .2s, box-shadow .2s;
-}
-.form-ctrl-e:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(245,158,11,0.12); outline:none; background:rgba(255,255,255,0.06); }
-.form-ctrl-e option { background:var(--g1); color:var(--white); }
-textarea.form-ctrl-e { resize:vertical; min-height:100px; }
-.btn-submit-e {
-  width:100%; background:var(--gold); color:var(--g0); border:none; border-radius:10px;
-  padding:14px; font-weight:900; font-size:0.82rem; letter-spacing:0.12em;
-  text-transform:uppercase; font-family:var(--font-body);
-  transition:box-shadow .25s, transform .2s; cursor:pointer;
-}
-.btn-submit-e:hover { box-shadow:0 0 30px rgba(245,158,11,0.4); transform:translateY(-2px); }
-
-/* ════════════════════════════════════════════════════════
-   GOOGLE MAPS
-════════════════════════════════════════════════════════ */
-#map-section { background: var(--g0); padding:0 0 60px; }
-.map-wrap {
-  border-radius:16px; overflow:hidden;
-  border:1px solid var(--border);
-  height:380px; background:var(--g2);
-  display:flex; align-items:center; justify-content:center;
-}
-.map-wrap iframe { width:100%; height:100%; border:none; filter:invert(0.9) hue-rotate(175deg); }
-.map-placeholder {
-  text-align:center; color:rgba(255,255,255,0.25); padding:40px;
-}
-.map-placeholder i { font-size:3rem; color:var(--g5); margin-bottom:12px; }
-
-/* ════════════════════════════════════════════════════════
-   FOOTER
-════════════════════════════════════════════════════════ */
-.site-footer { background:var(--g1); border-top:1px solid var(--border); padding:60px 0 24px; }
-.footer-brand { font-family:var(--font-head); font-size:1.4rem; color:var(--white); }
-.footer-sub   { color:rgba(255,255,255,0.3); font-size:0.78rem; margin:4px 0 20px; }
-.footer-soc   { display:flex; gap:8px; }
-.fsoc-btn {
-  width:38px; height:38px; border-radius:9px; border:1px solid var(--border);
-  display:flex; align-items:center; justify-content:center;
-  color:rgba(255,255,255,0.45); font-size:0.95rem;
-  transition: border-color .2s, color .2s;
-}
-.fsoc-btn:hover { border-color:var(--gold); color:var(--gold); }
-.footer-heading {
-  font-size:0.6rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase;
-  color:rgba(255,255,255,0.2); margin-bottom:16px;
-}
-.footer-link {
-  display:block; color:rgba(255,255,255,0.45); font-size:0.82rem;
-  margin-bottom:8px; transition:color .2s;
-}
-.footer-link:hover { color:var(--gold); }
-.footer-newsletter { display:flex; gap:0; border-radius:8px; overflow:hidden; }
-.footer-newsletter input {
-  flex:1; background:rgba(255,255,255,0.06); border:1px solid var(--border);
-  border-right:none; border-radius:8px 0 0 8px; padding:10px 14px;
-  color:var(--white); font-family:var(--font-body); font-size:0.82rem; outline:none;
-}
-.footer-newsletter input::placeholder { color:rgba(255,255,255,0.25); }
-.footer-newsletter button {
-  background:var(--gold); color:var(--g0); border:none;
-  padding:10px 16px; font-weight:800; font-size:0.75rem;
-  text-transform:uppercase; letter-spacing:0.08em;
-  border-radius:0 8px 8px 0; cursor:pointer; font-family:var(--font-body);
-  transition:box-shadow .2s;
-}
-.footer-newsletter button:hover { box-shadow:0 0 16px rgba(245,158,11,0.35); }
-.footer-copy {
-  color:rgba(255,255,255,0.2); font-size:0.72rem; text-align:center;
-  margin-top:40px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.06);
-}
-
-/* ════════════════════════════════════════════════════════
-   ANIMATIONS
-════════════════════════════════════════════════════════ */
-.fade-up { opacity:0; transform:translateY(30px); transition:opacity .65s ease, transform .65s ease; }
-.fade-up.visible { opacity:1; transform:translateY(0); }
-
-/* ── prefill flash ── */
+.fade-up { opacity: 0; transform: translateY(22px); transition: opacity .55s ease, transform .55s ease; }
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes flash-border {
-  0%  { box-shadow:0 0 0 0 rgba(245,158,11,0.5); }
-  70% { box-shadow:0 0 0 8px rgba(245,158,11,0); }
-  100%{ box-shadow:0 0 0 0 rgba(245,158,11,0); }
+  0%  { box-shadow: 0 0 0 0 rgba(245,158,11,0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(245,158,11,0); }
+  100%{ box-shadow: 0 0 0 0 rgba(245,158,11,0); }
 }
-.flash-field { animation:flash-border .8s ease; border-color:var(--gold) !important; }
+.flash-field { animation: flash-border .7s ease; border-color: var(--gold) !important; }
+
+/* section alt bg */
+.alt-bg { background: var(--ink2); }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     TOPBAR
-════════════════════════════════════════ -->
+{% if org.whatsapp_config and org.whatsapp_config.show_float_button and org.whatsapp_config.is_active %}
+<a href="{{ org.whatsapp_config.get_wa_url }}" target="_blank" rel="noopener" class="wa-float">
+  <i class="bi bi-whatsapp"></i>
+</a>
+{% endif %}
+
+<!-- ════════ TOPBAR ════════ -->
 <div class="topbar d-none d-md-block">
   <div class="container d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center flex-wrap gap-2">
-      {% if org.phone %}<i class="bi bi-telephone"></i><a href="tel:{{ org.phone }}">{{ org.phone }}</a>{% endif %}
-      {% if org.email %}<span class="sep">|</span><i class="bi bi-envelope"></i><a href="mailto:{{ org.email }}">{{ org.email }}</a>{% endif %}
-      {% if org.city %}<span class="sep">|</span><i class="bi bi-geo-alt"></i>{{ org.city }}, {{ org.state }}{% endif %}
-    </div>
+    {% include '_contact_inline.html' %}
     <div class="d-flex align-items-center gap-3">
-      {% if org.is_verified %}<span class="live-badge"><span class="live-dot"></span> Verified Business</span>{% endif %}
+      {% if org.is_verified %}<span class="vbadge"><span class="live-dot"></span> Verified Business</span>{% endif %}
       {% if org.facebook_url %}<a href="{{ org.facebook_url }}" target="_blank"><i class="bi bi-facebook"></i></a>{% endif %}
       {% if org.instagram_url %}<a href="{{ org.instagram_url }}" target="_blank"><i class="bi bi-instagram"></i></a>{% endif %}
       {% if org.twitter_url %}<a href="{{ org.twitter_url }}" target="_blank"><i class="bi bi-twitter-x"></i></a>{% endif %}
@@ -802,247 +983,345 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     NAVBAR
-════════════════════════════════════════ -->
-<nav class="main-nav navbar navbar-expand-lg py-1" id="home">
+<!-- ════════ MARQUEE TICKER ════════ -->
+<div class="ticker-wrap d-none d-md-block">
+  <div class="ticker-inner">
+    {% for item in "12345678"|make_list %}
+    <span class="ticker-item"><i class="bi bi-lightning-charge-fill"></i> Licensed & Certified <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><i class="bi bi-shield-check-fill"></i> 24/7 Emergency Service <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><i class="bi bi-stars"></i> 4.9★ Customer Rating <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><i class="bi bi-clock-fill"></i> Same-Day Response <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><i class="bi bi-patch-check-fill"></i> 100% Satisfaction Guaranteed <span class="ticker-sep">·</span></span>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ════════ NAVBAR ════════ -->
+<nav class="main-nav navbar navbar-expand-lg py-0" id="home">
   <div class="container">
-    <a class="brand-wrap" href="#home">
+    <a class="brand-wrap d-flex align-items-center gap-2" href="#home">
       <div class="brand-bolt"></div>
       <div>
         <div class="brand-name">{{ org.name }}</div>
         {% if org.tagline %}<div class="brand-sub">{{ org.tagline }}</div>{% endif %}
       </div>
     </a>
-    <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-      <i class="bi bi-list fs-3"></i>
+    <button class="navbar-toggler border-0 text-white py-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <i class="bi bi-list fs-4"></i>
     </button>
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav mx-auto">
-        <li class="nav-item"><a class="nav-link-item nav-link" href="#about">About Us</a></li>
+        <li class="nav-item"><a class="nav-link-item nav-link" href="#about">About</a></li>
         {% if services %}<li class="nav-item"><a class="nav-link-item nav-link" href="#services">Services</a></li>{% endif %}
         {% if products %}<li class="nav-item"><a class="nav-link-item nav-link" href="#products">Products</a></li>{% endif %}
         {% if gallery %}<li class="nav-item"><a class="nav-link-item nav-link" href="#gallery">Projects</a></li>{% endif %}
+        {% if payment_qrs %}<li class="nav-item"><a class="nav-link-item nav-link" href="#payment"><i class="bi bi-qr-code me-1"></i>Pay</a></li>{% endif %}
         <li class="nav-item"><a class="nav-link-item nav-link" href="#enquiry">Contact</a></li>
       </ul>
-      <a href="#enquiry" class="btn-quote"><i class="bi bi-lightning-charge-fill me-1"></i>Get Free Quote</a>
+      <a href="#enquiry" class="btn-quote"><i class="bi bi-lightning-charge-fill"></i>Free Quote</a>
     </div>
   </div>
 </nav>
 
-<!-- ════════════════════════════════════════
-     HERO
-════════════════════════════════════════ -->
+<!-- ════════ HERO ════════ -->
 <section class="hero" id="hero">
   <div class="hero-grid-bg"></div>
   <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
   <div class="container" style="position:relative;z-index:2;">
-    <div class="row g-5 align-items-center">
+    <div class="row g-4 align-items-center">
 
       <!-- LEFT COPY -->
-      <div class="col-lg-6 fade-up">
+      <div class="col-lg-7 fade-up">
         {% if org.category %}
         <div class="hero-eyebrow">
           <i class="bi bi-{{ org.category.icon|default:'lightning-charge' }}"></i>
           {{ org.category.name }}
         </div>
         {% endif %}
+
         <h1 class="hero-title">
           {% if org.tagline %}
             {{ org.tagline|truncatewords:3|upper }}
           {% else %}
-            POWERING<br>YOUR <span class="accent">WORLD,</span><br>SAFELY.
+            POWERING<br>YOUR <span class="accent">WORLD,</span><br><span class="stroke">SAFELY.</span>
           {% endif %}
         </h1>
+
         <p class="hero-sub">
-          {% if org.description %}{{ org.description|truncatechars:160 }}{% else %}Professional electrical services you can trust. Licensed technicians, certified workmanship, guaranteed results.{% endif %}
+          {% if org.description %}{{ org.description|truncatechars:140 }}{% else %}Professional electrical services you can trust. Licensed technicians, certified workmanship, guaranteed results.{% endif %}
         </p>
-        <!-- Trust badges -->
-        <div class="trust-bar">
+
+        <div class="trust-strip">
           {% if org.is_verified %}
-          <div class="trust-badge">
-            <div><div class="tval"><i class="bi bi-patch-check-fill" style="font-size:1.1rem;color:var(--gold);"></i></div><div class="tlbl">Verified</div></div>
+          <div class="tbadge">
+            <div class="tv"><i class="bi bi-patch-check-fill" style="font-size:1rem;color:var(--gold);"></i></div>
+            <div class="tl">Verified</div>
           </div>
           {% endif %}
-          <div class="trust-badge">
-            <div><div class="tval">500+</div><div class="tlbl">Clients</div></div>
+          <div class="tbadge">
+            <div class="tv">500+</div>
+            <div class="tl">Clients</div>
           </div>
-          <div class="trust-badge">
-            <div><div class="tval">24/7</div><div class="tlbl">Support</div></div>
+          <div class="tbadge">
+            <div class="tv">24/7</div>
+            <div class="tl">Support</div>
+          </div>
+          <div class="tbadge">
+            <div class="tv">4.9★</div>
+            <div class="tl">Rated</div>
           </div>
           {% if org.established_year %}
-          <div class="trust-badge">
-            <div><div class="tval">{{ org.established_year|slice:"-2:" }}+</div><div class="tlbl">Yrs Exp.</div></div>
+          <div class="tbadge">
+            <div class="tv">{{ org.established_year|slice:"-2:" }}+</div>
+            <div class="tl">Yrs Exp.</div>
           </div>
           {% endif %}
         </div>
+
         <div class="hero-ctas">
-          <a href="#enquiry" class="btn-hero-p"><i class="bi bi-lightning-charge-fill"></i>Get Free Quote</a>
-          {% if org.phone %}<a href="tel:{{ org.phone }}" class="btn-hero-o"><i class="bi bi-telephone-fill"></i>Call Now</a>{% endif %}
-        </div>
-      </div>
-
-      <!-- RIGHT: TECH IMAGE + AVAIL CARD -->
-      <div class="col-lg-3 d-none d-lg-block fade-up" style="transition-delay:.1s;">
-        <div class="tech-image-wrap">
-          {% if org.logo %}
-          <img src="{{ org.logo.url }}" alt="{{ org.name }}" style="width:100%;height:100%;object-fit:cover;">
-          {% else %}
-          <div class="tech-placeholder"><i class="bi bi-person-badge-fill"></i></div>
-          {% endif %}
-          <div class="verified-ring">
-            <div>
-              <div class="vr-name">{{ org.visiting_card_person|default:org.name }}</div>
-              <div class="vr-role">{{ org.visiting_card_designation|default:org.category.name|default:"Electrical Expert" }}</div>
-            </div>
-            <i class="bi bi-patch-check-fill verified-check"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-3 fade-up" style="transition-delay:.2s;">
-        <div class="avail-card">
-          <div class="avail-title">Quick Info</div>
-          {% if org.working_hours %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-clock"></i></div>
-            <div><div class="avail-lbl">Hours</div><div class="avail-val">{{ org.working_hours }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.city %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-geo-alt"></i></div>
-            <div><div class="avail-lbl">Location</div><div class="avail-val">{{ org.city }}, {{ org.state }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.phone %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-telephone"></i></div>
-            <div><div class="avail-lbl">Phone</div><div class="avail-val">{{ org.phone }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.email %}
-          <div class="avail-row">
-            <div class="avail-icon"><i class="bi bi-envelope"></i></div>
-            <div><div class="avail-lbl">Email</div><div class="avail-val" style="font-size:.75rem;">{{ org.email }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.whatsapp %}
-          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-wa-hero">
-            <i class="bi bi-whatsapp fs-5"></i> WhatsApp Chat
+          <a href="#enquiry" class="btn-hp"><i class="bi bi-lightning-charge-fill"></i>Get Free Quote</a>
+          {% if org.phone %}<a href="tel:{{ org.phone }}" class="btn-ho"><i class="bi bi-telephone-fill"></i>Call Now</a>{% endif %}
+          {% if org.slug %}
+          <a href="{% url 'visiting_card' org.slug %}" class="btn-ho" target="_blank">
+            <i class="bi bi-person-badge"></i>Digital Card
           </a>
           {% endif %}
         </div>
       </div>
 
+      <!-- RIGHT: compact card -->
+      <div class="col-lg-5 d-none d-lg-block fade-up" style="transition-delay:.12s;">
+        <div class="hero-right-card">
+          <div class="hero-logo-area">
+            {% if org.logo %}
+            <img src="{{ org.logo.url }}" alt="{{ org.name }}">
+            {% else %}
+            <div class="hero-logo-ph"><i class="bi bi-person-badge-fill"></i></div>
+            {% endif %}
+          </div>
+          <div class="hero-card-info">
+            <div>
+              <div class="hci-name">{{ org.visiting_card_person|default:org.name }}</div>
+              <div class="hci-role">
+                {% if org.visiting_card_designation %}{{ org.visiting_card_designation }}
+                {% elif org.category %}{{ org.category.name }}
+                {% else %}Electrical Expert{% endif %}
+              </div>
+            </div>
+            <div class="hci-badge">
+              <i class="bi bi-patch-check-fill"></i>
+            </div>
+          </div>
+          <!-- Quick contact pills inside hero card -->
+          <div style="padding:10px 14px 14px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border);">
+            {% if org.phone %}
+            <a href="tel:{{ org.phone }}" style="display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);color:var(--gold);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;">
+              <i class="bi bi-telephone-fill"></i>{{ org.phone }}
+            </a>
+            {% endif %}
+            {% if org.whatsapp %}
+            <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.2);color:#25d366;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;">
+              <i class="bi bi-whatsapp"></i>WhatsApp
+            </a>
+            {% endif %}
+            {% if org.city %}
+            <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.45);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;">
+              <i class="bi bi-geo-alt-fill"></i>{{ org.city }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
 
-<!-- ════════════════════════════════════════
-     ABOUT US
-════════════════════════════════════════ -->
-<section class="section" id="about" style="background:var(--g1);">
+<!-- ════════ STATS RIBBON ════════ -->
+<div class="stats-ribbon">
+  <div class="container p-0">
+    <div class="stats-ribbon-inner">
+      <div class="stat-item">
+        <i class="bi bi-award-fill stat-icon"></i>
+        <div><div class="stat-val">4.9★</div><div class="stat-lbl">Rating</div></div>
+      </div>
+      <div class="stat-item">
+        <i class="bi bi-people-fill stat-icon"></i>
+        <div><div class="stat-val">500+</div><div class="stat-lbl">Clients</div></div>
+      </div>
+      <div class="stat-item">
+        <i class="bi bi-headset stat-icon"></i>
+        <div><div class="stat-val">24/7</div><div class="stat-lbl">Support</div></div>
+      </div>
+      <div class="stat-item">
+        <i class="bi bi-shield-check-fill stat-icon"></i>
+        <div><div class="stat-val">100%</div><div class="stat-lbl">Guaranteed</div></div>
+      </div>
+      {% if org.established_year %}
+      <div class="stat-item">
+        <i class="bi bi-calendar-check-fill stat-icon"></i>
+        <div><div class="stat-val">{{ org.established_year }}</div><div class="stat-lbl">Est. Since</div></div>
+      </div>
+      {% endif %}
+      {% if org.home_service_available %}
+      <div class="stat-item">
+        <i class="bi bi-house-fill stat-icon"></i>
+        <div><div class="stat-val">Home</div><div class="stat-lbl">Service Available</div></div>
+      </div>
+      {% endif %}
+      {% if org.is_open_sunday %}
+      <div class="stat-item">
+        <i class="bi bi-sun-fill stat-icon"></i>
+        <div><div class="stat-val">Open</div><div class="stat-lbl">On Sundays</div></div>
+      </div>
+      {% endif %}
+      {% if org.accepts_online_payment %}
+      <div class="stat-item">
+        <i class="bi bi-credit-card-fill stat-icon"></i>
+        <div><div class="stat-val">UPI</div><div class="stat-lbl">Online Payment</div></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ════════ CTA BANNER TOP ════════ -->
+<section class="cta-banner">
   <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-6 fade-up">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2 class="cta-title">Need help fast? <br><span style="opacity:.7;">Book a service or get a free quote</span></h2>
+        <p class="cta-sub">Certified technicians, quick response, transparent pricing. Call or WhatsApp now.</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="#enquiry" class="btn-cta-dark"><i class="bi bi-lightning-charge-fill"></i>Get Quote</a>
+          {% if org.pdf_catalog %}<a href="{{ org.pdf_catalog.url }}" style="background:rgba(5,15,8,0.12);border:1.5px solid rgba(5,15,8,0.25);color:rgba(5,15,8,0.8);border-radius:var(--r8);padding:11px 18px;font-weight:700;font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase;font-family:var(--fb);display:inline-flex;align-items:center;gap:6px;" download><i class="bi bi-file-pdf"></i>Catalog</a>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ ABOUT ════════ -->
+<section class="section alt-bg" id="about">
+  <div class="container">
+    <div class="row g-4 align-items-start">
+      <div class="col-lg-7 fade-up">
         <div class="sec-eyebrow">Who We Are</div>
         <h2 class="sec-title">About {{ org.name }}</h2>
-        <div class="sec-divider mb-4"></div>
-        <p style="color:rgba(255,255,255,0.5);line-height:1.85;font-size:0.92rem;">
+        <div class="sec-line mb-3"></div>
+        <p style="color:rgba(255,255,255,0.45);line-height:1.8;font-size:13px;">
           {% if org.description %}{{ org.description }}
-          {% else %}We are a professional {{ org.category.name|default:"electrical services" }} business based in {{ org.city }}, {{ org.state }}. With years of experience, we deliver quality services with certified technicians and guaranteed workmanship.
+          {% else %}We are a professional {% if org.category %}{{ org.category.name }}{% else %}electrical services{% endif %} business based in {{ org.city }}, {{ org.state }}. With years of experience, we deliver quality services with certified technicians and guaranteed workmanship.
           {% endif %}
         </p>
-        <div class="row g-3 mt-2">
+        <div class="about-stats mt-3">
           {% if org.established_year %}
-          <div class="col-6">
-            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;">
-              <div style="font-family:var(--font-head);font-size:2rem;color:var(--gold);">{{ org.established_year }}</div>
-              <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;">Est. Year</div>
-            </div>
+          <div class="about-stat-box">
+            <div class="asv">{{ org.established_year }}</div><div class="asl">Est. Year</div>
           </div>
           {% endif %}
-          <div class="col-6">
-            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;">
-              <div style="font-family:var(--font-head);font-size:2rem;color:var(--gold);">{{ services.count }}</div>
-              <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;">Services</div>
-            </div>
+          <div class="about-stat-box">
+            <div class="asv">{{ services.count }}</div><div class="asl">Services</div>
+          </div>
+          <div class="about-stat-box">
+            <div class="asv">500+</div><div class="asl">Clients</div>
+          </div>
+          <div class="about-stat-box">
+            <div class="asv">4.9</div><div class="asl">Rating</div>
           </div>
         </div>
-        <div class="mt-4 d-flex gap-3 flex-wrap">
-          {% if org.is_verified %}<span style="display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-size:0.78rem;font-weight:700;"><i class="bi bi-patch-check-fill"></i>Verified Business</span>{% endif %}
-          {% if org.home_service_available %}<span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;"><i class="bi bi-house-fill"></i>Home Service</span>{% endif %}
-          {% if org.accepts_online_payment %}<span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;"><i class="bi bi-credit-card-fill"></i>Online Payment</span>{% endif %}
-          {% if org.is_open_sunday %}<span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;"><i class="bi bi-sun-fill"></i>Open Sunday</span>{% endif %}
+        <div class="mt-3">
+          {% if org.is_verified %}<span class="feat-tag feat-tag-gold"><i class="bi bi-patch-check-fill"></i>Verified Business</span>{% endif %}
+          {% if org.home_service_available %}<span class="feat-tag feat-tag-muted"><i class="bi bi-house-fill"></i>Home Service</span>{% endif %}
+          {% if org.accepts_online_payment %}<span class="feat-tag feat-tag-muted"><i class="bi bi-credit-card-fill"></i>Online Payment</span>{% endif %}
+          {% if org.is_open_sunday %}<span class="feat-tag feat-tag-muted"><i class="bi bi-sun-fill"></i>Open Sunday</span>{% endif %}
         </div>
       </div>
-      <div class="col-lg-6 fade-up" style="transition-delay:.15s;">
-        <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:24px;">
-          {% if org.gst_number %}
-          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-file-earmark-text"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">GST Number</div><div style="font-family:var(--font-mono);color:var(--white);font-size:0.88rem;font-weight:600;">{{ org.gst_number }}</div></div>
+      <div class="col-lg-5 fade-up" style="transition-delay:.1s;">
+        <!-- Quick Contact Card -->
+        <div style="background:var(--fog2);border:1px solid var(--border);border-radius:var(--r12);overflow:hidden;">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-headset" style="color:var(--gold);font-size:1rem;"></i>
+            <span style="font-family:var(--fh);font-size:0.95rem;font-weight:700;">Quick Contact</span>
           </div>
-          {% endif %}
-          {% if org.address_line1 %}
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;"><i class="bi bi-geo-alt"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Address</div><div style="color:rgba(255,255,255,0.65);font-size:0.85rem;line-height:1.5;">{{ org.get_full_address }}</div></div>
+          <div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
+            {% if org.phone %}
+            <a href="tel:{{ org.phone }}" class="contact-row" style="text-decoration:none;">
+              <div class="cr-icon"><i class="bi bi-telephone-fill"></i></div>
+              <div><div class="cr-label">Call Us</div><div class="cr-value">{{ org.phone }}</div></div>
+            </a>
+            {% endif %}
+            {% if org.whatsapp %}
+            <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="contact-row" style="text-decoration:none;">
+              <div class="cr-icon" style="background:rgba(37,211,102,0.1);border-color:rgba(37,211,102,0.18);color:#25d366;"><i class="bi bi-whatsapp"></i></div>
+              <div><div class="cr-label">WhatsApp</div><div class="cr-value">+91 {{ org.whatsapp }}</div></div>
+            </a>
+            {% endif %}
+            {% if org.email %}
+            <a href="mailto:{{ org.email }}" class="contact-row" style="text-decoration:none;">
+              <div class="cr-icon"><i class="bi bi-envelope-fill"></i></div>
+              <div><div class="cr-label">Email Us</div><div class="cr-value">{{ org.email }}</div></div>
+            </a>
+            {% endif %}
+            {% if org.working_hours %}
+            <div class="contact-row">
+              <div class="cr-icon"><i class="bi bi-clock-fill"></i></div>
+              <div><div class="cr-label">Working Hours</div><div class="cr-value">{{ org.working_hours }}</div></div>
+            </div>
+            {% endif %}
+            {% if org.city %}
+            <div class="contact-row">
+              <div class="cr-icon"><i class="bi bi-geo-alt-fill"></i></div>
+              <div><div class="cr-label">Location</div><div class="cr-value">{{ org.city }}, {{ org.state }}</div></div>
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% if org.working_hours %}
-          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-clock"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Working Hours</div><div style="color:var(--white);font-size:0.88rem;font-weight:600;">{{ org.working_hours }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.phone %}
-          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;">
-            <div style="width:36px;height:36px;background:rgba(245,158,11,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--gold);"><i class="bi bi-telephone"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Phone</div><a href="tel:{{ org.phone }}" style="color:var(--white);font-size:0.88rem;font-weight:700;">{{ org.phone }}</a></div>
-          </div>
-          {% endif %}
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ════════════════════════════════════════
-     SERVICES
-════════════════════════════════════════ -->
+<!-- ════════ SERVICES ════════ -->
 {% if services %}
-<section class="section" id="services">
+<section class="section" id="services" style="background:var(--ink2);">
   <div class="container">
-    <div class="row align-items-end mb-5">
-      <div class="col-md-8 fade-up">
+    <div class="sec-head fade-up">
+      <div>
         <div class="sec-eyebrow">What We Do</div>
         <h2 class="sec-title">Our Services</h2>
-        <div class="sec-divider"></div>
+        <div class="sec-line"></div>
       </div>
-      <div class="col-md-4 text-md-end fade-up">
-        <a href="#enquiry" class="btn-book">Book a Service <i class="bi bi-arrow-right"></i></a>
-      </div>
+      <a href="#enquiry" class="btn-see-all">Book a Service <i class="bi bi-arrow-right"></i></a>
     </div>
     <div class="svc-grid">
       {% for svc in services %}
-      <div class="svc-card fade-up" style="transition-delay:{{ forloop.counter0|divisibleby:3|yesno:',,' }}{{ forloop.counter0|add:1 }}00ms;">
+      <div class="svc-card fade-up" style="transition-delay:{{ forloop.counter0 }}00ms;">
         {% if svc.is_featured %}<span class="svc-featured-tag">Featured</span>{% endif %}
-        <div class="svc-icon-ph">
+        <div class="svc-img-wrap">
           {% if svc.image %}
-          <img src="{{ svc.image.url }}" alt="{{ svc.name }}" class="svc-img" style="font-size:0;">
+          <img src="{{ svc.image.url }}" alt="{{ svc.name }}" loading="lazy">
           {% else %}
-          <i class="bi bi-{{ svc.icon|default:'lightning-charge' }}"></i>
+          <div class="svc-img-ph"><i class="bi bi-{{ svc.icon|default:'lightning-charge' }}"></i></div>
           {% endif %}
         </div>
         <div class="svc-body">
           <div class="svc-name">{{ svc.name }}</div>
-          {% if svc.description %}<p class="svc-desc">{{ svc.description|truncatechars:90 }}</p>{% endif %}
-          {% if svc.price %}<div class="svc-price"><i class="bi bi-currency-rupee"></i>{{ svc.price }} / {{ svc.price_unit|default:"visit" }}</div>{% endif %}
-          <button type="button" class="btn-book" onclick="prefillEnquiry('{{ svc.pk }}','service','{{ svc.name|escapejs }}')">
-            <i class="bi bi-calendar-check"></i> Book Now
-          </button>
+          {% if svc.description %}<p class="svc-desc">{{ svc.description|truncatechars:70 }}</p>{% endif %}
+          <div class="svc-footer">
+            {% if svc.price %}
+            <div class="svc-price"><i class="bi bi-currency-rupee"></i>{{ svc.price }}<span style="font-size:9px;color:rgba(255,255,255,0.3);font-weight:500;">/{{ svc.price_unit|default:"visit" }}</span></div>
+            {% else %}<div></div>{% endif %}
+            <div class="svc-actions">
+              <button type="button" class="btn-svc" onclick="prefillEnquiry('{{ svc.pk }}','service','{{ svc.name|escapejs }}')">
+                <i class="bi bi-calendar-check"></i>Book
+              </button>
+              <button type="button" class="btn-svc-icon" onclick="addToCart('service', {{ svc.pk }}, '{{ svc.name|escapejs }}')" title="Add to cart">
+                <i class="bi bi-cart-plus"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       {% endfor %}
@@ -1051,23 +1330,20 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 </section>
 {% endif %}
 
-<!-- ════════════════════════════════════════
-     PRODUCTS
-════════════════════════════════════════ -->
+<!-- ════════ PRODUCTS ════════ -->
 {% if products %}
-<section class="section" id="products">
+<section class="section" id="products" style="background:var(--ink);">
   <div class="container">
-    <div class="row align-items-end mb-5">
-      <div class="col-md-8 fade-up">
+    <div class="sec-head fade-up">
+      <div>
         <div class="sec-eyebrow">Our Range</div>
         <h2 class="sec-title">Products</h2>
-        <div class="sec-divider"></div>
+        <div class="sec-line"></div>
       </div>
     </div>
     <div class="prod-grid">
       {% for product in products %}
       <div class="prod-card fade-up" data-product-id="{{ product.pk }}" data-org-slug="{{ org.slug }}">
-        <!-- Image / carousel -->
         <div class="prod-img-wrap" onclick="openProductModal({{ product.pk }}, '{{ org.slug }}')">
           {% if product.image %}
           <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
@@ -1075,7 +1351,7 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
           <div class="prod-ph-icon"><i class="bi bi-{{ product.icon|default:'box-seam' }}"></i></div>
           {% endif %}
           {% if product.discount_percent %}<span class="prod-badge-disc">−{{ product.discount_percent }}%</span>{% endif %}
-          {% if product.is_featured %}<span class="prod-badge-feat">Featured</span>{% endif %}
+          {% if product.is_featured %}<span class="prod-badge-feat">Top Pick</span>{% endif %}
           {% if not product.in_stock %}<div class="prod-oos-overlay"><span>Out of Stock</span></div>{% endif %}
         </div>
         <div class="prod-body">
@@ -1089,34 +1365,32 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
             {% else %}
             <span class="prod-price-reg">₹{{ product.price }}</span>
             {% endif %}
-            <span class="prod-unit"> / {{ product.unit }}</span>
+            <span class="prod-unit">/{{ product.unit }}</span>
           </div>
           <div class="prod-footer">
             <span class="{% if product.in_stock %}stock-in{% else %}stock-out{% endif %}">
               {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
             </span>
-            <button class="btn-view-prod" onclick="openProductModal({{ product.pk }}, '{{ org.slug }}')">
-              View Details
-            </button>
+            <div class="prod-foot-actions">
+              <button class="btn-vprod" onclick="openProductModal({{ product.pk }}, '{{ org.slug }}')">Details</button>
+              {% if product.in_stock %}
+              <button class="btn-cart-sm" onclick="addToCart('product', {{ product.pk }}, '{{ product.name|escapejs }}')" title="Add to cart">
+                <i class="bi bi-cart-plus"></i>
+              </button>
+              {% endif %}
+            </div>
           </div>
         </div>
-        <!-- Quick links shown on card -->
         {% if product.youtube_url or product.instagram_url or product.pdf_catalog %}
         <div class="prod-links-bar">
           {% if product.youtube_url %}
-          <a href="{{ product.youtube_url }}" target="_blank" class="prod-link-btn prod-link-yt">
-            <i class="bi bi-youtube"></i> Video
-          </a>
+          <a href="{{ product.youtube_url }}" target="_blank" class="prod-link-btn prod-link-yt"><i class="bi bi-youtube"></i>Video</a>
           {% endif %}
           {% if product.instagram_url %}
-          <a href="{{ product.instagram_url }}" target="_blank" class="prod-link-btn prod-link-ig">
-            <i class="bi bi-instagram"></i> Post
-          </a>
+          <a href="{{ product.instagram_url }}" target="_blank" class="prod-link-btn prod-link-ig"><i class="bi bi-instagram"></i>Post</a>
           {% endif %}
           {% if product.pdf_catalog %}
-          <a href="{% url 'download_product_catalog' org.slug product.pk %}" class="prod-link-btn prod-link-pdf">
-            <i class="bi bi-file-pdf"></i> Catalog
-          </a>
+          <a href="{% url 'download_product_catalog' org.slug product.pk %}" class="prod-link-btn prod-link-pdf"><i class="bi bi-file-pdf"></i>Catalog</a>
           {% endif %}
         </div>
         {% endif %}
@@ -1127,33 +1401,31 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 </section>
 {% endif %}
 
-<!-- ════════════════════════════════════════
-     WHY CHOOSE US
-════════════════════════════════════════ -->
-<section class="section" id="why-us">
+<!-- ════════ WHY CHOOSE US ════════ -->
+<section id="why-us">
   <div class="container">
-    <div class="text-center mb-5 fade-up">
+    <div class="text-center mb-4 fade-up">
       <div class="sec-eyebrow" style="justify-content:center;">Why Choose Us</div>
       <h2 class="sec-title">Trusted by Hundreds of Clients</h2>
-      <div class="sec-divider mx-auto"></div>
+      <div class="sec-line mx-auto"></div>
     </div>
-    <div class="why-grid">
-      <div class="why-card fade-up">
+    <div class="why-grid fade-up">
+      <div class="why-card">
         <div class="why-icon"><i class="bi bi-award-fill"></i></div>
         <div class="why-stat">4.9★</div>
         <div class="why-lbl">Google Rating</div>
       </div>
-      <div class="why-card fade-up" style="transition-delay:.1s;">
+      <div class="why-card">
         <div class="why-icon"><i class="bi bi-people-fill"></i></div>
         <div class="why-stat">500+</div>
         <div class="why-lbl">Happy Clients</div>
       </div>
-      <div class="why-card fade-up" style="transition-delay:.2s;">
+      <div class="why-card">
         <div class="why-icon"><i class="bi bi-headset"></i></div>
         <div class="why-stat">24/7</div>
         <div class="why-lbl">Support</div>
       </div>
-      <div class="why-card fade-up" style="transition-delay:.3s;">
+      <div class="why-card">
         <div class="why-icon"><i class="bi bi-shield-check-fill"></i></div>
         <div class="why-stat">100%</div>
         <div class="why-lbl">Guaranteed</div>
@@ -1162,17 +1434,15 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
   </div>
 </section>
 
-<!-- ════════════════════════════════════════
-     GALLERY
-════════════════════════════════════════ -->
+<!-- ════════ GALLERY ════════ -->
 {% if gallery %}
-<section class="section" id="gallery">
+<section class="section" id="gallery" style="background:var(--ink);">
   <div class="container">
-    <div class="row align-items-end mb-5">
-      <div class="col fade-up">
+    <div class="sec-head fade-up">
+      <div>
         <div class="sec-eyebrow">Our Work</div>
         <h2 class="sec-title">Recent Projects</h2>
-        <div class="sec-divider"></div>
+        <div class="sec-line"></div>
       </div>
     </div>
     <div class="gallery-grid fade-up">
@@ -1182,30 +1452,29 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         {% else %}<div class="g-placeholder"><i class="bi bi-image"></i></div>{% endif %}
       </div>
       {% empty %}
-      <div style="grid-column:span 4;text-align:center;color:rgba(255,255,255,0.2);padding:40px;">No project photos yet.</div>
+      <div style="grid-column:span 4;text-align:center;color:rgba(255,255,255,0.18);padding:30px;">No project photos yet.</div>
       {% endfor %}
     </div>
   </div>
 </section>
 {% endif %}
 
-<!-- ════════════════════════════════════════
-     TESTIMONIALS
-════════════════════════════════════════ -->
+<!-- ════════ TESTIMONIALS ════════ -->
 {% if testimonials %}
-<section class="section" id="testimonials">
+<section class="section" id="testimonials" style="background:var(--ink2);">
   <div class="container">
-    <div class="text-center mb-5 fade-up">
+    <div class="text-center mb-4 fade-up">
       <div class="sec-eyebrow" style="justify-content:center;">Reviews</div>
       <h2 class="sec-title">What Clients Say</h2>
-      <div class="sec-divider mx-auto"></div>
+      <div class="sec-line mx-auto"></div>
     </div>
     <div class="test-grid">
       {% for t in testimonials %}
       <div class="test-card fade-up">
+        <div class="test-quote-icon">"</div>
         <div class="test-stars">{% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
         <p class="test-text">{{ t.message }}</p>
-        <div class="d-flex align-items-center gap-3 pt-3" style="border-top:1px solid var(--border);">
+        <div class="d-flex align-items-center gap-2 pt-2" style="border-top:1px solid var(--border);">
           <div class="test-av">{{ t.client_name|first|upper }}</div>
           <div>
             <div class="test-name">{{ t.client_name }}</div>
@@ -1219,34 +1488,81 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
 </section>
 {% endif %}
 
-<!-- ════════════════════════════════════════
-     VISITING CARD
-════════════════════════════════════════ -->
+<!-- ════════ PAYMENT ════════ -->
+{% if payment_qrs %}
+<section class="section" id="payment" style="background:var(--ink);">
+  <div class="container">
+    <div class="sec-head fade-up">
+      <div>
+        <div class="sec-eyebrow"><i class="bi bi-shield-lock" style="font-size:.8rem;"></i>Secure Payments</div>
+        <h2 class="sec-title">Pay Us Securely</h2>
+        <div class="sec-line"></div>
+      </div>
+      <p style="color:rgba(255,255,255,0.28);font-size:11.5px;line-height:1.6;max-width:200px;text-align:right;">
+        Scan QR or copy UPI ID to pay instantly.
+      </p>
+    </div>
+    <div class="payment-grid">
+      {% for qr in payment_qrs %}
+      <div class="pay-card{% if qr.is_primary %} pay-card--primary{% endif %} fade-up">
+        {% if qr.is_primary %}<div class="pay-primary-badge"><i class="bi bi-star-fill me-1"></i>Primary</div>{% endif %}
+        <div class="pay-method-badge">
+          {% if qr.method == 'upi' %}<i class="bi bi-phone-fill"></i>UPI
+          {% elif qr.method == 'bank' %}<i class="bi bi-bank2"></i>Bank
+          {% elif qr.method == 'paypal' %}<i class="bi bi-paypal"></i>PayPal
+          {% elif qr.method == 'razorpay' %}<i class="bi bi-credit-card-2-front"></i>Razorpay
+          {% elif qr.method == 'stripe' %}<i class="bi bi-credit-card-fill"></i>Stripe
+          {% else %}<i class="bi bi-credit-card"></i>{{ qr.method|upper }}{% endif %}
+        </div>
+        <div class="pay-label">{{ qr.label }}</div>
+        {% if qr.upi_id %}<div class="pay-upi">{{ qr.upi_id }}</div>{% endif %}
+        {% if qr.qr_image %}
+        <div class="pay-qr-frame"><img src="{{ qr.qr_image.url }}" alt="{{ qr.label }} QR Code"></div>
+        {% else %}
+        <div class="pay-qr-empty"><i class="bi bi-qr-code"></i></div>
+        {% endif %}
+        {% if qr.upi_id %}
+        <button class="btn-copy-upi" data-upi="{{ qr.upi_id }}">
+          <i class="bi bi-clipboard"></i>Copy UPI ID
+        </button>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="payment-trust-note fade-up">
+      <i class="bi bi-shield-check text-success" style="font-size:.85rem;"></i>
+      All payments are secure &nbsp;·&nbsp; Save your transaction ID for reference
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ════════ VISITING CARD ════════ -->
 <section id="visiting-card">
   <div class="container">
-    <div class="row align-items-center g-5">
+    <div class="row g-4 align-items-center">
       <div class="col-lg-5 fade-up">
         <div class="sec-eyebrow">Get In Touch</div>
         <h2 class="sec-title">Our Business Card</h2>
-        <div class="sec-divider mb-4"></div>
-        <p style="color:rgba(255,255,255,0.4);font-size:0.88rem;line-height:1.75;">
-          Scan or share our business card to save our contact details instantly. We're always available for your electrical needs.
+        <div class="sec-line mb-3"></div>
+        <p style="color:rgba(255,255,255,0.38);font-size:12.5px;line-height:1.75;">
+          Scan or share our business card to save our contact details instantly.
         </p>
-        <div class="mt-4 d-flex flex-column gap-3">
+        <div class="mt-3 d-flex flex-column gap-2">
           {% if org.whatsapp %}
-          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" style="display:flex;align-items:center;gap:10px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25d366;border-radius:8px;padding:12px 16px;font-weight:700;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.08em;">
-            <i class="bi bi-whatsapp fs-5"></i> Chat on WhatsApp
+          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" style="display:flex;align-items:center;gap:9px;background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.25);color:#25d366;border-radius:var(--r8);padding:10px 14px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.07em;">
+            <i class="bi bi-whatsapp fs-5"></i>Chat on WhatsApp
           </a>
           {% endif %}
           {% if org.phone %}
-          <a href="tel:{{ org.phone }}" style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold);border-radius:8px;padding:12px 16px;font-weight:700;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.08em;">
-            <i class="bi bi-telephone-fill"></i> {{ org.phone }}
+          <a href="tel:{{ org.phone }}" style="display:flex;align-items:center;gap:9px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:var(--gold);border-radius:var(--r8);padding:10px 14px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.07em;">
+            <i class="bi bi-telephone-fill"></i>{{ org.phone }}
           </a>
           {% endif %}
         </div>
       </div>
-      <div class="col-lg-7 fade-up" style="transition-delay:.15s;">
-        <div class="vc-wrap">
+      <div class="col-lg-7 fade-up" style="transition-delay:.12s;">
+        <div style="display:flex;justify-content:center;perspective:1000px;">
           <div class="vc-card">
             <div class="vc-logo-row">
               <div class="vc-bolt"></div>
@@ -1259,43 +1575,21 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
             <div class="vc-footer-row align-items-start">
               <div>
                 <div class="vc-person-name">{{ org.visiting_card_person|default:org.name }}</div>
-                <div class="vc-designation">{{ org.visiting_card_designation|default:org.category.name|default:"Business Owner" }}</div>
+                <div class="vc-designation">
+                  {% if org.visiting_card_designation %}{{ org.visiting_card_designation }}
+                  {% elif org.category %}{{ org.category.name }}
+                  {% else %}Business Owner{% endif %}
+                </div>
                 <div class="vc-contacts">
-                  {% if org.phone %}
-                  <div class="vc-contact-row">
-                    <div class="vc-ci"><i class="bi bi-telephone-fill"></i></div>
-                    <div class="vc-cv"><a href="tel:{{ org.phone }}">{{ org.phone }}</a></div>
-                  </div>
-                  {% endif %}
-                  {% if org.whatsapp %}
-                  <div class="vc-contact-row">
-                    <div class="vc-ci"><i class="bi bi-whatsapp"></i></div>
-                    <div class="vc-cv"><a href="https://wa.me/91{{ org.whatsapp }}" target="_blank">+91 {{ org.whatsapp }}</a></div>
-                  </div>
-                  {% endif %}
-                  {% if org.email %}
-                  <div class="vc-contact-row">
-                    <div class="vc-ci"><i class="bi bi-envelope-fill"></i></div>
-                    <div class="vc-cv"><a href="mailto:{{ org.email }}">{{ org.email }}</a></div>
-                  </div>
-                  {% endif %}
-                  {% if org.website %}
-                  <div class="vc-contact-row">
-                    <div class="vc-ci"><i class="bi bi-globe"></i></div>
-                    <div class="vc-cv"><a href="{{ org.website }}" target="_blank">{{ org.website }}</a></div>
-                  </div>
-                  {% endif %}
-                  {% if org.city %}
-                  <div class="vc-contact-row">
-                    <div class="vc-ci"><i class="bi bi-geo-alt-fill"></i></div>
-                    <div class="vc-cv">{{ org.city }}, {{ org.state }}</div>
-                  </div>
-                  {% endif %}
+                  {% if org.phone %}<div class="vc-contact-row"><div class="vc-ci"><i class="bi bi-telephone-fill"></i></div><div class="vc-cv"><a href="tel:{{ org.phone }}">{{ org.phone }}</a></div></div>{% endif %}
+                  {% if org.whatsapp %}<div class="vc-contact-row"><div class="vc-ci"><i class="bi bi-whatsapp"></i></div><div class="vc-cv"><a href="https://wa.me/91{{ org.whatsapp }}" target="_blank">+91 {{ org.whatsapp }}</a></div></div>{% endif %}
+                  {% if org.email %}<div class="vc-contact-row"><div class="vc-ci"><i class="bi bi-envelope-fill"></i></div><div class="vc-cv"><a href="mailto:{{ org.email }}">{{ org.email }}</a></div></div>{% endif %}
+                  {% if org.website %}<div class="vc-contact-row"><div class="vc-ci"><i class="bi bi-globe"></i></div><div class="vc-cv"><a href="{{ org.website }}" target="_blank">{{ org.website }}</a></div></div>{% endif %}
+                  {% if org.city %}<div class="vc-contact-row"><div class="vc-ci"><i class="bi bi-geo-alt-fill"></i></div><div class="vc-cv">{{ org.city }}, {{ org.state }}</div></div>{% endif %}
                 </div>
               </div>
-              <!-- QR code placeholder (integrate with qrcode lib if desired) -->
-              <div class="vc-qr" title="QR Code" style="min-width:70px;">
-                <i class="bi bi-qr-code" style="font-size:1.8rem;color:var(--g0);"></i>
+              <div class="vc-qr" title="QR Code" style="min-width:58px;">
+                <i class="bi bi-qr-code" style="font-size:1.5rem;color:var(--ink);"></i>
               </div>
             </div>
           </div>
@@ -1305,78 +1599,55 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
   </div>
 </section>
 
-<!-- ════════════════════════════════════════
-     CTA BANNER
-════════════════════════════════════════ -->
+<!-- ════════ CTA BANNER BOTTOM ════════ -->
 <section class="cta-banner">
   <div class="container" style="position:relative;z-index:1;">
     <div class="row align-items-center">
       <div class="col-lg-8 fade-up">
-        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(5,15,8,0.5);margin-bottom:6px;">Limited Time Offer</div>
-        <h2 class="cta-title">Get a Free Electrical Inspection<br>for Your Home</h2>
-        <p class="cta-sub">Schedule today and our certified technician will visit and assess your electrical system at no charge.</p>
-        <div class="d-flex gap-3 flex-wrap">
-          <a href="#enquiry" class="btn-cta-dark"><i class="bi bi-lightning-charge-fill"></i> Book Free Inspection</a>
-          {% if org.phone %}<a href="tel:{{ org.phone }}" style="background:transparent;border:2px solid rgba(5,15,8,0.3);color:rgba(5,15,8,0.8);border-radius:8px;padding:14px 28px;font-weight:800;font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;font-family:var(--font-body);display:inline-flex;align-items:center;gap:8px;"><i class="bi bi-telephone"></i>{{ org.phone }}</a>{% endif %}
+        <div style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:rgba(5,15,8,0.45);margin-bottom:5px;">Limited Time Offer</div>
+        <h2 class="cta-title">Get a Free Inspection<br>for Your Home</h2>
+        <p class="cta-sub">Schedule today — our certified technician visits and assesses your system at no charge.</p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="#enquiry" class="btn-cta-dark"><i class="bi bi-lightning-charge-fill"></i>Book Free Inspection</a>
+          {% if org.phone %}<a href="tel:{{ org.phone }}" style="background:rgba(5,15,8,0.1);border:1.5px solid rgba(5,15,8,0.2);color:rgba(5,15,8,0.75);border-radius:var(--r8);padding:11px 18px;font-weight:800;font-size:11.5px;letter-spacing:0.07em;text-transform:uppercase;font-family:var(--fb);display:inline-flex;align-items:center;gap:6px;"><i class="bi bi-telephone"></i>{{ org.phone }}</a>{% endif %}
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ════════════════════════════════════════
-     ENQUIRY SECTION
-════════════════════════════════════════ -->
+<!-- ════════ ENQUIRY ════════ -->
 <section id="enquiry">
-  <div class="container" style="padding:80px 12px;">
-    <div class="row g-5 align-items-start">
-
-      <!-- LEFT INFO -->
-      <div class="col-lg-5 fade-up">
+  <div class="container" style="padding:44px 12px;">
+    <div class="row g-4 align-items-start">
+      <div class="col-lg-4 fade-up">
         <div class="sec-eyebrow">Contact</div>
         <h2 class="sec-title">Send Us an Enquiry</h2>
-        <div class="sec-divider mb-4"></div>
-        <p style="color:rgba(255,255,255,0.4);font-size:0.88rem;line-height:1.75;">
-          Fill the form and our team will respond within 24 hours. For urgent needs, call or WhatsApp us directly.
+        <div class="sec-line mb-3"></div>
+        <p style="color:rgba(255,255,255,0.38);font-size:12.5px;line-height:1.7;">
+          Fill the form and we'll respond within 24 hours. For urgent needs, call or WhatsApp directly.
         </p>
-        <div class="d-flex flex-column gap-3 mt-4">
-          {% if org.phone %}
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.1rem;flex-shrink:0;"><i class="bi bi-telephone-fill"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Call Us</div><div style="color:var(--white);font-weight:700;">{{ org.phone }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.email %}
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.1rem;flex-shrink:0;"><i class="bi bi-envelope-fill"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Email Us</div><div style="color:var(--white);font-weight:700;">{{ org.email }}</div></div>
-          </div>
-          {% endif %}
-          {% if org.working_hours %}
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:44px;height:44px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.1rem;flex-shrink:0;"><i class="bi bi-clock-fill"></i></div>
-            <div><div style="font-size:0.6rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.1em;">Working Hours</div><div style="color:var(--white);font-weight:700;">{{ org.working_hours }}</div></div>
-          </div>
-          {% endif %}
+        <div class="d-flex flex-column gap-2 mt-3">
+          {% if org.phone %}<a href="tel:{{ org.phone }}" class="contact-row" style="text-decoration:none;"><div class="cr-icon"><i class="bi bi-telephone-fill"></i></div><div><div class="cr-label">Call Us</div><div class="cr-value">{{ org.phone }}</div></div></a>{% endif %}
+          {% if org.email %}<a href="mailto:{{ org.email }}" class="contact-row" style="text-decoration:none;"><div class="cr-icon"><i class="bi bi-envelope-fill"></i></div><div><div class="cr-label">Email Us</div><div class="cr-value">{{ org.email }}</div></div></a>{% endif %}
+          {% if org.working_hours %}<div class="contact-row"><div class="cr-icon"><i class="bi bi-clock-fill"></i></div><div><div class="cr-label">Working Hours</div><div class="cr-value">{{ org.working_hours }}</div></div></div>{% endif %}
         </div>
       </div>
-
-      <!-- RIGHT FORM -->
-      <div class="col-lg-7 fade-up" style="transition-delay:.15s;">
+      <div class="col-lg-8 fade-up" style="transition-delay:.12s;">
         <div class="enq-card">
-          <h4 style="font-family:var(--font-head);font-size:1.8rem;color:var(--white);margin-bottom:24px;">
+          <h4 style="font-family:var(--fh);font-size:1.5rem;color:var(--white);margin-bottom:20px;font-weight:800;">
             <i class="bi bi-lightning-charge-fill me-2" style="color:var(--gold);"></i>Request a Callback
           </h4>
           {% if messages %}
             {% for message in messages %}
-            <div class="alert alert-success mb-4" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#22c55e;border-radius:10px;">
+            <div class="alert mb-3" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--go);border-radius:var(--r8);padding:10px 14px;font-size:12.5px;">
               <i class="bi bi-check-circle-fill me-2"></i>{{ message }}
             </div>
             {% endfor %}
           {% endif %}
           <form method="post">
             {% csrf_token %}
-            <div class="row g-3">
+            <div class="row g-2">
               <div class="col-md-6">
                 <label class="form-label-e">Full Name *</label>
                 {{ enquiry_form.name }}
@@ -1405,7 +1676,7 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
                 <label class="form-label-e">Message *</label>
                 {{ enquiry_form.message }}
               </div>
-              <div class="col-12">
+              <div class="col-12 mt-1">
                 <button type="submit" class="btn-submit-e">
                   <i class="bi bi-send-fill me-2"></i>Send Enquiry
                 </button>
@@ -1414,21 +1685,18 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </section>
 
-<!-- ════════════════════════════════════════
-     GOOGLE MAPS
-════════════════════════════════════════ -->
-<section id="map-section">
+<!-- ════════ MAP ════════ -->
+<section id="map-section" style="background:var(--ink);padding:0 0 44px;">
   <div class="container">
-    <div class="row align-items-end mb-4">
+    <div class="row align-items-end mb-3">
       <div class="col fade-up">
         <div class="sec-eyebrow">Location</div>
         <h2 class="sec-title">Find Us</h2>
-        <div class="sec-divider"></div>
+        <div class="sec-line"></div>
       </div>
     </div>
     <div class="map-wrap fade-up">
@@ -1437,11 +1705,11 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
       {% else %}
       <div class="map-placeholder">
         <div><i class="bi bi-geo-alt-fill d-block"></i></div>
-        <div style="font-family:var(--font-head);font-size:1.4rem;color:rgba(255,255,255,0.2);margin-top:8px;">{{ org.city }}, {{ org.state }}</div>
-        <div style="font-size:0.8rem;margin-top:8px;">Add a Google Maps embed URL in your settings to display the map.</div>
+        <div style="font-family:var(--fh);font-size:1.2rem;color:rgba(255,255,255,0.18);margin-top:6px;">{{ org.city }}, {{ org.state }}</div>
+        <div style="font-size:11.5px;margin-top:6px;">Add a Google Maps embed URL in settings to display the map.</div>
         {% if org.address_line1 %}
-        <a href="https://maps.google.com/?q={{ org.get_full_address|urlencode }}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold);border-radius:8px;padding:10px 20px;margin-top:16px;font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;">
-          <i class="bi bi-geo-alt"></i> Open in Google Maps
+        <a href="https://maps.google.com/?q={{ org.get_full_address|urlencode }}" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:var(--gold);border-radius:var(--r8);padding:8px 16px;margin-top:12px;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:0.07em;">
+          <i class="bi bi-geo-alt"></i>Open in Google Maps
         </a>
         {% endif %}
       </div>
@@ -1450,21 +1718,18 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
   </div>
 </section>
 
-<!-- ════════════════════════════════════════
-     FOOTER
-════════════════════════════════════════ -->
+<!-- ════════ FOOTER ════════ -->
 <footer class="site-footer">
   <div class="container">
-    <div class="row g-5 pb-5" style="border-bottom:1px solid rgba(255,255,255,0.06);">
-      <!-- Brand -->
+    <div class="row g-4 pb-4" style="border-bottom:1px solid rgba(255,255,255,0.05);">
       <div class="col-md-4">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <div class="brand-bolt" style="width:36px;height:36px;"></div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="brand-bolt" style="width:28px;height:28px;"></div>
           <div class="footer-brand">{{ org.name }}</div>
         </div>
         {% if org.tagline %}<div class="footer-sub">{{ org.tagline }}</div>{% endif %}
-        <p style="color:rgba(255,255,255,0.3);font-size:0.8rem;line-height:1.75;margin-bottom:16px;">
-          {% if org.city %}Serving {{ org.city }} and surrounding areas with professional electrical solutions.{% endif %}
+        <p style="color:rgba(255,255,255,0.28);font-size:11.5px;line-height:1.7;margin-bottom:12px;">
+          {% if org.city %}Serving {{ org.city }} and surrounding areas with professional solutions.{% endif %}
         </p>
         <div class="footer-soc">
           {% if org.phone %}<a href="tel:{{ org.phone }}" class="fsoc-btn"><i class="bi bi-telephone-fill"></i></a>{% endif %}
@@ -1475,7 +1740,6 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
           {% if org.twitter_url %}<a href="{{ org.twitter_url }}" class="fsoc-btn" target="_blank"><i class="bi bi-twitter-x"></i></a>{% endif %}
         </div>
       </div>
-      <!-- Services links -->
       <div class="col-md-2">
         <div class="footer-heading">Services</div>
         {% for svc in services|slice:":5" %}
@@ -1486,72 +1750,57 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
         <span class="footer-link" style="pointer-events:none;">Maintenance</span>
         {% endfor %}
       </div>
-      <!-- Quick links -->
       <div class="col-md-2">
         <div class="footer-heading">Quick Links</div>
         <a href="#about" class="footer-link">About Us</a>
         {% if products %}<a href="#products" class="footer-link">Products</a>{% endif %}
         {% if gallery %}<a href="#gallery" class="footer-link">Projects</a>{% endif %}
+        {% if payment_qrs %}<a href="#payment" class="footer-link">Pay Us</a>{% endif %}
         <a href="#enquiry" class="footer-link">Contact</a>
       </div>
-      <!-- Contact + Newsletter -->
       <div class="col-md-4">
         <div class="footer-heading">Stay Updated</div>
-        <div class="footer-newsletter mb-4">
+        <div class="footer-newsletter">
           <input type="email" placeholder="Your email address">
           <button>Subscribe</button>
         </div>
-        <div class="footer-heading">Contact</div>
-        {% if org.phone %}<a href="tel:{{ org.phone }}" class="footer-link"><i class="bi bi-telephone me-2"></i>{{ org.phone }}</a>{% endif %}
-        {% if org.email %}<a href="mailto:{{ org.email }}" class="footer-link"><i class="bi bi-envelope me-2"></i>{{ org.email }}</a>{% endif %}
-        {% if org.website %}<a href="{{ org.website }}" target="_blank" class="footer-link"><i class="bi bi-globe me-2"></i>{{ org.website }}</a>{% endif %}
-        {% if org.city %}<div class="footer-link" style="pointer-events:none;"><i class="bi bi-geo-alt me-2"></i>{{ org.city }}, {{ org.state }}</div>{% endif %}
       </div>
     </div>
     <div class="footer-copy">
-      &copy; {% now "Y" %} {{ org.name }}. All rights reserved. Powered by <a href="/" style="color:var(--gold);opacity:0.8;">OrgPortal</a>
+      &copy; {% now "Y" %} {{ org.name }}. All rights reserved. Powered by <a href="/" style="color:var(--gold);opacity:.75;">OrgPortal</a>
     </div>
   </div>
 </footer>
 
-<!-- ════════════════════════════════════════════════════════════════════════════
-     PRODUCT DETAIL MODAL
-════════════════════════════════════════════════════════════════════════════ -->
+<!-- ════════ PRODUCT DETAIL MODAL ════════ -->
 <div class="prod-modal-overlay" id="productModal" role="dialog" aria-modal="true">
   <div class="pm-close" onclick="closeProductModal()" title="Close">
     <i class="bi bi-x-lg"></i>
   </div>
   <div class="prod-modal">
-    <!-- Loading state -->
     <div id="pmLoading" class="text-center py-5">
-      <div style="width:48px;height:48px;border:3px solid rgba(245,158,11,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
-      <div style="color:rgba(255,255,255,0.35);font-size:0.85rem;">Loading product details…</div>
+      <div style="width:40px;height:40px;border:3px solid rgba(245,158,11,0.15);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;"></div>
+      <div style="color:rgba(255,255,255,0.3);font-size:12px;">Loading product details…</div>
     </div>
-    <!-- Content (filled by JS) -->
     <div id="pmContent" style="display:none;">
       <div class="pm-grid">
-        <!-- IMAGES -->
         <div>
           <div class="pm-carousel" id="pmCarousel">
             <img id="pmImgMain" src="" alt="" class="pm-img-main">
           </div>
           <div class="pm-thumbs" id="pmThumbs"></div>
         </div>
-        <!-- INFO -->
         <div class="pm-info">
           <div>
             <div class="pm-brand" id="pmBrand"></div>
             <h2 class="pm-name" id="pmName"></h2>
           </div>
           <div class="pm-price-row" id="pmPriceRow"></div>
-          <div>
-            <span class="pm-stock-badge in" id="pmStock"></span>
-          </div>
+          <div><span class="pm-stock-badge in" id="pmStock"></span></div>
           <p class="pm-desc" id="pmDesc"></p>
-          <!-- TABS -->
           <div>
             <div class="pm-tabs" id="pmTabs">
-              <div class="pm-tab active" data-tab="specs">Specifications</div>
+              <div class="pm-tab active" data-tab="specs">Specs</div>
               <div class="pm-tab" data-tab="video" id="tabVideo" style="display:none;">Video</div>
               <div class="pm-tab" data-tab="social" id="tabSocial" style="display:none;">Social</div>
             </div>
@@ -1565,7 +1814,6 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
               <div id="pmSocialContent"></div>
             </div>
           </div>
-          <!-- ACTIONS -->
           <div class="pm-actions" id="pmActions"></div>
         </div>
       </div>
@@ -1573,22 +1821,20 @@ textarea.form-ctrl-e { resize:vertical; min-height:100px; }
   </div>
 </div>
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ── Scroll reveal ──────────────────────────────────────────────────────────────
+// ── Scroll reveal
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-}, { threshold: 0.08 });
+}, { threshold: 0.06 });
 document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
 
-// ── Style Django-rendered form fields ──────────────────────────────────────────
+// ── Style Django form fields
 document.querySelectorAll('#enquiry input, #enquiry select, #enquiry textarea').forEach(el => {
   el.classList.add('form-ctrl-e');
 });
 
-// ── Service / Product enquiry prefill ──────────────────────────────────────────
+// ── Enquiry prefill
 function prefillEnquiry(pk, type, name) {
   document.getElementById('enquiry').scrollIntoView({ behavior: 'smooth' });
   setTimeout(() => {
@@ -1609,30 +1855,54 @@ function prefillEnquiry(pk, type, name) {
 }
 function flash(el) {
   el.classList.add('flash-field');
-  setTimeout(() => el.classList.remove('flash-field'), 1000);
+  setTimeout(() => el.classList.remove('flash-field'), 900);
 }
 
-// ── WhatsApp Admin Notification (called after POST redirect) ───────────────────
+// ── Copy UPI
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.btn-copy-upi');
+  if (!btn) return;
+  var upi = btn.getAttribute('data-upi');
+  if (!upi) return;
+  var origHTML = btn.innerHTML;
+  function markCopied() {
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.innerHTML = origHTML; btn.classList.remove('copied'); }, 2200);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(upi).then(markCopied).catch(function() { fallbackCopy(upi, markCopied); });
+  } else { fallbackCopy(upi, markCopied); }
+});
+function fallbackCopy(text, cb) {
+  var el = document.createElement('textarea');
+  el.value = text;
+  el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(el);
+  el.focus(); el.select();
+  try { document.execCommand('copy'); cb(); } catch(e) {}
+  document.body.removeChild(el);
+}
+
+// ── Admin WA notification
 const waAdminUrl = "{{ wa_admin_url|escapejs }}";
 if (waAdminUrl) {
-  // Show notification bar
   const bar = document.createElement('div');
-  bar.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;background:#1b4332;border:1px solid rgba(245,158,11,0.4);border-radius:12px;padding:16px 20px;max-width:320px;box-shadow:0 8px 32px rgba(5,15,8,0.5);';
+  bar.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;background:#182a1e;border:1px solid rgba(245,158,11,0.35);border-radius:12px;padding:14px 18px;max-width:300px;box-shadow:0 8px 28px rgba(5,15,8,0.5);';
   bar.innerHTML = `
-    <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Enquiry Submitted</div>
-    <div style="color:rgba(255,255,255,0.7);font-size:0.82rem;margin-bottom:12px;">Notify the admin on WhatsApp too?</div>
-    <div style="display:flex;gap:8px;">
-      <a href="${waAdminUrl}" target="_blank" style="flex:1;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.4);color:#25d366;border-radius:7px;padding:8px;text-align:center;font-weight:700;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;"><i class="bi bi-whatsapp"></i> Notify</a>
-      <button onclick="this.closest('div[style]').remove()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:7px;padding:8px 12px;font-size:0.75rem;cursor:pointer;">Dismiss</button>
+    <div style="font-size:9.5px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;">Enquiry Submitted</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:10px;">Notify the admin on WhatsApp too?</div>
+    <div style="display:flex;gap:7px;">
+      <a href="${waAdminUrl}" target="_blank" style="flex:1;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;border-radius:7px;padding:7px;text-align:center;font-weight:800;font-size:11px;text-transform:uppercase;"><i class="bi bi-whatsapp"></i> Notify</a>
+      <button onclick="this.closest('div[style]').remove()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);border-radius:7px;padding:7px 11px;font-size:11px;cursor:pointer;">Dismiss</button>
     </div>
   `;
   document.body.appendChild(bar);
-  setTimeout(() => bar.style.transition = 'opacity .4s' , 4000);
-  setTimeout(() => { bar.style.opacity = '0'; setTimeout(() => bar.remove(), 400); }, 8000);
+  setTimeout(() => { bar.style.transition = 'opacity .4s'; bar.style.opacity = '0'; setTimeout(() => bar.remove(), 400); }, 8000);
 }
 
-// ── PRODUCT DETAIL MODAL ───────────────────────────────────────────────────────
-const modal   = document.getElementById('productModal');
+// ── Product Modal
+const modal = document.getElementById('productModal');
 let currentYt = '';
 
 function openProductModal(productId, orgSlug) {
@@ -1641,27 +1911,23 @@ function openProductModal(productId, orgSlug) {
   document.body.style.overflow = 'hidden';
   document.getElementById('pmLoading').style.display = 'block';
   document.getElementById('pmContent').style.display  = 'none';
-  // Stop any existing YT
   document.getElementById('pmYtFrame').src = '';
 
   fetch(`/org/${orgSlug}/product/${productId}/json/`)
     .then(r => r.json())
     .then(data => renderProductModal(data))
     .catch(() => {
-      document.getElementById('pmLoading').innerHTML =
-        '<div style="color:rgba(255,255,255,0.35);">Could not load product details.</div>';
+      document.getElementById('pmLoading').innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:12px;">Could not load product details.</div>';
     });
 }
 
 function renderProductModal(p) {
-  // Images
   const imgs = p.images && p.images.length ? p.images : [];
   const main = document.getElementById('pmImgMain');
   const ph   = document.getElementById('pmCarousel');
 
   if (imgs.length) {
     main.src = imgs[0]; main.style.display = 'block';
-    // Remove old placeholder
     const oldPh = ph.querySelector('.pm-img-ph');
     if (oldPh) oldPh.remove();
   } else {
@@ -1677,16 +1943,19 @@ function renderProductModal(p) {
   imgs.forEach((src, i) => {
     const t = document.createElement('img');
     t.src = src; t.className = 'pm-thumb' + (i === 0 ? ' active' : '');
-    t.onclick = () => { main.style.opacity = '0'; setTimeout(() => { main.src = src; main.style.opacity = '1'; }, 200); document.querySelectorAll('.pm-thumb').forEach(x => x.classList.remove('active')); t.classList.add('active'); };
+    t.onclick = () => {
+      main.style.opacity = '0';
+      setTimeout(() => { main.src = src; main.style.opacity = '1'; }, 200);
+      document.querySelectorAll('.pm-thumb').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    };
     thumbsEl.appendChild(t);
   });
 
-  // Text fields
   document.getElementById('pmBrand').textContent = p.brand || '';
   document.getElementById('pmName').textContent  = p.name;
   document.getElementById('pmDesc').textContent  = p.description || 'No description available.';
 
-  // Price
   const pr = document.getElementById('pmPriceRow');
   if (p.discount_price) {
     pr.innerHTML = `<span class="pm-price-sale">₹${p.discount_price}</span><span class="pm-price-orig">₹${p.price}</span><span class="pm-price-disc">−${p.discount_percent}%</span>`;
@@ -1695,14 +1964,12 @@ function renderProductModal(p) {
   }
   pr.innerHTML += `<span class="prod-unit"> / ${p.unit}</span>`;
 
-  // Stock
   const stk = document.getElementById('pmStock');
   stk.className = 'pm-stock-badge ' + (p.in_stock ? 'in' : 'out');
   stk.innerHTML = p.in_stock
     ? '<i class="bi bi-check-circle-fill"></i> In Stock'
     : '<i class="bi bi-x-circle-fill"></i> Out of Stock';
 
-  // Specs table
   const specsEl = document.getElementById('pmSpecs');
   const rows = [];
   if (p.sku)       rows.push(['SKU', p.sku]);
@@ -1713,39 +1980,28 @@ function renderProductModal(p) {
   if (p.specs) Object.entries(p.specs).forEach(([k,v]) => rows.push([k, v]));
   specsEl.innerHTML = rows.length
     ? rows.map(([k,v]) => `<div class="pm-spec-row"><span class="pm-spec-key">${k}</span><span class="pm-spec-val">${v}</span></div>`).join('')
-    : '<div class="pm-spec-row" style="color:rgba(255,255,255,0.3);font-size:0.82rem;">No specifications listed.</div>';
+    : '<div class="pm-spec-row" style="color:rgba(255,255,255,0.28);font-size:12px;">No specifications listed.</div>';
 
-  // Tabs: Video
   const tabVideo = document.getElementById('tabVideo');
   if (p.youtube_url) {
     tabVideo.style.display = '';
-    // Convert watch URL to embed
     currentYt = p.youtube_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/');
-  } else {
-    tabVideo.style.display = 'none';
-  }
+  } else { tabVideo.style.display = 'none'; }
 
-  // Tabs: Social
   const tabSocial = document.getElementById('tabSocial');
   const socialContent = document.getElementById('pmSocialContent');
   if (p.instagram_url) {
     tabSocial.style.display = '';
     socialContent.innerHTML = `
-      <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-bottom:12px;">View our Instagram post for this product:</p>
-      <a href="${p.instagram_url}" target="_blank" class="pm-ig-link">
-        <i class="bi bi-instagram fs-5"></i> View on Instagram
-      </a>`;
-  } else {
-    tabSocial.style.display = 'none';
-  }
+      <p style="color:rgba(255,255,255,0.38);font-size:12px;margin-bottom:10px;">View our Instagram post for this product:</p>
+      <a href="${p.instagram_url}" target="_blank" class="pm-ig-link"><i class="bi bi-instagram fs-5"></i> View on Instagram</a>`;
+  } else { tabSocial.style.display = 'none'; }
 
-  // Tabs: reset to specs
   document.querySelectorAll('.pm-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.pm-tab-content').forEach(c => c.classList.remove('active'));
   document.querySelector('.pm-tab[data-tab="specs"]').classList.add('active');
   document.querySelector('.pm-tab-content[data-content="specs"]').classList.add('active');
 
-  // Actions
   const wa = p.org_whatsapp;
   const waMsg = encodeURIComponent(`Hi! I'm interested in *${p.name}* (₹${p.discount_price || p.price}). Please share more details.`);
   const actions = document.getElementById('pmActions');
@@ -1764,6 +2020,15 @@ function renderProductModal(p) {
   enqBtn.onclick = () => { closeProductModal(); prefillEnquiry(p.id, 'product', p.name); };
   actions.appendChild(enqBtn);
 
+  if (p.in_stock) {
+    const cartBtn = document.createElement('button');
+    cartBtn.className = 'btn-pm-enq';
+    cartBtn.style.cssText = 'background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);color:var(--gold);';
+    cartBtn.innerHTML = '<i class="bi bi-cart-plus" style="font-size:1rem;"></i>';
+    cartBtn.title = 'Add to Cart';
+    cartBtn.onclick = () => { addToCart('product', p.id, p.name); closeProductModal(); };
+    actions.appendChild(cartBtn);
+  }
   if (p.pdf_catalog) {
     const pdfA = document.createElement('a');
     pdfA.href = p.pdf_catalog;
@@ -1780,10 +2045,9 @@ function renderProductModal(p) {
 function closeProductModal() {
   modal.classList.remove('visible');
   document.getElementById('pmYtFrame').src = '';
-  setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = ''; }, 350);
+  setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = ''; }, 300);
 }
 
-// Tab switching
 document.querySelectorAll('.pm-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     const key = tab.dataset.tab;
@@ -1791,15 +2055,12 @@ document.querySelectorAll('.pm-tab').forEach(tab => {
     document.querySelectorAll('.pm-tab-content').forEach(c => c.classList.remove('active'));
     tab.classList.add('active');
     document.querySelector(`.pm-tab-content[data-content="${key}"]`).classList.add('active');
-    if (key === 'video' && currentYt) {
-      document.getElementById('pmYtFrame').src = currentYt;
-    }
+    if (key === 'video' && currentYt) document.getElementById('pmYtFrame').src = currentYt;
   });
 });
-
-// Close on backdrop click
 modal.addEventListener('click', e => { if (e.target === modal) closeProductModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeProductModal(); });
 </script>
+{% include '_cart_drawer.html' %}
 </body>
 </html>
