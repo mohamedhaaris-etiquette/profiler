@@ -84,6 +84,12 @@ urlpatterns = [
     # Referrals
     path('dashboard/referrals/', views.referral_dashboard, name='referral_dashboard'),
 
+    # ── Member-to-member invite + bonus ──────────────────────────────────────
+    path('dashboard/my-invites/',                      views.member_send_invite,   name='member_send_invite'),
+    path('dashboard/my-invites/list/',                 views.member_invite_list,   name='member_invite_list'),
+    path('dashboard/my-invites/<int:pk>/resend/',      views.member_resend_invite, name='member_resend_invite'),
+    path('dashboard/my-invites/<int:pk>/revoke/',      views.member_revoke_invite, name='member_revoke_invite'),
+
     # Super Admin — Member management
     path('dashboard/members/',                 views.member_list,  name='member_list'),
     path('dashboard/members/add/',             views.add_member,   name='add_member'),

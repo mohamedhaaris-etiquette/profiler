@@ -3,264 +3,210 @@
 
 {% block dash_content %}
 
-<!-- ── Page Header ──────────────────────────────────────────── -->
+<!-- ── Page Header ── -->
 <div class="page-header">
   <div>
     <h1>Dashboard</h1>
-    <div class="text-muted small">
+    <div class="text-muted" style="font-size:12px;margin-top:3px;">
       Overview of {{ org.name }}
       {% if org.sub_category %}
-      <span style="margin-left:8px;background:#ede9fe;color:#5b21b6;font-size:0.7rem;font-weight:700;padding:2px 10px;border-radius:50px;">
+      <span style="margin-left:8px;background:rgba(124,58,237,0.12);color:#a78bfa;border:1px solid rgba(124,58,237,0.25);font-size:9.5px;font-weight:700;padding:2px 10px;border-radius:20px;">
         <i class="bi bi-tag me-1"></i>{{ org.sub_category.name }}
       </span>
       {% endif %}
     </div>
   </div>
-  <div class="d-flex align-items-center gap-2 flex-wrap">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <div class="org-badge">
       <div class="dot" style="background:{% if org.status == 'active' %}#22c55e{% elif org.status == 'suspended' %}#ef4444{% elif org.status == 'pending' %}#f59e0b{% else %}#94a3b8{% endif %};"></div>
       {% if org.is_verified %}Verified{% else %}{{ org.get_status_display }}{% endif %}
     </div>
     {% if org.subdomain %}
-    <a href="{% url 'public_landing' org.slug %}" target="_blank"
-       style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:50px;
-              padding:6px 14px;font-size:0.78rem;font-weight:600;color:#0369a1;
-              text-decoration:none;">
-      <i class="bi bi-globe2 me-1"></i>{{ org.subdomain }}
+    <a href="{% url 'public_landing' org.slug %}" target="_blank" class="subdomain-link">
+      <i class="bi bi-globe2"></i>{{ org.subdomain }}
     </a>
     {% endif %}
-    <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-outline-primary btn-sm" style="border-radius:10px;">
-      <i class="bi bi-eye me-1"></i>View Public Page
+    <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn-dark-outline">
+      <i class="bi bi-eye"></i>View Public Page
     </a>
   </div>
 </div>
 
-<!-- ── Plan Status Alert ────────────────────────────────────── -->
+<!-- ── Plan Status Alert ── -->
 {% if org.plan %}
-<div class="alert d-flex align-items-center gap-3 mb-4
-  {% if not org.is_plan_active %}alert-danger
-  {% elif org.plan.level == 'trial' %}alert-warning
-  {% else %}alert-light border{% endif %}"
-  style="border-radius:14px;padding:14px 20px;">
-
-  <div style="width:42px;height:42px;border-radius:10px;flex-shrink:0;
-    background:{% if not org.is_plan_active %}#fee2e2{% elif org.plan.level == 'trial' %}#fef9c3{% elif org.plan.level == 'silver' %}#f0f9ff{% elif org.plan.level == 'gold' %}#fffbeb{% else %}#f5f3ff{% endif %};
-    display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+<div class="plan-alert">
+  <div class="plan-alert-icon"
+    style="background:{% if not org.is_plan_active %}rgba(239,68,68,0.1){% elif org.plan.level == 'trial' %}rgba(245,158,11,0.1){% elif org.plan.level == 'silver' %}rgba(14,165,233,0.1){% elif org.plan.level == 'gold' %}rgba(245,158,11,0.1){% else %}rgba(124,58,237,0.1){% endif %};
     color:{{ org.plan_badge_color }};">
     <i class="bi bi-award-fill"></i>
   </div>
-
-  <div class="flex-grow-1">
-    <div style="font-weight:700;font-size:0.9rem;">
-      <span style="background:{{ org.plan_badge_color }};color:#fff;font-size:0.68rem;font-weight:700;padding:2px 10px;border-radius:50px;margin-right:10px;">
+  <div style="flex:1;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:5px;">
+      <span class="sb-plan-badge" style="background:{{ org.plan_badge_color }};">
         {{ org.plan.name }} Plan
       </span>
       {% if not org.is_plan_active %}
-      <span class="badge bg-danger">Plan Expired — Contact Admin</span>
+      <span style="background:rgba(239,68,68,0.12);color:var(--fire);border:1px solid rgba(239,68,68,0.25);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;">Plan Expired — Contact Admin</span>
       {% elif org.plan.level == 'trial' %}
-      <span style="color:#92400e;font-size:0.82rem;">Trial period active — upgrade for full features</span>
+      <span style="color:var(--gold);font-size:12px;">Trial active — upgrade for full features</span>
       {% else %}
-      <span style="color:#374151;font-size:0.82rem;">Active</span>
+      <span style="color:var(--go);font-size:12px;"><i class="bi bi-check-circle me-1"></i>Active</span>
       {% endif %}
     </div>
-    <div class="d-flex gap-3 flex-wrap mt-1" style="font-size:0.75rem;color:#64748b;">
-      {% if org.plan_start_date %}
-      <span><i class="bi bi-calendar-check me-1"></i>Started {{ org.plan_start_date|date:"d M Y" }}</span>
-      {% endif %}
-      {% if org.plan_end_date %}
-      <span><i class="bi bi-calendar-x me-1"></i>Expires {{ org.plan_end_date|date:"d M Y" }}</span>
-      {% endif %}
+    <div class="plan-meta" style="display:flex;gap:14px;flex-wrap:wrap;">
+      {% if org.plan_start_date %}<span><i class="bi bi-calendar-check me-1"></i>Started {{ org.plan_start_date|date:"d M Y" }}</span>{% endif %}
+      {% if org.plan_end_date   %}<span><i class="bi bi-calendar-x me-1"></i>Expires {{ org.plan_end_date|date:"d M Y" }}</span>{% endif %}
       <span><i class="bi bi-briefcase me-1"></i>Max {{ org.plan.max_services }} Services</span>
       <span><i class="bi bi-box-seam me-1"></i>Max {{ org.plan.max_products }} Products</span>
       <span><i class="bi bi-people me-1"></i>Max {{ org.plan.max_staff }} Staff</span>
     </div>
   </div>
-
-  <a href="{% url 'org_settings' %}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;white-space:nowrap;">
-    <i class="bi bi-gear me-1"></i>Settings
+  <a href="{% url 'org_settings' %}" class="btn-dark-outline">
+    <i class="bi bi-gear"></i>Settings
   </a>
 </div>
 {% endif %}
 
-<!-- ── Stats Row ─────────────────────────────────────────────── -->
-<div class="row g-4 mb-4">
+<!-- ── Stats Row ── -->
+<div class="row g-3 mb-4">
   <div class="col-6 col-lg-3">
     <div class="stat-card">
-      <div class="icon" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-briefcase-fill"></i></div>
+      <div class="icon" style="background:rgba(37,99,235,0.12);color:#60a5fa;">
+        <i class="bi bi-briefcase-fill"></i>
+      </div>
       <div class="value">{{ services.count }}</div>
       <div class="label">Active Services</div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-card">
-      <div class="icon" style="background:#ede9fe;color:#7c3aed;"><i class="bi bi-box-seam-fill"></i></div>
+      <div class="icon" style="background:rgba(124,58,237,0.12);color:#a78bfa;">
+        <i class="bi bi-box-seam-fill"></i>
+      </div>
       <div class="value">{{ total_products }}</div>
       <div class="label">Active Products</div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-card">
-      <div class="icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-chat-dots-fill"></i></div>
+      <div class="icon" style="background:rgba(245,158,11,0.12);color:var(--gold);">
+        <i class="bi bi-chat-dots-fill"></i>
+      </div>
       <div class="value">{{ total_enquiries }}</div>
       <div class="label">Total Enquiries</div>
     </div>
   </div>
   <div class="col-6 col-lg-3">
     <div class="stat-card">
-      <div class="icon" style="background:#fee2e2;color:#ef4444;"><i class="bi bi-bell-fill"></i></div>
+      <div class="icon" style="background:rgba(239,68,68,0.12);color:var(--fire);">
+        <i class="bi bi-bell-fill"></i>
+      </div>
       <div class="value">{{ new_enquiries }}</div>
       <div class="label">New / Unread</div>
     </div>
   </div>
 </div>
 
-<!-- ── Main Body ─────────────────────────────────────────────── -->
+<!-- ── Main Body ── -->
 <div class="row g-4">
 
-  <!-- ── Org Info Card ──────────────────────────── -->
+  <!-- ── Org Info Card ── -->
   <div class="col-lg-4">
     <div class="card-modern h-100">
-      <div class="card-header d-flex align-items-center justify-content-between">
+      <div class="card-header">
         <span><i class="bi bi-building me-2"></i>Your Organization</span>
         {% if org.is_verified %}
-        <span style="background:rgba(34,197,94,0.2);color:#4ade80;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:50px;">
+        <span style="background:rgba(34,197,94,0.12);color:var(--go);border:1px solid rgba(34,197,94,0.25);font-size:9.5px;font-weight:800;padding:2px 9px;border-radius:20px;">
           <i class="bi bi-patch-check-fill me-1"></i>Verified
         </span>
         {% endif %}
       </div>
       <div class="p-4">
-
-        <!-- Logo / Avatar -->
         <div class="text-center mb-4">
           {% if org.logo %}
-          <img src="{{ org.logo.url }}" alt="Logo"
-            style="width:84px;height:84px;border-radius:20px;object-fit:cover;border:3px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,0.08);">
+          <img src="{{ org.logo.url }}" alt="Logo" class="org-logo-box">
           {% else %}
-          <div style="width:84px;height:84px;border-radius:20px;background:linear-gradient(135deg,var(--accent),#fbbf24);display:inline-flex;align-items:center;justify-content:center;font-size:2.2rem;color:#fff;box-shadow:0 4px 14px rgba(249,115,22,0.3);">
-            <i class="bi bi-building"></i>
-          </div>
+          <div class="org-logo-ph"><i class="bi bi-building"></i></div>
           {% endif %}
-          <h5 class="mt-3 mb-1" style="font-weight:800;">{{ org.name }}</h5>
-          <div class="d-flex justify-content-center gap-2 flex-wrap">
+          <h5 style="font-family:var(--fh);font-weight:800;margin:14px 0 8px;color:var(--white);">{{ org.name }}</h5>
+          <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">
             {% if org.category %}
-            <span class="badge" style="background:var(--accent);color:#fff;border-radius:50px;padding:4px 12px;font-size:0.72rem;">
+            <span style="background:rgba(245,158,11,0.1);color:var(--gold);border:1px solid rgba(245,158,11,0.2);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;">
               <i class="bi bi-{{ org.category.icon }} me-1"></i>{{ org.category.name }}
             </span>
             {% endif %}
             {% if org.sub_category %}
-            <span class="badge" style="background:#ede9fe;color:#5b21b6;border-radius:50px;padding:4px 12px;font-size:0.72rem;">
+            <span style="background:rgba(124,58,237,0.1);color:#a78bfa;border:1px solid rgba(124,58,237,0.2);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;">
               <i class="bi bi-tag me-1"></i>{{ org.sub_category.name }}
             </span>
             {% endif %}
           </div>
         </div>
 
-        <!-- Contact Details -->
-        <div class="d-flex flex-column gap-2">
-          <div class="d-flex gap-3 align-items-center">
-            <i class="bi bi-telephone text-muted" style="width:18px;"></i>
-            <span class="small">{{ org.phone }}</span>
-          </div>
-          {% if org.landline %}
-          <div class="d-flex gap-3 align-items-center">
-            <i class="bi bi-telephone-outbound text-muted" style="width:18px;"></i>
-            <span class="small">{{ org.landline }}</span>
-          </div>
-          {% endif %}
-          <div class="d-flex gap-3 align-items-center">
-            <i class="bi bi-envelope text-muted" style="width:18px;"></i>
-            <span class="small">{{ org.email }}</span>
-          </div>
-          <div class="d-flex gap-3 align-items-start">
-            <i class="bi bi-geo-alt text-muted" style="width:18px;margin-top:2px;"></i>
-            <span class="small">
-              {{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}, {{ org.state }}
-            </span>
-          </div>
-          {% if org.working_hours %}
-          <div class="d-flex gap-3 align-items-center">
-            <i class="bi bi-clock text-muted" style="width:18px;"></i>
-            <span class="small">{{ org.working_hours }}</span>
-          </div>
-          {% endif %}
-          {% if org.website %}
-          <div class="d-flex gap-3 align-items-center">
-            <i class="bi bi-globe text-muted" style="width:18px;"></i>
-            <a href="{{ org.website }}" target="_blank" class="small text-primary">{{ org.website }}</a>
-          </div>
-          {% endif %}
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div class="contact-row"><i class="bi bi-telephone"></i><span>{{ org.phone }}</span></div>
+          {% if org.landline %}<div class="contact-row"><i class="bi bi-telephone-outbound"></i><span>{{ org.landline }}</span></div>{% endif %}
+          <div class="contact-row"><i class="bi bi-envelope"></i><span>{{ org.email }}</span></div>
+          <div class="contact-row"><i class="bi bi-geo-alt"></i><span>{{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}, {{ org.state }}</span></div>
+          {% if org.working_hours %}<div class="contact-row"><i class="bi bi-clock"></i><span>{{ org.working_hours }}</span></div>{% endif %}
+          {% if org.website %}<div class="contact-row"><i class="bi bi-globe"></i><a href="{{ org.website }}" target="_blank">{{ org.website }}</a></div>{% endif %}
         </div>
 
-        <!-- Feature Badges -->
-        <div class="mt-3 d-flex gap-2 flex-wrap">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;">
           {% if org.home_service_available %}
-          <span class="badge" style="background:#dbeafe;color:#1d4ed8;font-size:0.7rem;padding:4px 10px;">
-            <i class="bi bi-house me-1"></i>Home Service
-          </span>
+          <span class="feat-tag feat-tag-blue"><i class="bi bi-house"></i>Home Service</span>
           {% endif %}
           {% if org.accepts_online_payment %}
-          <span class="badge" style="background:#d1fae5;color:#065f46;font-size:0.7rem;padding:4px 10px;">
-            <i class="bi bi-credit-card me-1"></i>Online Pay
-          </span>
+          <span class="feat-tag feat-tag-green"><i class="bi bi-credit-card"></i>Online Pay</span>
           {% endif %}
           {% if org.is_open_sunday %}
-          <span class="badge" style="background:#fef9c3;color:#92400e;font-size:0.7rem;padding:4px 10px;">
-            <i class="bi bi-sun me-1"></i>Open Sunday
-          </span>
+          <span class="feat-tag feat-tag-yellow"><i class="bi bi-sun"></i>Open Sunday</span>
           {% endif %}
-          <span class="badge" style="font-size:0.7rem;padding:4px 10px;
-            background:{% if org.status == 'active' %}#d1fae5;color:#065f46
-            {% elif org.status == 'suspended' %}#fee2e2;color:#991b1b
-            {% elif org.status == 'pending' %}#fef3c7;color:#92400e
-            {% else %}#f1f5f9;color:#475569{% endif %};">
-            <i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>
-            {{ org.get_status_display }}
+          <span class="feat-tag" style="
+            color:{% if org.status == 'active' %}var(--go){% elif org.status == 'suspended' %}var(--fire){% elif org.status == 'pending' %}var(--gold){% else %}rgba(255,255,255,0.35){% endif %};
+            border-color:{% if org.status == 'active' %}rgba(34,197,94,0.25){% elif org.status == 'suspended' %}rgba(239,68,68,0.25){% elif org.status == 'pending' %}rgba(245,158,11,0.25){% else %}var(--border){% endif %};
+            background:{% if org.status == 'active' %}rgba(34,197,94,0.07){% elif org.status == 'suspended' %}rgba(239,68,68,0.07){% elif org.status == 'pending' %}rgba(245,158,11,0.07){% else %}rgba(255,255,255,0.02){% endif %};">
+            <i class="bi bi-circle-fill" style="font-size:6px;"></i>{{ org.get_status_display }}
           </span>
         </div>
 
-        <!-- Plan dates strip -->
         {% if org.plan_start_date or org.plan_end_date %}
-        <div style="margin-top:14px;padding:10px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:10px;">
-          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin-bottom:6px;">Plan Period</div>
-          <div class="d-flex justify-content-between" style="font-size:0.78rem;font-weight:600;color:#475569;">
-            <span><i class="bi bi-play-circle me-1 text-success"></i>{{ org.plan_start_date|date:"d M Y"|default:"—" }}</span>
-            <span>→</span>
-            <span>
-              <i class="bi bi-stop-circle me-1 {% if not org.is_plan_active %}text-danger{% else %}text-warning{% endif %}"></i>
-              {{ org.plan_end_date|date:"d M Y"|default:"—" }}
-            </span>
+        <div class="plan-dates-strip">
+          <div class="plan-dates-label">Plan Period</div>
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.5);">
+            <span><i class="bi bi-play-circle me-1" style="color:var(--go);"></i>{{ org.plan_start_date|date:"d M Y"|default:"—" }}</span>
+            <span style="color:rgba(255,255,255,0.2);">→</span>
+            <span><i class="bi bi-stop-circle me-1" style="color:{% if not org.is_plan_active %}var(--fire){% else %}var(--gold){% endif %};"></i>{{ org.plan_end_date|date:"d M Y"|default:"—" }}</span>
           </div>
         </div>
         {% endif %}
 
-        <a href="{% url 'org_settings' %}" class="btn btn-outline-primary btn-sm mt-3 w-100" style="border-radius:10px;">
-          <i class="bi bi-pencil me-1"></i>Edit Profile
+        <a href="{% url 'org_settings' %}" class="btn-dark-outline" style="width:100%;justify-content:center;margin-top:14px;padding:9px;">
+          <i class="bi bi-pencil"></i>Edit Profile
         </a>
       </div>
     </div>
   </div>
 
-  <!-- ── Right Column ────────────────────────────── -->
+  <!-- ── Right Column ── -->
   <div class="col-lg-8">
 
     <!-- Recent Enquiries -->
     <div class="card-modern mb-4">
-      <div class="card-header d-flex align-items-center justify-content-between">
+      <div class="card-header">
         <span><i class="bi bi-chat-left-dots me-2"></i>Recent Enquiries</span>
-        <div class="d-flex align-items-center gap-2">
+        <div style="display:flex;align-items:center;gap:8px;">
           {% if new_enquiries > 0 %}
-          <span style="background:#ef4444;color:#fff;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:50px;">
+          <span style="background:var(--fire);color:#fff;font-size:9.5px;font-weight:800;padding:2px 9px;border-radius:20px;">
             {{ new_enquiries }} New
           </span>
           {% endif %}
-          <a href="{% url 'enquiries' %}" class="btn btn-sm btn-outline-light" style="border-radius:8px;font-size:0.78rem;">
-            View All
-          </a>
+          <a href="{% url 'enquiries' %}" class="btn-dark-outline" style="padding:4px 11px;font-size:10px;">View All</a>
         </div>
       </div>
-      <div class="p-0">
+      <div>
         {% if enquiries %}
-        <table class="table table-modern mb-0">
+        <table class="table-modern">
           <thead>
             <tr>
               <th>Name</th>
@@ -274,39 +220,37 @@
           <tr>
             <td>
               <div class="fw-600">{{ enq.name }}</div>
-              <div class="text-muted small">{{ enq.phone }}</div>
+              <div style="color:rgba(255,255,255,0.28);font-size:11px;">{{ enq.phone }}</div>
             </td>
             <td>
-              <span class="small">{{ enq.subject|truncatechars:35 }}</span>
-              <!-- Show service if linked -->
+              <span style="font-size:12.5px;">{{ enq.subject|truncatechars:35 }}</span>
               {% if enq.service %}
-              <div class="text-muted" style="font-size:0.7rem;margin-top:2px;">
-                <i class="bi bi-briefcase me-1" style="color:#2563eb;"></i>{{ enq.service.name }}
+              <div style="color:rgba(255,255,255,0.28);font-size:10.5px;margin-top:2px;">
+                <i class="bi bi-briefcase me-1" style="color:#60a5fa;"></i>{{ enq.service.name }}
               </div>
               {% endif %}
-              <!-- Show product if linked -->
               {% if enq.product %}
-              <div class="text-muted" style="font-size:0.7rem;margin-top:2px;">
-                <i class="bi bi-box-seam me-1" style="color:#7c3aed;"></i>{{ enq.product.name }}
+              <div style="color:rgba(255,255,255,0.28);font-size:10.5px;margin-top:2px;">
+                <i class="bi bi-box-seam me-1" style="color:#a78bfa;"></i>{{ enq.product.name }}
               </div>
               {% endif %}
             </td>
             <td>
-              <span class="badge badge-{{ enq.status }}" style="padding:5px 10px;border-radius:50px;font-size:0.72rem;">
+              <span class="badge badge-{{ enq.status }}" style="border-radius:20px;">
                 {{ enq.get_status_display }}
               </span>
             </td>
-            <td class="text-muted small">{{ enq.created_at|date:"d M" }}</td>
+            <td style="color:rgba(255,255,255,0.3);font-size:11.5px;">{{ enq.created_at|date:"d M" }}</td>
           </tr>
           {% endfor %}
           </tbody>
         </table>
         {% else %}
-        <div class="text-center py-5 text-muted">
-          <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
-          <p class="mb-3">No enquiries yet. Share your public page to start receiving them!</p>
-          <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-primary btn-sm" style="border-radius:8px;">
-            <i class="bi bi-share me-1"></i>View Your Page
+        <div style="text-align:center;padding:40px 20px;">
+          <i class="bi bi-inbox" style="font-size:2.5rem;color:rgba(255,255,255,0.1);display:block;margin-bottom:12px;"></i>
+          <p style="color:rgba(255,255,255,0.3);margin-bottom:14px;font-size:13px;">No enquiries yet. Share your public page to start receiving them!</p>
+          <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn-gold">
+            <i class="bi bi-share"></i>View Your Page
           </a>
         </div>
         {% endif %}
@@ -316,49 +260,43 @@
     <!-- Quick Actions -->
     <div class="row g-3">
       <div class="col-md-4">
-        <a href="{% url 'add_service' %}" class="text-decoration-none">
-          <div class="stat-card text-center" style="cursor:pointer;border-style:dashed;border-color:#bfdbfe;">
-            <i class="bi bi-plus-circle fs-3 text-primary d-block mb-2"></i>
-            <div class="label" style="font-weight:600;color:#1d4ed8;">Add Service</div>
-          </div>
+        <a href="{% url 'add_service' %}" class="quick-action-card">
+          <i class="bi bi-plus-circle" style="font-size:1.8rem;color:#60a5fa;display:block;margin-bottom:4px;"></i>
+          <div class="label" style="color:#60a5fa;">Add Service</div>
         </a>
       </div>
       <div class="col-md-4">
-        <a href="{% url 'add_product' %}" class="text-decoration-none">
-          <div class="stat-card text-center" style="cursor:pointer;border-style:dashed;border-color:#ddd6fe;">
-            <i class="bi bi-box-seam fs-3 d-block mb-2" style="color:#7c3aed;"></i>
-            <div class="label" style="font-weight:600;color:#5b21b6;">Add Product</div>
-          </div>
+        <a href="{% url 'add_product' %}" class="quick-action-card">
+          <i class="bi bi-box-seam" style="font-size:1.8rem;color:#a78bfa;display:block;margin-bottom:4px;"></i>
+          <div class="label" style="color:#a78bfa;">Add Product</div>
         </a>
       </div>
       <div class="col-md-4">
-        <a href="{% url 'enquiries' %}" class="text-decoration-none">
-          <div class="stat-card text-center" style="cursor:pointer;border-style:dashed;border-color:#fde68a;">
-            <i class="bi bi-chat-text fs-3 text-warning d-block mb-2"></i>
-            <div class="label" style="font-weight:600;color:#d97706;">
-              Enquiries
-              {% if new_enquiries > 0 %}
-              <span style="background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:50px;vertical-align:middle;margin-left:4px;">{{ new_enquiries }}</span>
-              {% endif %}
-            </div>
+        <a href="{% url 'enquiries' %}" class="quick-action-card">
+          <i class="bi bi-chat-text" style="font-size:1.8rem;color:var(--gold);display:block;margin-bottom:4px;"></i>
+          <div class="label" style="color:var(--gold);">
+            Enquiries
+            {% if new_enquiries > 0 %}
+            <span style="background:var(--fire);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:20px;vertical-align:middle;margin-left:4px;">{{ new_enquiries }}</span>
+            {% endif %}
           </div>
         </a>
       </div>
     </div>
 
-    <!-- Plan Features Card -->
+    <!-- Plan Features -->
     {% if org.plan and org.plan.features %}
     <div class="card-modern mt-4">
       <div class="card-header">
-        <i class="bi bi-list-check me-2"></i>Your {{ org.plan.name }} Plan Includes
+        <span><i class="bi bi-list-check me-2"></i>Your {{ org.plan.name }} Plan Includes</span>
       </div>
       <div class="p-3">
         <div class="row g-2">
           {% for feature in org.plan.features %}
           <div class="col-md-6">
-            <div class="d-flex align-items-center gap-2" style="padding:6px 8px;background:#f0fdf4;border-radius:8px;">
-              <i class="bi bi-check-circle-fill text-success" style="font-size:0.85rem;flex-shrink:0;"></i>
-              <span style="font-size:0.82rem;font-weight:500;color:#166534;">{{ feature }}</span>
+            <div class="plan-feat-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>{{ feature }}</span>
             </div>
           </div>
           {% endfor %}
@@ -367,23 +305,21 @@
     </div>
     {% endif %}
 
-    <!-- Testimonials preview -->
+    <!-- Testimonials -->
     {% if testimonials %}
     <div class="card-modern mt-4">
       <div class="card-header">
-        <i class="bi bi-star-fill me-2"></i>Recent Testimonials
-        <span style="background:rgba(255,255,255,0.2);color:#fff;font-size:0.68rem;padding:2px 8px;border-radius:50px;margin-left:8px;">{{ testimonials.count }}</span>
+        <span><i class="bi bi-star-fill me-2"></i>Recent Testimonials</span>
+        <span style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ testimonials.count }}</span>
       </div>
-      <div class="p-3 d-flex flex-column gap-2">
+      <div class="p-3" style="display:flex;flex-direction:column;gap:8px;">
         {% for t in testimonials %}
-        <div style="padding:12px 14px;background:#f8faff;border:1px solid var(--border);border-radius:10px;">
-          <div class="d-flex align-items-center justify-content-between mb-1">
-            <span style="font-weight:700;font-size:0.84rem;">{{ t.client_name }}</span>
-            <span style="color:#fbbf24;font-size:0.8rem;">
-              {% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}
-            </span>
+        <div class="test-mini">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span class="t-name">{{ t.client_name }}</span>
+            <span class="stars">{% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
           </div>
-          <p style="font-size:0.8rem;color:#64748b;margin:0;line-height:1.5;">{{ t.message|truncatechars:100 }}</p>
+          <p class="t-text">{{ t.message|truncatechars:100 }}</p>
         </div>
         {% endfor %}
       </div>

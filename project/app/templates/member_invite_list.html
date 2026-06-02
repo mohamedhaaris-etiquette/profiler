@@ -1,0 +1,317 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}My Invitations — {{ org.name }}{% endblock %}
+
+{% block dash_css %}
+<style>
+/* ── Stat cards ──────────────────────────────── */
+.inv-stat {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px 22px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  transition: box-shadow .2s, transform .2s;
+}
+.inv-stat:hover { box-shadow: 0 6px 20px rgba(0,0,0,.08); transform: translateY(-2px); }
+.inv-stat .stat-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0;
+}
+.inv-stat .stat-val {
+  font-family: var(--font-display); font-size: 2rem;
+  font-weight: 800; line-height: 1;
+}
+.inv-stat .stat-lbl { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+/* ── Table ───────────────────────────────────── */
+.table-modern th {
+  background: var(--surface); font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.table-modern td {
+  padding: 13px 16px; vertical-align: middle;
+  border-bottom: 1px solid var(--border); font-size: 0.85rem;
+}
+.table-modern tbody tr:last-child td { border-bottom: none; }
+.table-modern tbody tr:hover { background: var(--surface); }
+
+/* ── Status badges ───────────────────────────── */
+.badge-pill {
+  border-radius: 50px; padding: 4px 13px;
+  font-size: 0.73rem; font-weight: 700; white-space: nowrap;
+}
+.bp-pending  { background:#fef3c7; color:#92400e; }
+.bp-accepted { background:#dcfce7; color:#166534; }
+.bp-expired  { background:#f1f5f9; color:#64748b; }
+.bp-revoked  { background:#fee2e2; color:#991b1b; }
+
+/* ── Bonus badge ─────────────────────────────── */
+.bonus-earned {
+  background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25);
+  color: #d97706; border-radius: 50px;
+  padding: 3px 11px; font-size: 0.73rem; font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Empty state ─────────────────────────────── */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+}
+.empty-state i { font-size: 3rem; color: #cbd5e1; display: block; margin-bottom: 16px; }
+.empty-state h5 { font-weight: 700; margin-bottom: 6px; }
+.empty-state p  { color: var(--muted); font-size: 0.88rem; margin-bottom: 20px; }
+
+/* ── Filter bar ──────────────────────────────── */
+.filter-bar {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+</style>
+{% endblock %}
+
+{% block dash_content %}
+
+<!-- ── Page header ───────────────────────────── -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1 style="font-size:1.5rem;font-weight:800;margin:0;">
+      <i class="bi bi-send me-2 text-accent"></i>My Invitations
+    </h1>
+    <div class="text-muted small mt-1">Track the businesses you've invited and your bonus earnings.</div>
+  </div>
+  <a href="{% url 'member_send_invite' %}" class="btn btn-primary" style="border-radius:10px;font-weight:700;">
+    <i class="bi bi-plus-lg me-1"></i> Send Invite
+  </a>
+</div>
+
+<!-- ── Stats row ─────────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="inv-stat d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#eff6ff;">
+        <i class="bi bi-send" style="color:#3b82f6;"></i>
+      </div>
+      <div>
+        <div class="stat-val">{{ total_sent }}</div>
+        <div class="stat-lbl">Sent</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="inv-stat d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#f0fdf4;">
+        <i class="bi bi-check-circle" style="color:#22c55e;"></i>
+      </div>
+      <div>
+        <div class="stat-val" style="color:var(--success);">{{ total_accepted }}</div>
+        <div class="stat-lbl">Accepted</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="inv-stat d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#fefce8;">
+        <i class="bi bi-hourglass-split" style="color:#eab308;"></i>
+      </div>
+      <div>
+        <div class="stat-val" style="color:#d97706;">{{ total_pending }}</div>
+        <div class="stat-lbl">Pending</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="inv-stat d-flex align-items-center gap-3">
+      <div class="stat-icon" style="background:#fffbeb;">
+        <i class="bi bi-coin" style="color:#f59e0b;"></i>
+      </div>
+      <div>
+        <div class="stat-val" style="color:#f59e0b;">{{ total_bonus }}</div>
+        <div class="stat-lbl">Pts earned</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Quota bar ──────────────────────────────── -->
+<div class="card-modern mb-4">
+  <div class="card-header">
+    <i class="bi bi-bar-chart me-2"></i>Invite Quota
+    <span class="ms-auto small" style="opacity:.7;">
+      {{ config.bonus_points_per_invite }} OrgPoints per successful invite
+    </span>
+  </div>
+  <div class="p-3">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <span class="small fw-600">{{ invites_sent|add:0 }} of {{ invite_limit }} slots used</span>
+      <span class="small text-muted">{{ invites_left }} remaining</span>
+    </div>
+    <div style="height:8px;background:var(--border);border-radius:999px;overflow:hidden;">
+      <div style="
+        height:100%;
+        width:{% widthratio invites_sent invite_limit 100 %}%;
+        background:{% if invites_left == 0 %}#ef4444{% else %}var(--accent){% endif %};
+        border-radius:999px; transition:width .8s;
+      "></div>
+    </div>
+    <div class="mt-2" style="font-size:0.77rem;color:var(--muted);">
+      Current plan: <strong>{% if org.plan %}{{ org.plan.name }}{% else %}Trial{% endif %}</strong>.
+      {% if org.plan and org.plan.level != 'platinum' %}
+      <a href="{% url 'org_settings' %}">Upgrade for more slots →</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── Filter bar ─────────────────────────────── -->
+<form method="get" class="filter-bar">
+  <label class="small fw-600 text-muted mb-0">Filter:</label>
+  <select name="status" class="form-select form-select-sm" style="width:auto;">
+    <option value="">All statuses</option>
+    {% for val, label in status_choices %}
+    <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;">
+    <i class="bi bi-funnel me-1"></i>Filter
+  </button>
+  {% if status_filter %}
+  <a href="{% url 'member_invite_list' %}" class="btn btn-sm btn-link text-muted">Clear</a>
+  {% endif %}
+  <span class="ms-auto text-muted small">{{ page_obj.paginator.count }} record{{ page_obj.paginator.count|pluralize }}</span>
+</form>
+
+<!-- ── Table ──────────────────────────────────── -->
+<div class="card-modern">
+  <div class="p-0">
+    {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table table-modern mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email Invited</th>
+            <th>Status</th>
+            <th>Business Joined</th>
+            <th>Bonus</th>
+            <th>Sent</th>
+            <th>Expires</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in page_obj %}
+          <tr>
+            <td class="text-muted small">{{ forloop.counter }}</td>
+
+            <td>
+              <div class="fw-600">{{ inv.email }}</div>
+            </td>
+
+            <td>
+              {% if inv.status == 'pending' %}
+              <span class="badge-pill bp-pending"><i class="bi bi-hourglass-split me-1"></i>Pending</span>
+              {% elif inv.status == 'accepted' %}
+              <span class="badge-pill bp-accepted"><i class="bi bi-check-circle me-1"></i>Accepted</span>
+              {% elif inv.status == 'expired' %}
+              <span class="badge-pill bp-expired">Expired</span>
+              {% elif inv.status == 'revoked' %}
+              <span class="badge-pill bp-revoked">Revoked</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if inv.organization %}
+              <div class="fw-600" style="font-size:0.83rem;">{{ inv.organization.name }}</div>
+              <div class="text-muted" style="font-size:0.72rem;">{{ inv.organization.city }}</div>
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if inv.bonus_rewarded %}
+              <span class="bonus-earned">
+                <i class="bi bi-star-fill me-1"></i>+{{ config.bonus_points_per_invite }} pts
+              </span>
+              {% elif inv.status == 'accepted' %}
+              <span class="text-muted small">Processing…</span>
+              {% else %}
+              <span class="text-muted small">Pending join</span>
+              {% endif %}
+            </td>
+
+            <td class="small text-muted">{{ inv.created_at|date:"d M Y" }}</td>
+
+            <td class="small text-muted">
+              {% if inv.status == 'pending' %}
+              {{ inv.expires_at|date:"d M Y" }}
+              {% else %}—{% endif %}
+            </td>
+
+            <td>
+              {% if inv.status == 'pending' %}
+              <div class="d-flex gap-2">
+                <form method="post" action="{% url 'member_resend_invite' inv.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-primary" style="border-radius:8px;font-size:0.75rem;" title="Resend">
+                    <i class="bi bi-arrow-repeat"></i>
+                  </button>
+                </form>
+                <form method="post" action="{% url 'member_revoke_invite' inv.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;font-size:0.75rem;" title="Revoke"
+                    onclick="return confirm('Revoke this invite for {{ inv.email }}?')">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </form>
+              </div>
+              {% else %}
+              <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.previous_page_number }}">‹</a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+          </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ page_obj.next_page_number }}">›</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-send"></i>
+      <h5>No invitations yet</h5>
+      <p>Invite other business owners and earn OrgPoints when they join!</p>
+      <a href="{% url 'member_send_invite' %}" class="btn btn-primary" style="border-radius:10px;font-weight:700;">
+        <i class="bi bi-plus-lg me-1"></i> Send Your First Invite
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

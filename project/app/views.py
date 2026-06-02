@@ -11,6 +11,8 @@ from .forms import (
 )
 
 
+
+
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -76,7 +78,7 @@ def signup_view(request):
                             )
 
                     login(request, user)
-                    messages.success(request, f'Welcome to OrgPortal, {org.name}! Your profile is ready.')
+                    messages.success(request, f'Welcome to Portal, {org.name}! Your profile is ready.')
                     return redirect('dashboard')
             except Exception as e:
                 messages.error(request, f'Registration failed: {str(e)}')
@@ -584,7 +586,7 @@ def signup_with_ref(request, ref_code):
                             f'They earned {pts} OrgPoints!'
                         )
                     else:
-                        messages.success(request, f'Welcome to OrgPortal, {org.name}!')
+                        messages.success(request, f'Welcome to Portal, {org.name}!')
 
                     login(request, user)
                     return redirect('dashboard')
@@ -964,6 +966,12 @@ from .views_features import (
     edit_whatsapp_config, supply_chain_view, link_supply_chain, update_chain_link,
     discovery_home, discovery_category,
 )
+
+from .views_member_invite import (
+    member_send_invite, member_invite_list,
+    member_resend_invite, member_revoke_invite,
+    _award_member_invite_bonus,
+)
  
  
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1027,17 +1035,17 @@ def invite_member(request):
 def _send_invitation_email(invite: InvitationToken, request):
     """Send the magic-link email to the invited person."""
     onboard_url = invite.get_onboard_url(request)
-    subject = f"You're invited to join OrgPortal — Complete your profile"
+    subject = f"You're invited to join Portal — Complete your profile"
  
     # Plain-text body (also send HTML version below)
     body = (
         f"Hello,\n\n"
-        f"You have been invited to join OrgPortal by {invite.invited_by.get_full_name() or invite.invited_by.username}.\n\n"
+        f"You have been invited to join Portal by {invite.invited_by.get_full_name() or invite.invited_by.username}.\n\n"
         f"Click the link below to complete your profile and set your password:\n\n"
         f"{onboard_url}\n\n"
         f"This link expires in 7 days.\n\n"
         f"If you did not expect this invitation, you can ignore this email.\n\n"
-        f"— OrgPortal Team"
+        f"— Portal Team"
     )
  
     # Try HTML template first; fall back to plain text
@@ -1052,7 +1060,7 @@ def _send_invitation_email(invite: InvitationToken, request):
     send_mail(
         subject      = subject,
         message      = body,
-        from_email   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@orgportal.com'),
+        from_email   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@Portal.com'),
         recipient_list = [invite.email],
         html_message = html_body,
         fail_silently = False,
@@ -1091,12 +1099,13 @@ def onboard_accept(request, token):
                     invite.accepted_at  = timezone.now()
                     invite.organization = org
                     invite.save()
+                    _award_member_invite_bonus(invite)   # ← award bonus if member invite
  
                     from django.contrib.auth import login as auth_login
                     auth_login(request, user)
                     messages.success(
                         request,
-                        f'Welcome to OrgPortal, {org.name}! Your account is ready.'
+                        f'Welcome to Portal, {org.name}! Your account is ready.'
                     )
                     return redirect('onboard_done', token=token)
  
@@ -1600,3 +1609,4 @@ def cart_view(request, slug):
     org  = get_object_or_404(Organization, slug=slug, is_active=True)
     cart = _get_cart(request, org)
     return render(request, 'cart.html', {'org': org, 'cart': cart})
+
