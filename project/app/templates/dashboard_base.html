@@ -1,16 +1,24 @@
+
 {% extends 'base.html' %}
 {% load app_filters %}
-{% block title %}Super Admin — OrgPortal{% endblock %}
+
+{% block title %}Dashboard — {{ org.name }}{% endblock %}
+
 {% block extra_css %}
 <style>
 body { background: #f1f5f9; }
+
+/* Content space wrapper adjustments */
+
+
 .page-header {
   background: #fff; border-bottom: 1px solid var(--border);
-  padding: 20px 30px; margin: -30px -30px 30px;
+  padding: 20px 30px;
+  margin: 0 0 30px;
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 12px;
 }
-.page-header h1 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+.page-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; }
 .org-badge {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 50px; padding: 6px 14px;
@@ -19,47 +27,7 @@ body { background: #f1f5f9; }
 }
 .org-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
 
-/* ── Sidebar ────────────────────────────────── */
-.sidebar {
-  width: 260px; background: var(--brand);
-  position: fixed; top: 0; left: 0; bottom: 0;
-  display: flex; flex-direction: column;
-  overflow-y: auto; z-index: 300;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.1) transparent;
-}
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-
-.sidebar-section {
-  font-size: 0.62rem; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.15em;
-  color: rgba(255,255,255,0.3);
-  padding: 18px 24px 6px;
-}
-.nav-link {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 24px; color: rgba(255,255,255,0.6);
-  font-size: 0.85rem; font-weight: 500;
-  text-decoration: none; transition: all .2s;
-  border-left: 3px solid transparent;
-}
-.nav-link i { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
-.nav-link:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); }
-.nav-link.active {
-  background: rgba(255,255,255,0.1);
-  color: #fff; font-weight: 600;
-  border-left-color: var(--accent);
-}
-
-/* ── Main Content ────────────────────────────── */
-.main-content {
-  margin-left: 260px;
-  padding: 30px;
-  min-height: 100vh;
-}
-
-/* ── Cards ───────────────────────────────────── */
+/* Cards */
 .card-modern {
   background: #fff; border-radius: 18px;
   border: 1px solid var(--border);
@@ -83,10 +51,10 @@ body { background: #f1f5f9; }
   display: flex; align-items: center; justify-content: center;
   font-size: 1.25rem; margin-bottom: 14px;
 }
-.stat-card .value { font-size: 1.8rem; font-weight: 800; color: var(--brand); line-height: 1; }
+.stat-card .value { font-size: 1.8rem; font-weight: 700; color: var(--brand); line-height: 1; }
 .stat-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
 
-/* ── Tables ──────────────────────────────────── */
+/* Tables */
 .table-modern { border-collapse: separate; border-spacing: 0; width: 100%; }
 .table-modern thead th {
   background: #f8fafc; font-size: 0.72rem;
@@ -103,230 +71,57 @@ body { background: #f1f5f9; }
 .fw-600 { font-weight: 600; }
 .fw-500 { font-weight: 500; }
 
-/* ── Status badges ───────────────────────────── */
+/* Status badges */
 .badge-new       { background: #dbeafe; color: #1d4ed8; }
 .badge-contacted { background: #fef3c7; color: #92400e; }
 .badge-in_progress { background: #ede9fe; color: #5b21b6; }
 .badge-resolved  { background: #dcfce7; color: #166534; }
 .badge-closed    { background: #f1f5f9; color: #475569; }
 
-/* ── Plan badge colors ───────────────────────── */
+/* Plan badge colors */
 .plan-trial    { background: #f3f4f6; color: #374151; }
 .plan-silver   { background: #f0f9ff; color: #0369a1; }
 .plan-gold     { background: #fffbeb; color: #92400e; }
 .plan-platinum { background: #f5f3ff; color: #5b21b6; }
 
-/* ── Mobile sidebar toggle ───────────────────── */
-.sidebar-toggle {
-  display: none; position: fixed; bottom: 20px; right: 20px;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: var(--brand); color: #fff; border: none;
-  font-size: 1.3rem; z-index: 400;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-}
-@media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); transition: transform .3s; }
-  .sidebar.open { transform: translateX(0); }
-  .main-content { margin-left: 0; padding: 20px; }
-  .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
-  .page-header { padding: 16px 20px; margin: -20px -20px 20px; }
+/* ===== RESPONSIVE MEDIA QUERIES (Updated to standard 991px) ===== */
+@media (max-width: 991px) {
+  .main-content {
+    padding: 12px !important; /* Reduced padding for extra mobile screen space */
+  }
+
+  .container-fluid{
+      width:100%;
+      padding-left:12px !important;
+      padding-right:12px !important;
+      overflow-x:hidden;
+  }
+
+.page-header {
+    padding: 14px 16px;
+    margin: 0 0 16px;
+    border-radius: 0;
+}  
 }
 </style>
 {% block dash_css %}{% endblock %}
 {% endblock %}
 
-{% block navbar %}{% endblock %}
-
-{# ── Override the messages block so base.html renders nothing there.        #}
-{# ── We render messages ourselves below, inside .main-content, for proper   #}
-{# ── positioning alongside the sidebar layout.                               #}
-{% block messages %}{% endblock %}
-
-{% block content %}
-<!-- ══════════════════════════════════════════════
-     SIDEBAR
-══════════════════════════════════════════════ -->
-<div class="sidebar" id="sidebar">
-
-  <!-- Logo / Brand -->
-  <div style="padding:20px 24px 10px;border-bottom:1px solid rgba(255,255,255,0.08);">
-    <a href="{% url 'home' %}" style="font-family:var(--font-display);font-size:1.3rem;font-weight:800;color:#fff;text-decoration:none;">
-      Org<span style="color:var(--accent);">Portal</span>
-    </a>
-    {% if user.organization %}
-    <div style="color:rgba(255,255,255,0.45);font-size:0.72rem;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ user.organization.name }}">
-      {{ user.organization.name }}
-    </div>
-    {% endif %}
-  </div>
-
-  <!-- ── SUPER ADMIN NAVIGATION ───────────────── -->
-  {% if user.is_super_admin %}
-
-  <div class="sidebar-section">Overview</div>
-  <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-    <i class="bi bi-grid-1x2"></i> Dashboard
-  </a>
-
-  <div class="sidebar-section">Member Management</div>
-  <a href="{% url 'member_list' %}" class="nav-link {% if request.resolver_match.url_name == 'member_list' %}active{% endif %}">
-    <i class="bi bi-people-fill"></i> All Members
-  </a>
-  <a href="{% url 'add_member' %}" class="nav-link {% if request.resolver_match.url_name == 'add_member' %}active{% endif %}">
-    <i class="bi bi-person-plus-fill"></i> Add Member
-    <span style="background:var(--accent);color:#fff;font-size:0.58rem;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;">NEW</span>
-  </a>
-  <a href="{% url 'invite_member' %}" class="nav-link {% if request.resolver_match.url_name == 'invite_member' %}active{% endif %}">
-    <i class="bi bi-envelope-plus"></i> Invite Member
-  </a>
-  <a href="{% url 'invitation_list' %}" class="nav-link {% if request.resolver_match.url_name == 'invitation_list' %}active{% endif %}">
-    <i class="bi bi-send"></i> Invitations
-  </a>
-
-  <div class="sidebar-section">System</div>
-  <a href="/admin/" class="nav-link" target="_blank">
-    <i class="bi bi-shield-lock"></i> Django Admin
-  </a>
-
-  <!-- ── ORG ADMIN / STAFF NAVIGATION ─────────── -->
-  {% else %}
-
-  <div class="sidebar-section">Main</div>
-  <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-    <i class="bi bi-grid-1x2"></i> Dashboard
-  </a>
-
-  {% if user.organization %}
-  <div class="sidebar-section">Business</div>
-  <a href="{% url 'manage_services' %}" class="nav-link {% if 'service' in request.resolver_match.url_name %}active{% endif %}">
-    <i class="bi bi-briefcase"></i> Services
-  </a>
-  <a href="{% url 'manage_products' %}" class="nav-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
-    <i class="bi bi-box-seam"></i> Products
-  </a>
-  <a href="{% url 'enquiries' %}" class="nav-link {% if 'enquir' in request.resolver_match.url_name %}active{% endif %}">
-    <i class="bi bi-chat-left-dots"></i> Enquiries
-    {% with new_count=user.organization.enquiries.filter %}
-    {% endwith %}
-  </a>
-  <a href="{% url 'org_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'org_settings' %}active{% endif %}">
-    <i class="bi bi-sliders"></i> Settings
-  </a>
-
-  <div class="sidebar-section">Grow</div>
-  <a href="{% url 'referral_dashboard' %}" class="nav-link {% if 'referral' in request.resolver_match.url_name %}active{% endif %}" style="color:rgba(250,204,21,0.85);">
-    <i class="bi bi-gift"></i> Invite & Earn
-    <span style="background:#f97316;color:#fff;font-size:0.58rem;font-weight:700;padding:2px 7px;border-radius:50px;margin-left:auto;">NEW</span>
-  </a>
-
-  <div class="sidebar-section">Public</div>
-  <a href="{% url 'public_landing' user.organization.slug %}" target="_blank" class="nav-link">
-    <i class="bi bi-box-arrow-up-right"></i> View My Page
-  </a>
-  {% endif %}
-
-  {% endif %}
-
-
-  <!-- Org-specific tools -->
-  {% if user.organization %}
-  <div class="sidebar-section">System</div>
-  <a href="{% url 'edit_visiting_card' %}" class="nav-link {% if request.resolver_match.url_name == 'edit_visiting_card' %}active{% endif %}">
-    <i class="bi bi-person-badge"></i> My Card
-  </a>
-
-  <a href="{% url 'manage_payment_qr' %}" class="nav-link {% if request.resolver_match.url_name == 'manage_payment_qr' %}active{% endif %}">
-    <i class="bi bi-qr-code"></i> Payment QR
-  </a>
-
-  <a href="{% url 'edit_whatsapp_config' %}" class="nav-link {% if request.resolver_match.url_name == 'edit_whatsapp_config' %}active{% endif %}">
-    <i class="bi bi-whatsapp"></i> WhatsApp
-  </a>
-
-  <a href="{% url 'supply_chain' %}" class="nav-link {% if request.resolver_match.url_name == 'supply_chain' %}active{% endif %}">
-    <i class="bi bi-diagram-3"></i> Supply Chain
-  </a>
-
-  <a href="{% url 'referral_dashboard' %}" class="nav-link {% if 'referral' in request.resolver_match.url_name %}active{% endif %}">
-    <i class="bi bi-gift"></i> Referrals
-  </a>
-
-  <a href="{% url 'org_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'org_settings' %}active{% endif %}">
-    <i class="bi bi-sliders"></i> Settings
-  </a>
-
-  {% endif %}
-
-  <!-- ── ACCOUNT (common to all roles) ─────────── -->
-  <div class="sidebar-section">Account</div>
-  <a href="{% url 'logout' %}" class="nav-link" style="color:rgba(239,68,68,0.75);">
-    <i class="bi bi-box-arrow-left"></i> Logout
-  </a>
-
-  <!-- ── User info card ─────────────────────────── -->
-  <div style="padding:20px 16px;margin-top:auto;border-top:1px solid rgba(255,255,255,0.07);">
-    <div style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:14px;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#fbbf24);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:0.9rem;flex-shrink:0;">
-          {{ user.first_name|first|upper|default:user.username|first|upper }}
-        </div>
-        <div style="overflow:hidden;">
-          <div style="color:rgba(255,255,255,0.9);font-size:0.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            {{ user.get_full_name|default:user.username }}
-          </div>
-          <div style="color:rgba(255,255,255,0.4);font-size:0.68rem;">{{ user.get_role_display }}</div>
-        </div>
-      </div>
-
-      <!-- Plan badge (org users only) -->
-      {% if user.organization and user.organization.plan %}
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
-        <span style="background:{{ user.organization.plan_badge_color }};color:#fff;font-size:0.63rem;font-weight:700;padding:3px 10px;border-radius:50px;">
-          <i class="bi bi-award-fill me-1"></i>{{ user.organization.plan.name }}
-        </span>
-        {% if not user.organization.is_plan_active %}
-        <span style="background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:50px;">
-          Expired
-        </span>
-        {% elif user.organization.plan_end_date %}
-        <span style="color:rgba(255,255,255,0.4);font-size:0.65rem;">
-          till {{ user.organization.plan_end_date|date:"d M" }}
-        </span>
-        {% endif %}
-      </div>
-      {% elif user.is_super_admin %}
-      <span style="background:rgba(249,115,22,0.3);color:var(--accent);font-size:0.63rem;font-weight:700;padding:3px 10px;border-radius:50px;">
-        <i class="bi bi-shield-fill-check me-1"></i>Super Admin
-      </span>
-      {% endif %}
-    </div>
-  </div>
-
-</div><!-- /sidebar -->
-
-<!-- Mobile sidebar toggle -->
-<button class="sidebar-toggle" id="sidebarToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
-  <i class="bi bi-list"></i>
-</button>
-
-<!-- ══════════════════════════════════════════════
-     MAIN CONTENT
-══════════════════════════════════════════════ -->
-<div class="main-content">
-
-  {# ── Single source of truth for messages. base.html renders nothing      #}
-  {# ── because we override {% block messages %} above to be empty.         #}
-  {% if messages %}
+{% block messages %}
+{% if messages %}
+<div class="container mt-3">
   {% for msg in messages %}
   <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" style="border-radius:12px;">
     {{ msg }}
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
   </div>
   {% endfor %}
-  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
 
+{% block content %}
+<div class="container-fluid">
   {% block dash_content %}{% endblock %}
-
-</div><!-- /main-content -->
-
+</div>
 {% endblock %}
