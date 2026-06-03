@@ -1112,19 +1112,20 @@ textarea.form-ctrl-e { resize: vertical; min-height: 88px; }
           {% endif %}
         </div>
 
-        <div class="hero-ctas">
-          <a href="#enquiry" class="btn-hp"><i class="bi bi-lightning-charge-fill"></i>Book a Service</a>
-          {% if org.whatsapp %}
-          <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-ho"><i class="bi bi-whatsapp"></i>WhatsApp Now</a>
-          {% elif org.phone %}
-          <a href="tel:{{ org.phone }}" class="btn-ho"><i class="bi bi-telephone-fill"></i>Call Now</a>
-          {% endif %}
-          {% if org.slug %}
-          <a href="{% url 'visiting_card' org.slug %}" class="btn-ho" target="_blank">
-            <i class="bi bi-person-badge"></i>Digital Card
-          </a>
-          {% endif %}
-        </div>
+        <!-- In your main template, replace the Digital Card link in hero-ctas section -->
+<div class="hero-ctas">
+  <a href="#enquiry" class="btn-hp"><i class="bi bi-lightning-charge-fill"></i>Book a Service</a>
+  {% if org.whatsapp %}
+  <a href="https://wa.me/91{{ org.whatsapp }}" target="_blank" class="btn-ho"><i class="bi bi-whatsapp"></i>WhatsApp Now</a>
+  {% elif org.phone %}
+  <a href="tel:{{ org.phone }}" class="btn-ho"><i class="bi bi-telephone-fill"></i>Call Now</a>
+  {% endif %}
+  
+  <!-- ✅ This should link to the HTML visiting card page, not VCF -->
+  <a href="{% url 'visiting_card' org.slug %}" class="btn-ho" target="_blank">
+    <i class="bi bi-person-badge"></i>Digital Card
+  </a>
+</div>
       </div>
 
       <!-- RIGHT: compact card -->

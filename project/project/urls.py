@@ -116,8 +116,11 @@ urlpatterns = [
 
 
 
-    path('card/<slug:slug>/',            views.visiting_card,  name='visiting_card'),
-    path('card/<slug:slug>/download.vcf', views.download_vcard, name='download_vcard'),
+    path('card/<slug:slug>/', views.visiting_card, name='visiting_card'),
+    
+    # VCF download (for phone contacts)
+    path('card/<slug:slug>/vcard/', views.download_vcard, name='download_vcard'),
+    
 ]
 
 if settings.DEBUG:

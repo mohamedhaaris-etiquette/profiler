@@ -5,171 +5,574 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ org.name }} — Digital Card</title>
+  <title>{{ org.name }} — Digital ID Card</title>
+  <meta name="description" content="Professional digital ID card for {{ org.name }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root { color-scheme: light; }
-    body { margin: 0; min-height: 100vh; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f7fb; color: #0f172a; }
-    .page-shell { padding: 26px 16px 40px; }
-    .card-shell { max-width: 920px; margin: 0 auto; }
-    .vc-card { background: #ffffff; border-radius: 28px; box-shadow: 0 28px 60px rgba(15, 23, 42, 0.11); overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.16); }
-    .vc-top { display: grid; grid-template-columns: 120px 1fr; gap: 24px; align-items: center; padding: 28px 30px 18px; }
-    .vc-avatar { width: 120px; aspect-ratio: 1 / 1; border-radius: 26px; overflow: hidden; display: grid; place-items: center; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #f8fafc; font-size: 3rem; font-weight: 800; }
-    .vc-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .vc-headline { display: grid; gap: 10px; }
-    .vc-name { margin: 0; font-size: clamp(1.9rem, 2.8vw, 2.4rem); letter-spacing: -0.03em; line-height: 1.05; font-weight: 800; }
-    .vc-title { margin: 0; color: #475569; font-size: 1rem; }
-    .vc-tag { display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; background: #eff6ff; border-radius: 999px; color: #1d4ed8; font-weight: 700; font-size: 0.95rem; width: fit-content; }
-    .vc-meta { display: flex; flex-wrap: wrap; gap: 12px; color: #64748b; font-size: 0.95rem; margin-top: 10px; }
-    .vc-meta span { display: inline-flex; align-items: center; gap: 8px; }
-    .vc-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 0 30px 26px; }
-    .vc-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 16px; border-radius: 999px; font-weight: 700; text-decoration: none; transition: transform 0.17s ease, box-shadow 0.17s ease; border: 1px solid transparent; }
-    .vc-button:hover { transform: translateY(-1px); }
-    .btn-call { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
-    .btn-wa { background: #16a34a; color: #ffffff; }
-    .btn-vcf { background: #1d4ed8; color: #ffffff; }
-    .vc-divider { height: 1px; background: rgba(148, 163, 184, 0.15); margin: 0 30px; }
-    .vc-body { padding: 26px 30px 34px; display: grid; gap: 26px; }
-    .vc-section { display: grid; gap: 12px; }
-    .vc-section h2 { margin: 0; font-size: 1.05rem; font-weight: 700; }
-    .vc-section p { margin: 0; color: #475569; line-height: 1.75; }
-    .info-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
-    .info-pill { display: grid; gap: 8px; padding: 18px 18px; border-radius: 22px; background: #f8fafc; border: 1px solid #e2e8f0; }
-    .info-pill strong { display: block; color: #0f172a; }
-    .info-pill span { color: #64748b; font-size: 0.95rem; }
-    .social-links { display: flex; flex-wrap: wrap; gap: 12px; }
-    .social-links a { width: 50px; height: 50px; border-radius: 16px; display: grid; place-items: center; background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; text-decoration: none; font-size: 1.2rem; }
-    .vc-note { color: #475569; font-size: 0.95rem; }
-    .qr-list { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
-    .qr-list img { width: 120px; height: 120px; border-radius: 20px; object-fit: cover; border: 1px solid #e2e8f0; }
-    @media (max-width: 768px) {
-      .vc-top { grid-template-columns: 1fr; text-align: center; }
-      .vc-buttons { grid-template-columns: 1fr; }
-      .vc-meta { justify-content: center; }
-      .vc-avatar { margin: 0 auto; }
+    body { 
+      margin: 0; 
+      min-height: 100vh; 
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+    }
+    
+    .page-shell { 
+      max-width: 500px; 
+      margin: 0 auto;
+    }
+    
+    /* ID CARD STYLES */
+    .id-card {
+      background: #ffffff;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 8px rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .id-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    /* Card Header */
+    .id-card-header {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      padding: 30px 24px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .id-card-header::before {
+      content: '⚡';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      font-size: 100px;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+    
+    .org-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    
+    .org-name-id {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+    
+    .org-tagline {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      margin: 0;
+    }
+    
+    /* Photo Area */
+    .photo-container {
+      margin-top: -40px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .id-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: 4px solid #fff;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .id-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .id-photo span {
+      font-size: 48px;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    /* Card Body */
+    .id-card-body {
+      padding: 24px;
+    }
+    
+    .person-name {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      color: #1e293b;
+      margin: 0 0 4px 0;
+    }
+    
+    .person-designation {
+      text-align: center;
+      color: #2563eb;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    
+    /* Info Grid */
+    .info-grid-id {
+      display: grid;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .info-icon {
+      width: 36px;
+      height: 36px;
+      background: #eff6ff;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #2563eb;
+      font-size: 18px;
+    }
+    
+    .info-text {
+      flex: 1;
+    }
+    
+    .info-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 2px;
+    }
+    
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    
+    .info-value a {
+      color: #1e293b;
+      text-decoration: none;
+    }
+    
+    .info-value a:hover {
+      color: #2563eb;
+    }
+    
+    /* QR Code */
+    .qr-section {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .qr-code {
+      display: inline-block;
+      padding: 8px;
+      background: white;
+      border-radius: 12px;
+    }
+    
+    .qr-code img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+    }
+    
+    /* Card Footer */
+    .id-card-footer {
+      background: #f1f5f9;
+      padding: 16px 24px;
+      text-align: center;
+    }
+    
+    .validity {
+      font-size: 10px;
+      color: #64748b;
+      margin: 0;
+    }
+    
+    .id-number {
+      font-family: monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      letter-spacing: 1px;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+    
+    .btn-id {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .btn-download-img {
+      background: #2563eb;
+      color: white;
+    }
+    
+    .btn-download-pdf {
+      background: #dc2626;
+      color: white;
+    }
+    
+    .btn-share-id {
+      background: #f59e0b;
+      color: white;
+    }
+    
+    .btn-id:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      padding: 10px 20px;
+      border-radius: 50px;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      transition: all 0.2s;
+    }
+    
+    .back-link:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+    
+    .toast-message {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #16a34a;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+    
+    .toast-message.show {
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    @media (max-width: 480px) {
+      body { padding: 20px 16px; }
+      .action-buttons { grid-template-columns: 1fr; }
+      .person-name { font-size: 20px; }
+      .org-name-id { font-size: 18px; }
     }
   </style>
 </head>
 <body>
   <div class="page-shell">
-    <div class="card-shell">
-      <article class="vc-card">
-        <div class="vc-top">
-          <div class="vc-avatar">
-            {% if card.profile_photo %}
-              <img src="{{ card.profile_photo.url }}" alt="{{ org.name }} photo">
-            {% elif org.logo %}
-              <img src="{{ org.logo.url }}" alt="{{ org.name }} logo">
+    <!-- Back Link -->
+    <div style="text-align: center; margin-bottom: 20px;">
+      <a href="/" class="back-link">
+        <i class="bi bi-arrow-left"></i> Back to Website
+      </a>
+    </div>
+    
+    <!-- ID CARD -->
+    <div id="idCard" class="id-card">
+      <!-- Header -->
+      <div class="id-card-header">
+        <div class="org-badge">
+          <i class="bi bi-patch-check-fill"></i> VERIFIED
+        </div>
+        <h2 class="org-name-id">{{ org.name }}</h2>
+        {% if org.tagline %}
+          <p class="org-tagline">{{ org.tagline }}</p>
+        {% endif %}
+      </div>
+      
+      <!-- Photo -->
+      <div class="photo-container">
+        <div class="id-photo">
+          {% if card.profile_photo %}
+            <img src="{{ card.profile_photo.url }}" alt="{{ card.contact_name|default:org.name }}">
+          {% elif org.logo %}
+            <img src="{{ org.logo.url }}" alt="{{ org.name }}">
+          {% else %}
+            <span>{{ card.contact_name|default:org.name|slice:":1"|upper }}</span>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Body -->
+      <div class="id-card-body">
+        <h1 class="person-name">{{ card.contact_name|default:org.name }}</h1>
+        <div class="person-designation">
+          {{ card.designation|default:org.visiting_card_designation|default:"Professional Member" }}
+        </div>
+        
+        <div class="info-grid-id">
+          {% with phone_num=card.direct_phone|default:org.phone %}
+            {% if phone_num %}
+            <div class="info-row">
+              <div class="info-icon"><i class="bi bi-telephone-fill"></i></div>
+              <div class="info-text">
+                <div class="info-label">PHONE</div>
+                <div class="info-value"><a href="tel:{{ phone_num }}">{{ phone_num }}</a></div>
+              </div>
+            </div>
+            {% endif %}
+          {% endwith %}
+          
+          {% with wa_num=card.direct_whatsapp|default:org.whatsapp|default:wa_config.whatsapp_number|default:'' %}
+            {% if wa_num %}
+            <div class="info-row">
+              <div class="info-icon"><i class="bi bi-whatsapp"></i></div>
+              <div class="info-text">
+                <div class="info-label">WHATSAPP</div>
+                <div class="info-value"><a href="https://wa.me/{{ wa_num|cut:'+'|cut:' ' }}" target="_blank">{{ wa_num }}</a></div>
+              </div>
+            </div>
+            {% endif %}
+          {% endwith %}
+          
+          {% with email_addr=card.direct_email|default:org.email %}
+            {% if email_addr %}
+            <div class="info-row">
+              <div class="info-icon"><i class="bi bi-envelope-fill"></i></div>
+              <div class="info-text">
+                <div class="info-label">EMAIL</div>
+                <div class="info-value"><a href="mailto:{{ email_addr }}">{{ email_addr|truncatechars:25 }}</a></div>
+              </div>
+            </div>
+            {% endif %}
+          {% endwith %}
+          
+          {% if org.city %}
+            <div class="info-row">
+              <div class="info-icon"><i class="bi bi-geo-alt-fill"></i></div>
+              <div class="info-text">
+                <div class="info-label">LOCATION</div>
+                <div class="info-value">{{ org.city }}{% if org.state %}, {{ org.state }}{% endif %}</div>
+              </div>
+            </div>
+          {% endif %}
+          
+          {% if org.established_year %}
+            <div class="info-row">
+              <div class="info-icon"><i class="bi bi-calendar-check-fill"></i></div>
+              <div class="info-text">
+                <div class="info-label">MEMBER SINCE</div>
+                <div class="info-value">{{ org.established_year }}</div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+        
+        <!-- QR Code Section -->
+        <div class="qr-section">
+          <div class="qr-code" id="qrCodeContainer">
+            {% if payment_qrs.0.qr_image %}
+              <img src="{{ payment_qrs.0.qr_image.url }}" alt="Payment QR">
             {% else %}
-              {{ org.name|slice:":1"|upper }}
+              <div style="width: 100px; height: 100px; background: #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #64748b;">QR</div>
             {% endif %}
           </div>
-          <div class="vc-headline">
-            <h1 class="vc-name">{{ org.name }}</h1>
-            <p class="vc-title">{% if org.visiting_card_designation %}{{ org.visiting_card_designation }}{% elif org.category %}{{ org.category.name }}{% else %}Trusted local expert{% endif %}</p>
-            {% if card.tagline %}
-              <div class="vc-tag">{{ card.tagline }}</div>
-            {% elif org.tagline %}
-              <div class="vc-tag">{{ org.tagline }}</div>
-            {% endif %}
-            <div class="vc-meta">
-              {% if org.city %}<span><i class="bi bi-geo-alt-fill"></i>{{ org.city }}</span>{% endif %}
-              {% if org.established_year %}<span><i class="bi bi-calendar2-check-fill"></i>Since {{ org.established_year }}</span>{% endif %}
-            </div>
+          <div style="margin-top: 8px;">
+            <span class="id-number">ID: {{ org.slug|upper|slice:":8" }}</span>
           </div>
         </div>
-
-        <div class="vc-buttons">
-          {% if card.direct_phone or org.phone %}
-            <a href="tel:{{ card.direct_phone|default:org.phone }}" class="vc-button btn-call"><i class="bi bi-telephone-fill"></i>Call</a>
-          {% endif %}
-          {% if card.direct_whatsapp or wa_config and wa_config.whatsapp_number or org.whatsapp %}
-            {% if card.direct_whatsapp %}
-              {% with wa=card.direct_whatsapp %}
-                <a href="https://wa.me/{{ wa }}" target="_blank" class="vc-button btn-wa"><i class="bi bi-whatsapp"></i>WhatsApp</a>
-              {% endwith %}
-            {% elif wa_config and wa_config.whatsapp_number %}
-              {% with wa=wa_config.whatsapp_number %}
-                <a href="https://wa.me/{{ wa }}" target="_blank" class="vc-button btn-wa"><i class="bi bi-whatsapp"></i>WhatsApp</a>
-              {% endwith %}
-            {% elif org.whatsapp %}
-              <a href="https://wa.me/{{ org.whatsapp }}" target="_blank" class="vc-button btn-wa"><i class="bi bi-whatsapp"></i>WhatsApp</a>
-            {% endif %}
-          {% endif %}
-          <a href="{% url 'download_vcard' org.slug %}" class="vc-button btn-vcf"><i class="bi bi-download"></i>Download vCard</a>
-        </div>
-
-        <div class="vc-divider"></div>
-
-        <div class="vc-body">
-          <section class="vc-section">
-            <h2>About this card</h2>
-            <p>{% if org.description %}{{ org.description|truncatechars:220 }}{% else %}This digital card is built for quick sharing, easy contact saving, and instant messaging so customers can reach you faster.{% endif %}</p>
-          </section>
-
-          <section class="vc-section">
-            <div class="info-grid">
-              {% if card.direct_phone or org.phone %}
-              <div class="info-pill">
-                <strong>Phone</strong>
-                <span>{{ card.direct_phone|default:org.phone }}</span>
-              </div>
-              {% endif %}
-
-              {% if card.direct_whatsapp or wa_config and wa_config.whatsapp_number or org.whatsapp %}
-              <div class="info-pill">
-                <strong>WhatsApp</strong>
-                <span>{% if card.direct_whatsapp %}{{ card.direct_whatsapp }}{% elif wa_config and wa_config.whatsapp_number %}{{ wa_config.whatsapp_number }}{% else %}{{ org.whatsapp }}{% endif %}</span>
-              </div>
-              {% endif %}
-
-              {% if org.website %}
-              <div class="info-pill">
-                <strong>Website</strong>
-                <span><a href="{{ org.website }}" target="_blank" style="color:#0f172a;text-decoration:none;">{{ org.website|cut:'https://'|cut:'http://' }}</a></span>
-              </div>
-              {% endif %}
-
-              {% if org.city %}
-              <div class="info-pill">
-                <strong>Location</strong>
-                <span>{{ org.city }}</span>
-              </div>
-              {% endif %}
-            </div>
-          </section>
-
-          {% if payment_qrs and payment_qrs.exists %}
-          <section class="vc-section">
-            <h2>Payments</h2>
-            <div class="qr-list">
-              {% for qr in payment_qrs %}
-                {% if qr.qr_image %}
-                  <img src="{{ qr.qr_image.url }}" alt="{{ qr.label }}">
-                {% endif %}
-              {% endfor %}
-            </div>
-            <p class="vc-note">Accept secure payments via QR whenever available.</p>
-          </section>
-          {% endif %}
-
-          {% if card.linkedin_url or card.instagram_url or card.twitter_url or card.youtube_url %}
-          <section class="vc-section">
-            <h2>Social links</h2>
-            <div class="social-links">
-              {% if card.linkedin_url %}<a href="{{ card.linkedin_url }}" target="_blank" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>{% endif %}
-              {% if card.instagram_url %}<a href="{{ card.instagram_url }}" target="_blank" aria-label="Instagram"><i class="bi bi-instagram"></i></a>{% endif %}
-              {% if card.twitter_url %}<a href="{{ card.twitter_url }}" target="_blank" aria-label="Twitter"><i class="bi bi-twitter"></i></a>{% endif %}
-              {% if card.youtube_url %}<a href="{{ card.youtube_url }}" target="_blank" aria-label="YouTube"><i class="bi bi-youtube"></i></a>{% endif %}
-            </div>
-          </section>
-          {% endif %}
-
-          <p class="vc-note">Share this page and let customers save your contact instantly. Download the vCard to add it directly to phone contacts.</p>
-        </div>
-      </article>
+      </div>
+      
+      <!-- Footer -->
+      <div class="id-card-footer">
+        <p class="validity">
+          <i class="bi bi-shield-check-fill"></i> Valid Digital ID • Scan QR to Connect
+        </p>
+      </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button onclick="downloadAsImage()" class="btn-id btn-download-img">
+        <i class="bi bi-download"></i> Save as Image
+      </button>
+      <button onclick="downloadAsPDF()" class="btn-id btn-download-pdf">
+        <i class="bi bi-file-pdf-fill"></i> Save as PDF
+      </button>
+      <button onclick="shareBusinessCard()" class="btn-id btn-share-id">
+        <i class="bi bi-share-fill"></i> Share Card
+      </button>
+    </div>
+    
+    <!-- VCF Download (separate) -->
+    <div style="text-align: center; margin-top: 16px;">
+      <a href="{% url 'download_vcard' org.slug %}" style="color: rgba(255,255,255,0.8); font-size: 12px; text-decoration: none;">
+        <i class="bi bi-person-lines-fill"></i> Or download vCard for phone contacts
+      </a>
     </div>
   </div>
+
+  <script>
+    const idCardElement = document.getElementById('idCard');
+    
+    async function downloadAsImage() {
+      try {
+        showToast('Generating image... 📸');
+        const canvas = await html2canvas(idCardElement, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: true
+        });
+        
+        const link = document.createElement('a');
+        link.download = '{{ org.slug }}_id_card.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        
+        showToast('ID Card saved as image! ✅');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error generating image. Please try again.');
+      }
+    }
+    
+    async function downloadAsPDF() {
+      try {
+        showToast('Generating PDF... 📄');
+        const canvas = await html2canvas(idCardElement, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: true
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        
+        // Calculate dimensions to fit PDF
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        pdf.addImage(imgData, 'PNG', 0, 40, imgWidth, imgHeight);
+        pdf.save('{{ org.slug }}_id_card.pdf');
+        
+        showToast('PDF saved successfully! ✅');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error generating PDF. Please try again.');
+      }
+    }
+    
+    function shareBusinessCard() {
+      const shareData = {
+        title: '{{ card.contact_name|default:org.name }} - Digital ID Card',
+        text: 'Check out my professional digital ID card',
+        url: window.location.href
+      };
+      
+      if (navigator.share && window.innerWidth <= 768) {
+        navigator.share(shareData).catch(() => {
+          copyToClipboard();
+        });
+      } else {
+        copyToClipboard();
+      }
+    }
+    
+    function copyToClipboard() {
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied to clipboard! 📋');
+      }).catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('Link copied! 📋');
+      });
+    }
+    
+    function showToast(message) {
+      let toast = document.querySelector('.toast-message');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast-message';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+  </script>
 </body>
 </html>
