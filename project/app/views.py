@@ -1610,3 +1610,26 @@ def cart_view(request, slug):
     cart = _get_cart(request, org)
     return render(request, 'cart.html', {'org': org, 'cart': cart})
 
+
+
+@login_required
+def member_delete_invite(request, pk):
+    """Hard-delete a member-sent InvitationToken belonging to this org."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+
+    # Only allow deletion of invites THIS org sent (invite_type='member')
+    invite = get_object_or_404(
+        InvitationToken,
+        pk=pk,
+        referred_by_org=org,
+        invite_type='member'
+    )
+
+    if request.method == 'POST':
+        email = invite.email  # capture before deletion
+        invite.delete()
+        messages.success(request, f'Invitation for {email} has been deleted.')
+
+    return redirect('member_invite_list')

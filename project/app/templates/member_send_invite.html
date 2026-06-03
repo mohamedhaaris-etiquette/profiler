@@ -43,7 +43,7 @@
 
 /* ── How it works steps ──────────────────────── */
 .how-step {
-  background: #fff; border: 1px solid var(--border);
+   border: 1px solid var(--border);
   border-radius: 14px; padding: 20px 16px; text-align: center; height: 100%;
 }
 .how-step .step-num {
@@ -371,20 +371,46 @@
           <a href="{% url 'member_invite_list' %}" class="ms-auto small" style="color:rgba(255,255,255,.6);">See all →</a>
         </div>
         <div class="p-3">
-          {% for inv in recent_invites %}
-          <div class="invite-row">
-            <div class="overflow-hidden">
-              <div class="invite-email text-truncate">{{ inv.email }}</div>
-              <div class="invite-sub">{{ inv.created_at|date:"d M Y" }}</div>
-            </div>
-            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-              {% if inv.bonus_rewarded %}
-              <span style="color:#f59e0b;font-size:0.75rem;font-weight:700;">+{{ config.bonus_points_per_invite }}pts</span>
-              {% endif %}
-              <span class="inv-badge badge-{{ inv.status }}">{{ inv.get_status_display }}</span>
-            </div>
-          </div>
-          {% endfor %}
+       {% for inv in recent_invites %}
+<div class="invite-row">
+  <div class="overflow-hidden flex-grow-1">
+    <div class="invite-email text-truncate">{{ inv.email }}</div>
+    <div class="invite-sub">{{ inv.created_at|date:"d M Y" }}</div>
+  </div>
+
+  <div class="d-flex align-items-center gap-2 flex-shrink-0">
+    {% if inv.bonus_rewarded %}
+      <span style="color:#f59e0b;font-size:0.75rem;font-weight:700;">
+        +{{ config.bonus_points_per_invite }}pts
+      </span>
+    {% endif %}
+
+    <span class="inv-badge badge-{{ inv.status }}">
+      {{ inv.get_status_display }}
+    </span>
+
+    <!-- Delete button -->
+    <form method="post"
+          action="{% url 'member_delete_invite' inv.pk %}"
+          style="margin:0;"
+          onsubmit="return confirm('Delete invite for {{ inv.email }}?')">
+      {% csrf_token %}
+      <button type="submit"
+              title="Delete invite"
+              style="
+                background: none; border: 1px solid transparent;
+                border-radius: 6px; padding: 2px 7px;
+                color: #ef4444; cursor: pointer; font-size: 0.78rem;
+                transition: all .15s;
+              "
+              onmouseover="this.style.background='#fee2e2';this.style.borderColor='#fca5a5';"
+              onmouseout="this.style.background='none';this.style.borderColor='transparent';">
+        <i class="bi bi-trash"></i>
+      </button>
+    </form>
+  </div>
+</div>
+{% endfor %}
         </div>
       </div>
       {% endif %}

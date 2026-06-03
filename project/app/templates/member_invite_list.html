@@ -5,7 +5,7 @@
 <style>
 /* ── Stat cards ──────────────────────────────── */
 .inv-stat {
-  background: #fff; border: 1px solid var(--border);
+   border: 1px solid var(--border);
   border-radius: 16px; padding: 20px 22px;
   box-shadow: 0 1px 4px rgba(0,0,0,.04);
   transition: box-shadow .2s, transform .2s;
@@ -63,14 +63,107 @@
 
 /* ── Filter bar ──────────────────────────────── */
 .filter-bar {
-  background: #fff; border: 1px solid var(--border);
+   border: 1px solid var(--border);
   border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
 }
+
+/* ── Action buttons ──────────────────────────── */
+.action-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1.5px solid; font-size: 0.8rem;
+  cursor: pointer; transition: all .15s; background: transparent;
+  text-decoration: none;
+}
+.action-btn-resend  { border-color: #bfdbfe; color: #3b82f6; }
+.action-btn-resend:hover  { background: #eff6ff; border-color: #3b82f6; }
+.action-btn-revoke  { border-color: #fed7aa; color: #f97316; }
+.action-btn-revoke:hover  { background: #fff7ed; border-color: #f97316; }
+.action-btn-delete  { border-color: #fecaca; color: #ef4444; }
+.action-btn-delete:hover  { background: #fef2f2; border-color: #ef4444; }
+
+/* ── Delete modal ────────────────────────────── */
+.delete-modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,.55); backdrop-filter: blur(4px);
+  z-index: 9999; align-items: center; justify-content: center;
+}
+.delete-modal-backdrop.show { display: flex; }
+.delete-modal {
+  background: #fff; border-radius: 18px;
+  padding: 32px 28px; max-width: 400px; width: 90%;
+  box-shadow: 0 24px 60px rgba(0,0,0,.2);
+  animation: modalIn .2s ease;
+}
+@keyframes modalIn {
+  from { transform: scale(.94) translateY(8px); opacity: 0; }
+  to   { transform: scale(1)  translateY(0);    opacity: 1; }
+}
+.delete-modal .modal-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: #fef2f2; display: flex; align-items: center;
+  justify-content: center; font-size: 1.4rem; color: #ef4444;
+  margin: 0 auto 18px;
+}
+.delete-modal h5 {
+  font-weight: 800; font-size: 1.05rem; text-align: center; margin-bottom: 8px;
+}
+.delete-modal p {
+  color: #64748b; font-size: 0.85rem; text-align: center;
+  line-height: 1.6; margin-bottom: 6px;
+}
+.delete-modal .warn-note {
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 0.78rem; color: #92400e;
+  text-align: center; margin: 10px 0 20px;
+  display: none;
+}
+.delete-modal .warn-note.show { display: block; }
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions .btn-cancel {
+  flex: 1; padding: 11px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: #fff;
+  font-weight: 600; font-size: 0.88rem; cursor: pointer;
+  transition: background .15s;
+}
+.modal-actions .btn-cancel:hover { background: #f8fafc; }
+.modal-actions .btn-confirm-delete {
+  flex: 1; padding: 11px; border-radius: 10px;
+  border: none; background: #ef4444; color: #fff;
+  font-weight: 700; font-size: 0.88rem; cursor: pointer;
+  transition: background .15s;
+}
+.modal-actions .btn-confirm-delete:hover { background: #dc2626; }
 </style>
 {% endblock %}
 
 {% block dash_content %}
+
+<!-- ── Delete confirmation modal ─────────────── -->
+<div class="delete-modal-backdrop" id="deleteModal">
+  <div class="delete-modal">
+    <div class="modal-icon"><i class="bi bi-trash"></i></div>
+    <h5>Delete Invitation?</h5>
+    <p>This will permanently remove the invitation for<br>
+      <strong id="deleteModalEmail" style="color:#0f172a;"></strong>
+    </p>
+    <div class="warn-note" id="deleteModalBonusWarn">
+      <i class="bi bi-exclamation-triangle-fill me-1"></i>
+      Bonus points for this invite have already been awarded and will <strong>not</strong> be reversed.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <form id="deleteModalForm" method="post" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit" class="btn-confirm-delete w-100">
+          <i class="bi bi-trash me-1"></i>Delete
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- ── Page header ───────────────────────────── -->
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
@@ -249,26 +342,43 @@
               {% else %}—{% endif %}
             </td>
 
+            <!-- ── Actions ─────────────────────────── -->
             <td>
-              {% if inv.status == 'pending' %}
-              <div class="d-flex gap-2">
+              <div class="d-flex gap-1 align-items-center">
+
+                {% if inv.status == 'pending' %}
+                <!-- Resend -->
                 <form method="post" action="{% url 'member_resend_invite' inv.pk %}">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-sm btn-outline-primary" style="border-radius:8px;font-size:0.75rem;" title="Resend">
+                  <button type="submit" class="action-btn action-btn-resend" title="Resend invitation">
                     <i class="bi bi-arrow-repeat"></i>
                   </button>
                 </form>
-                <form method="post" action="{% url 'member_revoke_invite' inv.pk %}">
+
+                <!-- Revoke (keeps record, marks revoked) -->
+                <form method="post" action="{% url 'member_revoke_invite' inv.pk %}"
+                      onsubmit="return confirm('Revoke invite for {{ inv.email }}?\n\nThey will no longer be able to use this link. The record will be kept.')">
                   {% csrf_token %}
-                  <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;font-size:0.75rem;" title="Revoke"
-                    onclick="return confirm('Revoke this invite for {{ inv.email }}?')">
-                    <i class="bi bi-x-lg"></i>
+                  <button type="submit" class="action-btn action-btn-revoke" title="Revoke (keeps record)">
+                    <i class="bi bi-slash-circle"></i>
                   </button>
                 </form>
+                {% endif %}
+
+                <!-- Delete (hard delete, available for all statuses) -->
+                <button
+                  type="button"
+                  class="action-btn action-btn-delete"
+                  title="Delete permanently"
+                  onclick="openDeleteModal(
+                    '{% url 'member_delete_invite' inv.pk %}',
+                    '{{ inv.email|escapejs }}',
+                    {{ inv.bonus_rewarded|yesno:'true,false' }}
+                  )">
+                  <i class="bi bi-trash"></i>
+                </button>
+
               </div>
-              {% else %}
-              <span class="text-muted small">—</span>
-              {% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -314,4 +424,36 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block dash_js %}
+<script>
+function openDeleteModal(actionUrl, email, bonusRewarded) {
+  document.getElementById('deleteModalEmail').textContent = email;
+  document.getElementById('deleteModalForm').action = actionUrl;
+
+  const warnEl = document.getElementById('deleteModalBonusWarn');
+  if (bonusRewarded) {
+    warnEl.classList.add('show');
+  } else {
+    warnEl.classList.remove('show');
+  }
+
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+}
+
+// Close on backdrop click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDeleteModal();
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeDeleteModal();
+});
+</script>
 {% endblock %}

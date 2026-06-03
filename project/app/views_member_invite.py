@@ -296,3 +296,5 @@ def _award_member_invite_bonus(invite: InvitationToken):
 
     # Mark as rewarded so it can't be double-credited
     InvitationToken.objects.filter(pk=invite.pk).update(bonus_rewarded=True)
+
+

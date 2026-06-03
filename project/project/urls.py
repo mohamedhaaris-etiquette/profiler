@@ -112,6 +112,8 @@ urlpatterns = [
     path('org/<slug:slug>/product/<int:pk>/catalog/', views.download_product_catalog, name='download_product_catalog'),
 
     # ── PUBLIC — Digital Visiting Card ────────────────────────────────────────
+   path('invites/<int:pk>/delete/', views.member_delete_invite, name='member_delete_invite'),
+
 
 
     path('card/<slug:slug>/',            views.visiting_card,  name='visiting_card'),
