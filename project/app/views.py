@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -368,7 +369,7 @@ def enquiries_list(request):
         page_org_name = 'All organizations'
     else:
         org = user.organization
-        enquiries = org.enquiries.all() if org else Enquiry.objects.none()
+        enquiries = org.enquiries.select_related('service').all() if org else Enquiry.objects.none()
         page_org_name = org.name if org else ''
 
     if status_filter:
@@ -383,9 +384,14 @@ def enquiries_list(request):
         'show_org_column': user.is_super_admin,
     })
 
+from django.http import JsonResponse
+import logging
+logger = logging.getLogger(__name__)
 
 @login_required
 def update_enquiry_status(request, pk):
+    logger.error(f"HIT update_enquiry_status pk={pk} method={request.method} POST={request.POST}")
+    print(f"HIT update_enquiry_status pk={pk} method={request.method} POST={request.POST}")
     user = request.user
     if user.is_super_admin:
         enq = get_object_or_404(Enquiry, pk=pk)
@@ -397,9 +403,10 @@ def update_enquiry_status(request, pk):
         enq.status = request.POST.get('status', enq.status)
         enq.notes = request.POST.get('notes', enq.notes)
         enq.save()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True})
         messages.success(request, 'Enquiry updated.')
     return redirect('enquiries')
-
 
 # ── PRODUCTS ──────────────────────────────────────────────────────────────────
 
