@@ -2148,3 +2148,203 @@ def _safe_int(value, default=0, min_val=None, max_val=None):
     if max_val is not None:
         n = min(max_val, n)
     return n
+
+
+from datetime import timedelta
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from django.utils import timezone
+from django.http import HttpResponse
+import csv
+
+from .models import PageView, AnalyticsEvent, Enquiry
+
+
+PLAN_DAYS = {'trial': 7, 'silver': 30, 'gold': 30, 'platinum': 90}
+
+PLAN_FEATURES = {
+    'trial':    {'chart': False, 'breakdown': False, 'export': False, 'compare': False},
+    'silver':   {'chart': True,  'breakdown': False, 'export': False, 'compare': False},
+    'gold':     {'chart': True,  'breakdown': True,  'export': True,  'compare': True},
+    'platinum': {'chart': True,  'breakdown': True,  'export': True,  'compare': True},
+}
+
+
+def _plan_level(org):
+    return org.plan.level if (org and org.plan) else 'trial'
+
+
+@login_required
+def analytics_dashboard(request):
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+
+    level    = _plan_level(org)
+    features = PLAN_FEATURES[level]
+    days     = PLAN_DAYS[level]
+    from_dt  = timezone.now() - timedelta(days=days)
+
+    # ── Core stats (all plans) ────────────────────────────────────────────────
+    total_views     = PageView.objects.filter(organization=org, created_at__gte=from_dt).count()
+    unique_visitors = (
+        PageView.objects
+        .filter(organization=org, created_at__gte=from_dt)
+        .values('session_key').distinct().count()
+    )
+    total_enquiries = Enquiry.objects.filter(organization=org, created_at__gte=from_dt).count()
+    new_enquiries   = Enquiry.objects.filter(organization=org, status='new', created_at__gte=from_dt).count()
+    wa_clicks       = AnalyticsEvent.objects.filter(
+        organization=org, event_type='whatsapp_click', created_at__gte=from_dt
+    ).count()
+    phone_clicks    = AnalyticsEvent.objects.filter(
+        organization=org, event_type='phone_click', created_at__gte=from_dt
+    ).count()
+    vcard_downloads = AnalyticsEvent.objects.filter(
+        organization=org, event_type='vcard_download', created_at__gte=from_dt
+    ).count()
+    conversion_rate = round(total_enquiries / total_views * 100, 1) if total_views else 0.0
+
+    # ── Daily trend chart (Silver+) ───────────────────────────────────────────
+    chart_labels, daily_views, daily_enquiries = [], [], []
+    if features['chart']:
+        date_range = [
+            (timezone.now().date() - timedelta(days=i))
+            for i in range(days - 1, -1, -1)
+        ]
+        views_map = {
+            r['day']: r['count']
+            for r in (
+                PageView.objects
+                .filter(organization=org, created_at__gte=from_dt)
+                .annotate(day=TruncDate('created_at'))
+                .values('day').annotate(count=Count('id'))
+            )
+        }
+        enq_map = {
+            r['day']: r['count']
+            for r in (
+                Enquiry.objects
+                .filter(organization=org, created_at__gte=from_dt)
+                .annotate(day=TruncDate('created_at'))
+                .values('day').annotate(count=Count('id'))
+            )
+        }
+        for d in date_range:
+            chart_labels.append(d.strftime('%-d %b'))
+            daily_views.append(views_map.get(d, 0))
+            daily_enquiries.append(enq_map.get(d, 0))
+
+    # ── Product / service breakdown (Gold+) ───────────────────────────────────
+    top_products, top_services = [], []
+    if features['breakdown']:
+        top_products = list(
+            AnalyticsEvent.objects
+            .filter(organization=org, event_type='product_view', created_at__gte=from_dt)
+            .values('object_name').annotate(views=Count('id')).order_by('-views')[:6]
+        )
+        top_services = list(
+            AnalyticsEvent.objects
+            .filter(organization=org, event_type='service_view', created_at__gte=from_dt)
+            .values('object_name').annotate(views=Count('id')).order_by('-views')[:6]
+        )
+
+    # ── Period-over-period (Gold+) ────────────────────────────────────────────
+    prev_views = prev_enquiries = view_delta = enq_delta = None
+    if features['compare']:
+        prev_from      = from_dt - timedelta(days=days)
+        prev_views     = PageView.objects.filter(
+            organization=org, created_at__range=(prev_from, from_dt)
+        ).count()
+        prev_enquiries = Enquiry.objects.filter(
+            organization=org, created_at__range=(prev_from, from_dt)
+        ).count()
+        view_delta = total_views - prev_views
+        enq_delta  = total_enquiries - prev_enquiries
+
+    # ── CSV export (Gold+) ────────────────────────────────────────────────────
+    if request.GET.get('export') == 'csv' and features['export']:
+        return _export_csv(org, from_dt)
+
+    return render(request, 'analytics.html', {
+        'org': org, 'level': level, 'features': features, 'days': days,
+        'total_views': total_views, 'unique_visitors': unique_visitors,
+        'total_enquiries': total_enquiries, 'new_enquiries': new_enquiries,
+        'wa_clicks': wa_clicks, 'phone_clicks': phone_clicks,
+        'vcard_downloads': vcard_downloads, 'conversion_rate': conversion_rate,
+        'chart_labels': chart_labels, 'daily_views': daily_views,
+        'daily_enquiries': daily_enquiries,
+        'top_products': top_products, 'top_services': top_services,
+        'prev_views': prev_views, 'prev_enquiries': prev_enquiries,
+        'view_delta': view_delta, 'enq_delta': enq_delta,
+    })
+
+
+def _export_csv(org, from_dt):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{org.slug}_analytics.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Page Views', 'Enquiries'])
+    from django.db.models.functions import TruncDate
+    views_map = {
+        r['day']: r['count']
+        for r in (
+            PageView.objects
+            .filter(organization=org, created_at__gte=from_dt)
+            .annotate(day=TruncDate('created_at'))
+            .values('day').annotate(count=Count('id'))
+        )
+    }
+    enq_map = {
+        r['day']: r['count']
+        for r in (
+            Enquiry.objects
+            .filter(organization=org, created_at__gte=from_dt)
+            .annotate(day=TruncDate('created_at'))
+            .values('day').annotate(count=Count('id'))
+        )
+    }
+    for r in sorted(views_map.keys() | enq_map.keys()):
+        writer.writerow([r, views_map.get(r, 0), enq_map.get(r, 0)])
+    return response
+
+
+# ── Logging helpers — call these from existing views ─────────────────────────
+
+def log_page_view(request, org):
+    """Add to public_landing(), product_detail(), visiting_card()."""
+    try:
+        if not request.session.session_key:
+            request.session.create()
+        ip = (
+            request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+            or request.META.get('REMOTE_ADDR', '')
+        )
+        PageView.objects.create(
+            organization=org,
+            session_key=request.session.session_key or '',
+            ip_hash=PageView.hash_ip(ip) if ip else '',
+            referrer=request.META.get('HTTP_REFERER', '')[:500],
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:300],
+        )
+    except Exception:
+        pass
+
+
+def log_event(request, org, event_type, object_id=None, object_name='', meta=None):
+    """Call from cart_add, enquiry submit, WhatsApp button click handler, etc."""
+    try:
+        if not request.session.session_key:
+            request.session.create()
+        AnalyticsEvent.objects.create(
+            organization=org,
+            event_type=event_type,
+            session_key=request.session.session_key or '',
+            object_id=object_id,
+            object_name=object_name,
+            meta=meta or {},
+        )
+    except Exception:
+        pass

@@ -153,6 +153,8 @@ urlpatterns = [
     # Payment QR
     path('payment-qr/<int:pk>/edit/',          views.edit_payment_qr,        name='edit_payment_qr'),
     path('invitations/<int:pk>/delete/', views.delete_invitation, name='delete_invitation'),
+
+    path('dashboard/analytics/', views.analytics_dashboard, name='analytics'),
     
 ]
 

@@ -1027,3 +1027,63 @@ class MemberInviteConfig(models.Model):
             'gold':     self.max_invites_gold,
             'platinum': self.max_invites_platinum,
         }.get(org.plan.level, self.max_invites_trial)
+
+
+import hashlib
+from django.db import models
+from django.utils import timezone
+
+
+class PageView(models.Model):
+    """One row per public landing-page visit."""
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='page_views'
+    )
+    session_key  = models.CharField(max_length=64, db_index=True)
+    ip_hash      = models.CharField(max_length=16, blank=True)  # SHA-256 prefix, privacy-safe
+    referrer     = models.CharField(max_length=500, blank=True)
+    user_agent   = models.CharField(max_length=300, blank=True)
+    created_at   = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes  = [models.Index(fields=['organization', 'created_at'])]
+
+    def __str__(self):
+        return f"View — {self.organization.name} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+    @staticmethod
+    def hash_ip(ip: str) -> str:
+        return hashlib.sha256(ip.encode()).hexdigest()[:16]
+
+
+class AnalyticsEvent(models.Model):
+    """Tracks discrete user actions on public org pages."""
+    EVENT_CHOICES = [
+        ('enquiry_submit',  'Enquiry Submitted'),
+        ('whatsapp_click',  'WhatsApp Button Click'),
+        ('phone_click',     'Phone Number Click'),
+        ('product_view',    'Product Viewed'),
+        ('service_view',    'Service Viewed'),
+        ('vcard_download',  'vCard Downloaded'),
+        ('payment_qr_view', 'Payment QR Viewed'),
+        ('cart_add',        'Item Added to Cart'),
+        ('cart_checkout',   'Cart Checkout'),
+    ]
+
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='analytics_events'
+    )
+    event_type  = models.CharField(max_length=30, choices=EVENT_CHOICES, db_index=True)
+    session_key = models.CharField(max_length=64, blank=True, db_index=True)
+    object_id   = models.PositiveIntegerField(null=True, blank=True)
+    object_name = models.CharField(max_length=200, blank=True)
+    meta        = models.JSONField(default=dict, blank=True)
+    created_at  = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes  = [models.Index(fields=['organization', 'event_type', 'created_at'])]
+
+    def __str__(self):
+        return f"{self.get_event_type_display()} — {self.organization.name}"

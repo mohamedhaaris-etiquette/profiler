@@ -326,7 +326,7 @@ body.drawer-open {
   margin-left: 0 !important;
   padding: 28px;
   min-height: calc(100vh - 60px);
-  position: relative; z-index: 1;
+  position: relative;
 }
 
 /* ── PAGE HEADER ── */
@@ -788,6 +788,20 @@ body.drawer-open {
             <i class="bi bi-grid-1x2"></i> Dashboard
           </a>
         </li>
+
+        <li>
+  <a href="{% url 'analytics' %}"
+     class="dropdown-item {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+    <i class="bi bi-graph-up-arrow"></i> Analytics
+  </a>
+</li>
+
+        <li>
+  <a href="{% url 'analytics' %}"
+     class="dropdown-item {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+    <i class="bi bi-graph-up-arrow"></i> Analytics
+  </a>
+</li>
       </ul>
     </div>
 
@@ -858,6 +872,12 @@ body.drawer-open {
             <i class="bi bi-grid-1x2"></i> Dashboard
           </a>
         </li>
+        <li>
+  <a href="{% url 'analytics' %}"
+     class="dropdown-item {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+    <i class="bi bi-graph-up-arrow"></i> Analytics
+  </a>
+</li>
       </ul>
     </div>
 

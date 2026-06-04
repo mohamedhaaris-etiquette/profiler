@@ -111,6 +111,7 @@
 <div class="row g-4">
 
   <!-- ── Org Info Card ── -->
+ <!-- ── Org Info Card ── -->
   <div class="col-lg-4">
     <div class="card-modern h-100">
       <div class="card-header">
@@ -145,11 +146,23 @@
 
         <div style="display:flex;flex-direction:column;gap:9px;">
           <div class="contact-row"><i class="bi bi-telephone"></i><span>{{ org.phone }}</span></div>
-          {% if org.landline %}<div class="contact-row"><i class="bi bi-telephone-outbound"></i><span>{{ org.landline }}</span></div>{% endif %}
-          <div class="contact-row"><i class="bi bi-envelope"></i><span>{{ org.email }}</span></div>
+          {% if org.landline %}
+          <div class="contact-row"><i class="bi bi-telephone-outbound"></i><span>{{ org.landline }}</span></div>
+          {% endif %}
+          <div class="contact-row">
+  <i class="bi bi-envelope"></i>
+  <a href="mailto:{{ org.email }}" style="color:var(--white);">Mail us</a>
+</div>
           <div class="contact-row"><i class="bi bi-geo-alt"></i><span>{{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}, {{ org.state }}</span></div>
-          {% if org.working_hours %}<div class="contact-row"><i class="bi bi-clock"></i><span>{{ org.working_hours }}</span></div>{% endif %}
-          {% if org.website %}<div class="contact-row"><i class="bi bi-globe"></i><a href="{{ org.website }}" target="_blank">{{ org.website }}</a></div>{% endif %}
+          {% if org.working_hours %}
+          <div class="contact-row"><i class="bi bi-clock"></i><span>{{ org.working_hours }}</span></div>
+          {% endif %}
+          {% if org.website %}
+        <div class="contact-row">
+  <i class="bi bi-globe"></i>
+  <a href="{{ org.website }}" target="_blank" style="color:var(--white);">Visit here</a>
+</div>
+          {% endif %}
         </div>
 
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;">
