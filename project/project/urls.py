@@ -120,6 +120,39 @@ urlpatterns = [
     
     # VCF download (for phone contacts)
     path('card/<slug:slug>/vcard/', views.download_vcard, name='download_vcard'),
+
+     # Organisation
+    path('admin/members/<int:pk>/delete/',      views.org_soft_delete,        name='org_soft_delete'),
+ 
+    # Enquiry
+    path('enquiries/<int:pk>/delete/',           views.delete_enquiry,         name='delete_enquiry'),
+ 
+    # Supply chain
+    path('supply-chain/link/<int:pk>/delete/',  views.delete_chain_link,      name='delete_chain_link'),
+ 
+    # Invitations (admin-sent)
+    path('admin/invitations/<int:pk>/delete/',  views.admin_delete_invite,    name='admin_delete_invite'),
+ 
+    # Staff
+    path('staff/',                              views.staff_list,             name='staff_list'),
+    path('staff/<int:pk>/edit/',               views.edit_staff,             name='edit_staff'),
+    path('staff/<int:pk>/toggle-active/',      views.toggle_staff_active,    name='toggle_staff_active'),
+    path('staff/<int:pk>/delete/',             views.delete_staff,           name='delete_staff'),
+ 
+    # Gallery
+    path('gallery/',                            views.manage_gallery,         name='manage_gallery'),
+    path('gallery/add/',                        views.add_gallery_images,     name='add_gallery_images'),
+    path('gallery/<int:pk>/delete/',           views.delete_gallery_image,   name='delete_gallery_image'),
+ 
+    # Testimonials
+    path('testimonials/',                       views.manage_testimonials,    name='manage_testimonials'),
+    path('testimonials/add/',                   views.add_testimonial,        name='add_testimonial'),
+    path('testimonials/<int:pk>/edit/',        views.edit_testimonial,       name='edit_testimonial'),
+    path('testimonials/<int:pk>/delete/',      views.delete_testimonial,     name='delete_testimonial'),
+ 
+    # Payment QR
+    path('payment-qr/<int:pk>/edit/',          views.edit_payment_qr,        name='edit_payment_qr'),
+    path('invitations/<int:pk>/delete/', views.delete_invitation, name='delete_invitation'),
     
 ]
 

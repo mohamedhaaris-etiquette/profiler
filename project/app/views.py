@@ -1281,6 +1281,22 @@ def invitation_list(request):
         'status_choices': InvitationToken.STATUS_CHOICES,
     })
  
+
+
+@login_required
+def delete_invitation(request, pk):
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+
+    invite = get_object_or_404(InvitationToken, pk=pk)
+
+    if request.method == 'POST':
+        invite.delete()
+        messages.success(request, f"Invitation to {invite.email} has been deleted.")
+        return redirect('invitation_list')
+
+    # GET → show confirmation page
+    return render(request, 'invitation_confirm_delete.html', {'invite': invite})
  
 @login_required
 def resend_invitation(request, pk):
@@ -1640,3 +1656,495 @@ def member_delete_invite(request, pk):
         messages.success(request, f'Invitation for {email} has been deleted.')
 
     return redirect('member_invite_list')
+
+
+@login_required
+@require_POST
+def org_soft_delete(request, pk):
+    """
+    Soft-delete: sets status='inactive' and is_active=False.
+    Hard data (enquiries, products, etc.) is preserved.
+    Triggered by a modal confirm form — POST only.
+    """
+    if not request.user.is_super_admin:
+        return JsonResponse({'ok': False, 'error': 'Access denied.'}, status=403)
+ 
+    org = get_object_or_404(Organization, pk=pk)
+ 
+    # Prevent deleting the org the current super admin belongs to (safety guard)
+    if request.user.organization and request.user.organization.pk == pk:
+        messages.error(request, 'You cannot deactivate your own organisation.')
+        return redirect('member_list')
+ 
+    org.status    = 'inactive'
+    org.is_active = False
+    org.save(update_fields=['status', 'is_active'])
+ 
+    messages.success(request, f'"{org.name}" has been deactivated.')
+    return redirect('member_list')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  2. ENQUIRY — delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+@require_POST
+def delete_enquiry(request, pk):
+    """
+    Hard-delete an enquiry. Only the owning org_admin or super admin can do this.
+    Modal confirm → POST.
+    """
+    user = request.user
+    if user.is_super_admin:
+        enq = get_object_or_404(Enquiry, pk=pk)
+    else:
+        org = user.organization
+        if not org:
+            return redirect('dashboard')
+        enq = get_object_or_404(Enquiry, pk=pk, organization=org)
+ 
+    enq.delete()
+    messages.success(request, 'Enquiry deleted.')
+ 
+    # AJAX support (called from inline table row)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+    return redirect('enquiries')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  3. SUPPLY CHAIN LINK — delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+@require_POST
+def delete_chain_link(request, pk):
+    """
+    Hard-delete a supply-chain link.
+    Only the parent or child organisation can remove it.
+    """
+    org  = request.user.organization
+    link = get_object_or_404(SupplyChainLink, pk=pk)
+ 
+    if org not in (link.parent, link.child):
+        messages.error(request, 'Permission denied.')
+        return redirect('supply_chain')
+ 
+    other = link.child if link.parent == org else link.parent
+    link.delete()
+    messages.success(request, f'Connection with "{other.name}" removed.')
+    return redirect('supply_chain')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  4. INVITATION TOKEN (admin-sent) — delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+@require_POST
+def admin_delete_invite(request, pk):
+    """
+    Hard-delete an admin-sent InvitationToken (invite_type='admin').
+    Super admin only.
+    """
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+ 
+    invite = get_object_or_404(InvitationToken, pk=pk, invite_type='admin')
+    email  = invite.email
+    invite.delete()
+    messages.success(request, f'Invitation for {email} has been deleted.')
+    return redirect('invitation_list')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  5. STAFF — list / edit / toggle-active / delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def staff_list(request):
+    """
+    List all staff members belonging to the current organisation.
+    Super admins see all staff across all orgs (filtered by ?org=pk).
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        org_pk = request.GET.get('org')
+        members = CustomUser.objects.select_related('organization').exclude(role='super_admin')
+        if org_pk:
+            members = members.filter(organization_id=org_pk)
+        org = None
+    else:
+        org = user.organization
+        if not org:
+            return redirect('dashboard')
+        members = org.members.all()
+ 
+    return render(request, 'staff_list.html', {
+        'members': members,
+        'org':     org,
+    })
+ 
+ 
+@login_required
+def edit_staff(request, pk):
+    """
+    Edit a staff member's details.
+    Org admins can only edit staff in their own org.
+    Super admins can edit anyone.
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        member = get_object_or_404(CustomUser, pk=pk)
+    else:
+        org    = user.organization
+        member = get_object_or_404(CustomUser, pk=pk, organization=org)
+ 
+    if request.method == 'POST':
+        member.first_name     = request.POST.get('first_name', member.first_name).strip()
+        member.last_name      = request.POST.get('last_name',  member.last_name).strip()
+        member.phone          = request.POST.get('phone',      member.phone).strip()
+        member.landline       = request.POST.get('landline',   member.landline).strip()
+        member.gender         = request.POST.get('gender',     member.gender)
+        member.role           = request.POST.get('role',       member.role)
+ 
+        dob = request.POST.get('date_of_birth', '')
+        if dob:
+            from datetime import date
+            try:
+                member.date_of_birth = date.fromisoformat(dob)
+            except ValueError:
+                messages.error(request, 'Invalid date of birth format.')
+                return redirect('edit_staff', pk=pk)
+ 
+        if request.FILES.get('profile_pic'):
+            member.profile_pic = request.FILES['profile_pic']
+ 
+        # Password change (optional — only if both fields supplied)
+        new_password  = request.POST.get('new_password', '').strip()
+        confirm_pass  = request.POST.get('confirm_password', '').strip()
+        if new_password:
+            if new_password != confirm_pass:
+                messages.error(request, 'Passwords do not match.')
+                return redirect('edit_staff', pk=pk)
+            if len(new_password) < 8:
+                messages.error(request, 'Password must be at least 8 characters.')
+                return redirect('edit_staff', pk=pk)
+            member.set_password(new_password)
+ 
+        member.save()
+        messages.success(request, f'{member.get_full_name() or member.username} updated.')
+        return redirect('staff_list')
+ 
+    return render(request, 'staff_edit.html', {
+        'member': member,
+        'role_choices': CustomUser.ROLE_CHOICES,
+        'gender_choices': CustomUser.GENDER_CHOICES,
+    })
+ 
+ 
+@login_required
+@require_POST
+def toggle_staff_active(request, pk):
+    """
+    Toggle a staff member's is_active flag (enable / disable login).
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        member = get_object_or_404(CustomUser, pk=pk)
+    else:
+        org    = user.organization
+        member = get_object_or_404(CustomUser, pk=pk, organization=org)
+ 
+    # Prevent self-deactivation
+    if member.pk == user.pk:
+        messages.error(request, 'You cannot deactivate your own account.')
+        return redirect('staff_list')
+ 
+    member.is_active = not member.is_active
+    member.save(update_fields=['is_active'])
+ 
+    status = 'activated' if member.is_active else 'deactivated'
+    messages.success(request, f'{member.get_full_name() or member.username} {status}.')
+ 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'is_active': member.is_active})
+    return redirect('staff_list')
+ 
+ 
+@login_required
+@require_POST
+def delete_staff(request, pk):
+    """
+    Hard-delete a staff member.
+    Org admins can only delete staff in their own org.
+    Cannot delete super admins.
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        member = get_object_or_404(CustomUser, pk=pk)
+    else:
+        org    = user.organization
+        member = get_object_or_404(CustomUser, pk=pk, organization=org)
+ 
+    if member.pk == user.pk:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('staff_list')
+ 
+    if member.role == 'super_admin':
+        messages.error(request, 'Super admin accounts cannot be deleted here.')
+        return redirect('staff_list')
+ 
+    name = member.get_full_name() or member.username
+    member.delete()
+    messages.success(request, f'Staff member "{name}" deleted.')
+    return redirect('staff_list')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  6. GALLERY IMAGE — list / add (single + bulk) / delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def manage_gallery(request):
+    """List all gallery images for the current org."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    images = org.gallery.all()
+    return render(request, 'manage_gallery.html', {
+        'org':    org,
+        'images': images,
+        'total':  images.count(),
+    })
+ 
+ 
+@login_required
+def add_gallery_images(request):
+    """
+    Upload one or multiple gallery images in a single POST.
+    The template should use:
+      <input type="file" name="images" multiple accept="image/*">
+    """
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    if request.method == 'POST':
+        files   = request.FILES.getlist('images')
+        caption = request.POST.get('caption', '').strip()
+ 
+        if not files:
+            messages.error(request, 'Please select at least one image.')
+            return redirect('manage_gallery')
+ 
+        # Determine next order value
+        last_order = org.gallery.order_by('-order').values_list('order', flat=True).first() or 0
+ 
+        created = 0
+        for idx, img_file in enumerate(files):
+            # Basic image validation
+            if not img_file.content_type.startswith('image/'):
+                messages.warning(request, f'"{img_file.name}" is not an image — skipped.')
+                continue
+            if img_file.size > 10 * 1024 * 1024:   # 10 MB guard
+                messages.warning(request, f'"{img_file.name}" exceeds 10 MB — skipped.')
+                continue
+ 
+            GalleryImage.objects.create(
+                organization = org,
+                image        = img_file,
+                caption      = caption,
+                order        = last_order + idx + 1,
+            )
+            created += 1
+ 
+        if created:
+            messages.success(request, f'{created} image(s) uploaded successfully.')
+        return redirect('manage_gallery')
+ 
+    # GET — just redirect; upload UI lives on manage_gallery
+    return redirect('manage_gallery')
+ 
+ 
+@login_required
+@require_POST
+def delete_gallery_image(request, pk):
+    """Delete a single gallery image."""
+    org   = request.user.organization
+    image = get_object_or_404(GalleryImage, pk=pk, organization=org)
+ 
+    # Remove the file from storage too
+    if image.image:
+        try:
+            image.image.delete(save=False)
+        except Exception:
+            pass   # storage error shouldn't block the DB delete
+ 
+    image.delete()
+    messages.success(request, 'Image removed.')
+ 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+    return redirect('manage_gallery')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  7. TESTIMONIAL — list / add / edit / delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def manage_testimonials(request):
+    """List all testimonials for the current org."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    testimonials = org.testimonials.all()
+    return render(request, 'manage_testimonials.html', {
+        'org':          org,
+        'testimonials': testimonials,
+        'total':        testimonials.count(),
+        'active':       testimonials.filter(is_active=True).count(),
+    })
+ 
+ 
+@login_required
+def add_testimonial(request):
+    """Add a new testimonial."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    if request.method == 'POST':
+        client_name = request.POST.get('client_name', '').strip()
+        if not client_name:
+            messages.error(request, 'Client name is required.')
+            return redirect('manage_testimonials')
+ 
+        rating = _safe_int(request.POST.get('rating'), default=5, min_val=1, max_val=5)
+ 
+        org.testimonials.create(
+            client_name = client_name,
+            client_role = request.POST.get('client_role', '').strip(),
+            message     = request.POST.get('message', '').strip(),
+            rating      = rating,
+            is_active   = request.POST.get('is_active') == 'on',
+        )
+        messages.success(request, f'Testimonial from "{client_name}" added.')
+        return redirect('manage_testimonials')
+ 
+    return redirect('manage_testimonials')
+ 
+ 
+@login_required
+def edit_testimonial(request, pk):
+    """Edit an existing testimonial."""
+    org         = request.user.organization
+    testimonial = get_object_or_404(Testimonial, pk=pk, organization=org)
+ 
+    if request.method == 'POST':
+        client_name = request.POST.get('client_name', '').strip()
+        if not client_name:
+            messages.error(request, 'Client name is required.')
+            return redirect('manage_testimonials')
+ 
+        testimonial.client_name = client_name
+        testimonial.client_role = request.POST.get('client_role', '').strip()
+        testimonial.message     = request.POST.get('message', '').strip()
+        testimonial.rating      = _safe_int(request.POST.get('rating'), default=5, min_val=1, max_val=5)
+        testimonial.is_active   = request.POST.get('is_active') == 'on'
+        testimonial.save()
+ 
+        messages.success(request, 'Testimonial updated.')
+        return redirect('manage_testimonials')
+ 
+    # GET — render inline edit form
+    return render(request, 'testimonial_edit.html', {
+        'org':         org,
+        'testimonial': testimonial,
+    })
+ 
+ 
+@login_required
+@require_POST
+def delete_testimonial(request, pk):
+    """Delete a testimonial."""
+    org         = request.user.organization
+    testimonial = get_object_or_404(Testimonial, pk=pk, organization=org)
+ 
+    client_name = testimonial.client_name
+    testimonial.delete()
+    messages.success(request, f'Testimonial from "{client_name}" deleted.')
+ 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+    return redirect('manage_testimonials')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  8. PAYMENT QR — edit
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def edit_payment_qr(request, pk):
+    """Edit an existing PaymentQR entry."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    qr = get_object_or_404(PaymentQR, pk=pk, organization=org)
+ 
+    if request.method == 'POST':
+        qr.label      = request.POST.get('label', qr.label).strip()
+        qr.method     = request.POST.get('method', qr.method)
+        qr.upi_id     = request.POST.get('upi_id', qr.upi_id).strip()
+        qr.is_primary = request.POST.get('is_primary') == 'on'
+        qr.is_active  = request.POST.get('is_active') == 'on'
+ 
+        order_raw = request.POST.get('order', '')
+        if order_raw.isdigit():
+            qr.order = int(order_raw)
+ 
+        if request.FILES.get('qr_image'):
+            # Delete old image from storage before replacing
+            if qr.qr_image:
+                try:
+                    qr.qr_image.delete(save=False)
+                except Exception:
+                    pass
+            qr.qr_image = request.FILES['qr_image']
+ 
+        qr.save()
+        messages.success(request, f'Payment QR "{qr.label}" updated.')
+        return redirect('manage_payment_qr')
+ 
+    # GET — render edit form
+    return render(request, 'payment_qr_edit.html', {
+        'org': org,
+        'qr':  qr,
+        'method_choices': PaymentQR.METHOD_CHOICES,
+    })
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  SHARED HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+def _safe_int(value, default=0, min_val=None, max_val=None):
+    """Parse an integer safely, clamping to optional min/max bounds."""
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return default
+    if min_val is not None:
+        n = max(min_val, n)
+    if max_val is not None:
+        n = min(max_val, n)
+    return n

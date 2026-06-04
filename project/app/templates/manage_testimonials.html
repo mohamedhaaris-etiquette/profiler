@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Testimonials — {{ org.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  {# ── Page Header ──────────────────────────────────────────────────────── #}
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-semibold mb-0">Testimonials</h4>
+      <p class="text-muted small mb-0">{{ total }} total &middot; {{ active }} visible</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTestimonialModal">
+      <i class="bi bi-plus-lg me-1"></i> Add Testimonial
+    </button>
+  </div>
+
+  {# ── Flash Messages ───────────────────────────────────────────────────── #}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+      {{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+
+  {# ── Card Grid ────────────────────────────────────────────────────────── #}
+  {% if testimonials %}
+    <div class="row g-3">
+      {% for t in testimonials %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100 {% if not t.is_active %}opacity-50{% endif %}">
+            <div class="card-body d-flex flex-column">
+
+              {# Stars #}
+              <div class="mb-2">
+                {% for i in "12345" %}
+                  <i class="bi bi-star{% if forloop.counter <= t.rating %}-fill text-warning{% endif %}" style="font-size:13px"></i>
+                {% endfor %}
+                <span class="ms-1 text-muted" style="font-size:12px">({{ t.rating }}/5)</span>
+              </div>
+
+              {# Message #}
+              <p class="text-secondary small fst-italic flex-grow-1 mb-3">
+                &ldquo;{{ t.message|truncatewords:30 }}&rdquo;
+              </p>
+
+              {# Footer row #}
+              <div class="d-flex align-items-center justify-content-between mt-auto pt-2 border-top">
+                <div>
+                  <p class="fw-semibold mb-0 small">{{ t.client_name }}</p>
+                  {% if t.client_role %}
+                    <p class="text-muted mb-0" style="font-size:12px">{{ t.client_role }}</p>
+                  {% endif %}
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                  {% if not t.is_active %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary me-1">Hidden</span>
+                  {% endif %}
+                  <a href="{% url 'edit_testimonial' t.pk %}"
+                     class="btn btn-sm btn-outline-secondary"
+                     title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteTestimonialModal"
+                    data-action="{% url 'delete_testimonial' t.pk %}"
+                    data-name="{{ t.client_name }}"
+                    title="Delete"
+                  >
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-chat-quote fs-1 d-block mb-3 opacity-25"></i>
+      <p class="mb-1 fw-semibold">No testimonials yet</p>
+      <p class="small">Add your first customer review to build trust.</p>
+      <button class="btn btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#addTestimonialModal">
+        <i class="bi bi-plus-lg me-1"></i> Add Testimonial
+      </button>
+    </div>
+  {% endif %}
+
+</div>
+
+
+{# ══════════════════════════════════════════════════════════════════════════
+   ADD MODAL
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="addTestimonialModal" tabindex="-1" aria-labelledby="addTestimonialLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="post" action="{% url 'add_testimonial' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title fw-semibold" id="addTestimonialLabel">
+            <i class="bi bi-chat-quote me-2 text-primary"></i>Add Testimonial
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Client name <span class="text-danger">*</span></label>
+            <input type="text" name="client_name" class="form-control" required maxlength="100" placeholder="e.g. Ramesh Kumar">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role / Company</label>
+            <input type="text" name="client_role" class="form-control" maxlength="100" placeholder="e.g. Owner, ABC Pvt Ltd">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="3" placeholder="What did they say about you?"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rating</label>
+            <div class="d-flex gap-2" id="starPicker">
+              {% for v in "12345" %}
+                <input type="radio" class="btn-check" name="rating" id="star{{ v }}" value="{{ v }}" {% if v == '5' %}checked{% endif %}>
+                <label class="btn btn-sm btn-outline-warning" for="star{{ v }}">
+                  <i class="bi bi-star-fill"></i> {{ v }}
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" name="is_active" id="isActiveAdd" class="form-check-input" checked>
+            <label class="form-check-label" for="isActiveAdd">Visible on landing page</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Testimonial</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+{# ══════════════════════════════════════════════════════════════════════════
+   DELETE CONFIRM MODAL
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="deleteTestimonialModal" tabindex="-1" aria-labelledby="deleteTestimonialLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger" id="deleteTestimonialLabel">
+          <i class="bi bi-exclamation-triangle me-2"></i>Delete Testimonial
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-0 text-secondary">
+          Delete the testimonial from <strong id="deleteTestimonialName"></strong>?
+          This action cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" id="deleteTestimonialForm">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3 me-1"></i>Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+document.getElementById('deleteTestimonialModal').addEventListener('show.bs.modal', function (e) {
+  const btn = e.relatedTarget;
+  document.getElementById('deleteTestimonialForm').action      = btn.dataset.action;
+  document.getElementById('deleteTestimonialName').textContent = btn.dataset.name;
+});
+</script>
+{% endblock %}

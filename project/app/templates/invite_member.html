@@ -2,138 +2,224 @@
 {% load app_filters %}
 {% block title %}Invite New Member — Admin{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4 px-4">
+{% block dash_content %}
+<style>
+.invite-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(45,106,79,0.28);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.invite-card h6 {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+}
+.invite-label {
+  display: block;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: rgba(255,255,255,0.4) !important;
+  margin-bottom: 6px !important;
+}
+.invite-input {
+  width: 100%;
+  padding: 10px 13px;
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(45,106,79,0.35) !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color .15s;
+  font-family: inherit;
+}
+.invite-input::placeholder { color: rgba(255,255,255,0.2); }
+.invite-input:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.1) !important;
+  background: rgba(255,255,255,0.07) !important;
+}
+.invite-input option {
+  background: #111a15;
+  color: #fff;
+}
+.invite-hint {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.3);
+  margin-top: 5px;
+}
+.step-badge {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 800;
+  flex-shrink: 0;
+}
+.input-group-dark {
+  display: flex;
+}
+.input-group-dark .invite-input {
+  border-radius: 10px 0 0 10px !important;
+  flex: 1;
+}
+.input-group-suffix {
+  padding: 10px 13px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(45,106,79,0.35);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  display: flex; align-items: center;
+}
+@media(max-width:576px) {
+  .invite-card { padding: 16px; }
+  .two-col { grid-template-columns: 1fr !important; }
+}
+</style>
 
-  <!-- Page header -->
-  <div class="d-flex align-items-center gap-3 mb-4">
-    <a href="{% url 'invitation_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill">
+<!-- Page Header -->
+<div class="page-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="{% url 'invitation_list' %}"
+      style="width:34px;height:34px;border-radius:8px;border:1px solid rgba(45,106,79,0.4);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);text-decoration:none;flex-shrink:0;">
       <i class="bi bi-arrow-left"></i>
     </a>
     <div>
-      <h5 class="fw-bold mb-0">Invite New Member</h5>
-      <small class="text-muted">Enter their email — they'll complete the rest themselves.</small>
+      <h1 style="font-size:1.3rem;"><i class="bi bi-envelope-plus me-2"></i>Invite New Member</h1>
+      <div class="text-muted small">Enter their email — they'll complete the rest themselves.</div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:720px;margin:0 auto;">
+
+  <!-- Messages -->
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show mb-3">
+    {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+
+  <!-- How it works -->
+  <div style="background:linear-gradient(135deg,rgba(45,106,79,0.25),rgba(30,56,40,0.4));border:1px solid rgba(45,106,79,0.4);border-radius:16px;padding:20px;margin-bottom:20px;">
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="bi bi-send-check-fill" style="color:#f59e0b;font-size:1.1rem;"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;color:#fff;margin-bottom:6px;">How it works</div>
+        <div style="font-size:0.83rem;color:rgba(255,255,255,0.55);line-height:1.7;">
+          Enter their email + pre-assign a plan and category. An invitation link is sent to them.
+          They click it, fill in their business details, set a password, and go live instantly.
+          <span style="color:#f59e0b;font-weight:600;">No back-and-forth, no manual data entry.</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+      <div style="display:flex;align-items:center;gap:7px;font-size:0.78rem;color:rgba(255,255,255,0.6);">
+        <span class="step-badge" style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;">1</span>
+        Admin sends invite
+      </div>
+      <i class="bi bi-arrow-right" style="color:rgba(255,255,255,0.2);font-size:0.7rem;"></i>
+      <div style="display:flex;align-items:center;gap:7px;font-size:0.78rem;color:rgba(255,255,255,0.6);">
+        <span class="step-badge" style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;">2</span>
+        User gets email
+      </div>
+      <i class="bi bi-arrow-right" style="color:rgba(255,255,255,0.2);font-size:0.7rem;"></i>
+      <div style="display:flex;align-items:center;gap:7px;font-size:0.78rem;color:rgba(255,255,255,0.6);">
+        <span class="step-badge" style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#f59e0b;">3</span>
+        User fills profile
+      </div>
+      <i class="bi bi-arrow-right" style="color:rgba(255,255,255,0.2);font-size:0.7rem;"></i>
+      <div style="display:flex;align-items:center;gap:7px;font-size:0.78rem;color:rgba(255,255,255,0.6);">
+        <span class="step-badge" style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.35);color:#22c55e;">✓</span>
+        Account activated
+      </div>
     </div>
   </div>
 
-  <div class="row justify-content-center">
-    <div class="col-xl-7 col-lg-9">
+  <!-- Form -->
+  <form method="POST" id="inviteForm">
+    {% csrf_token %}
 
-      <!-- How it works -->
-      <div class="card border-0 mb-4" style="background:linear-gradient(135deg,#0f172a,#1e293b); border-radius:16px; overflow:hidden;">
-        <div class="card-body p-4 text-white">
-          <div class="d-flex align-items-start gap-3 mb-3">
-            <div style="width:40px;height:40px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <i class="bi bi-send-check-fill" style="font-size:1.1rem;"></i>
-            </div>
-            <div>
-              <div class="fw-semibold mb-1">How it works</div>
-              <div style="font-size:0.82rem; opacity:0.75; line-height:1.7;">
-                Enter their email + pre-assign a plan and category. An invitation link is sent to them.
-                They click it, fill in their business details, set a password, and go live instantly.
-                <strong style="color:#fbbf24;">No back-and-forth, no manual data entry.</strong>
-              </div>
-            </div>
-          </div>
-          <div class="d-flex flex-wrap gap-3">
-            {% for item in "1,Admin sends invite|2,User gets email|3,User fills profile|4,Account activated"|split:"|" %}
-              {% with parts=item|split:"," %}
-                <div class="d-flex align-items-center gap-2" style="font-size:0.78rem; opacity:0.8;">
-                  {% if parts.0 == '4' %}
-                    <span style="width:22px;height:22px;background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#4ade80;font-size:0.7rem;">✓</span>
-                  {% else %}
-                    <span style="width:22px;height:22px;background:rgba(251,191,36,0.2);border:1px solid rgba(251,191,36,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fbbf24;font-size:0.7rem;">{{ parts.0 }}</span>
-                  {% endif %}
-                  {{ parts.1 }}
-                </div>
-                {% if not forloop.last %}
-                  <i class="bi bi-arrow-right" style="opacity:0.3;"></i>
-                {% endif %}
-              {% endwith %}
+    <!-- Email -->
+    <div class="invite-card">
+      <label class="invite-label">Email Address <span style="color:#ef4444;">*</span></label>
+      <input type="email" name="email" class="invite-input" placeholder="member@example.com" required
+             value="{{ request.POST.email|default:'' }}">
+      <div class="invite-hint"><i class="bi bi-info-circle me-1"></i>An invitation link will be emailed to this address. Link expires in 7 days.</div>
+    </div>
+
+    <!-- Pre-configure -->
+    <div class="invite-card">
+      <h6><i class="bi bi-sliders me-2" style="color:#f59e0b;"></i>Pre-configure <span style="color:rgba(255,255,255,0.35);font-weight:400;font-size:0.82rem;">(Optional)</span></h6>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="two-col">
+
+        <div>
+          <label class="invite-label">Plan</label>
+          <select name="plan" class="invite-input">
+            <option value="">— Select Plan —</option>
+            {% for plan in plans %}
+            <option value="{{ plan.pk }}" {% if request.POST.plan == plan.pk|stringformat:"s" %}selected{% endif %}>
+              {{ plan.name }}
+            </option>
             {% endfor %}
-          </div>
+          </select>
         </div>
+
+        <div>
+          <label class="invite-label">Main Category</label>
+          <select name="main_category" id="mainCatSelect" class="invite-input">
+            <option value="">— Select Category —</option>
+            {% for cat in categories %}
+            <option value="{{ cat.pk }}" {% if request.POST.main_category == cat.pk|stringformat:"s" %}selected{% endif %}>
+              {{ cat.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="invite-label">Sub Category</label>
+          <select name="sub_category" id="subCatSelect" class="invite-input">
+            <option value="">— Select Sub Category —</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="invite-label">Pre-assigned Subdomain</label>
+          <div class="input-group-dark">
+            <input type="text" name="subdomain" class="invite-input" placeholder="johns-electricals"
+                   value="{{ request.POST.subdomain|default:'' }}">
+            <span class="input-group-suffix">.orgportal.com</span>
+          </div>
+          <div class="invite-hint">Leave blank to let member choose.</div>
+        </div>
+
       </div>
 
-      <!-- Messages -->
-      {% for msg in messages %}
-      <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} alert-dismissible fade show rounded-3" role="alert">
-        {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div style="margin-top:14px;">
+        <label class="invite-label">Site Title / Note for Member</label>
+        <input type="text" name="site_title" class="invite-input" placeholder="e.g. John's Electricals — Coimbatore"
+               value="{{ request.POST.site_title|default:'' }}">
       </div>
-      {% endfor %}
-
-      <!-- Form -->
-      <form method="POST" id="inviteForm">
-        {% csrf_token %}
-
-        <!-- Email -->
-        <div class="card border-0 shadow-sm mb-3" style="border-radius:14px;">
-          <div class="card-body p-4">
-            <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
-            <input type="email" name="email" class="form-control form-control-lg" placeholder="member@example.com" required
-                   value="{{ request.POST.email|default:'' }}" style="border-radius:10px;">
-            <div class="form-text">An invitation link will be emailed to this address. Link expires in 7 days.</div>
-          </div>
-        </div>
-
-        <!-- Plan + Category -->
-        <div class="card border-0 shadow-sm mb-3" style="border-radius:14px;">
-          <div class="card-body p-4">
-            <h6 class="fw-bold mb-3"><i class="bi bi-gear me-2 text-primary"></i>Pre-configure (Optional)</h6>
-            <div class="row g-3">
-              <div class="col-sm-6">
-                <label class="form-label fw-semibold">Plan</label>
-                <select name="plan" class="form-select" style="border-radius:10px;">
-                  <option value="">— Select Plan —</option>
-                  {% for plan in plans %}
-                  <option value="{{ plan.pk }}" {% if request.POST.plan == plan.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ plan.name }} ({{ plan.get_level_display }})
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label fw-semibold">Main Category</label>
-                <select name="main_category" id="mainCatSelect" class="form-select" style="border-radius:10px;">
-                  <option value="">— Select Category —</option>
-                  {% for cat in categories %}
-                  <option value="{{ cat.pk }}" {% if request.POST.main_category == cat.pk|stringformat:"s" %}selected{% endif %}>
-                    {{ cat.name }}
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label fw-semibold">Sub Category</label>
-                <select name="sub_category" id="subCatSelect" class="form-select" style="border-radius:10px;">
-                  <option value="">— Select Sub Category —</option>
-                </select>
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label fw-semibold">Pre-assigned Subdomain</label>
-                <div class="input-group">
-                  <input type="text" name="subdomain" class="form-control" placeholder="johns-electricals"
-                         style="border-radius:10px 0 0 10px;" value="{{ request.POST.subdomain|default:'' }}">
-                  <span class="input-group-text" style="font-size:0.8rem;">.orgportal.com</span>
-                </div>
-                <div class="form-text">Leave blank to let member choose.</div>
-              </div>
-              <div class="col-12">
-                <label class="form-label fw-semibold">Site Title / Note for member</label>
-                <input type="text" name="site_title" class="form-control" placeholder="e.g. John's Electricals — Coimbatore"
-                       style="border-radius:10px;" value="{{ request.POST.site_title|default:'' }}">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-dark btn-lg w-100" style="border-radius:12px; font-weight:600;">
-          <i class="bi bi-send-fill me-2"></i>Send Invitation
-        </button>
-      </form>
-
     </div>
-  </div>
+
+    <!-- Submit -->
+    <button type="submit"
+      style="width:100%;padding:13px;background:#f59e0b;color:#111;border:none;border-radius:12px;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:box-shadow .2s;">
+      <i class="bi bi-send-fill"></i> Send Invitation
+    </button>
+
+  </form>
 </div>
 
 <script>
@@ -143,17 +229,22 @@ const subCatSelect  = document.getElementById('subCatSelect');
 mainCatSelect.addEventListener('change', function () {
   const catId = this.value;
   subCatSelect.innerHTML = '<option value="">Loading...</option>';
-  if (!catId) { subCatSelect.innerHTML = '<option value="">— Select Sub Category —</option>'; return; }
+  if (!catId) {
+    subCatSelect.innerHTML = '<option value="">— Select Sub Category —</option>';
+    return;
+  }
   fetch(`/ajax/subcategories/?category_id=${catId}`)
     .then(r => r.json())
     .then(data => {
       subCatSelect.innerHTML = '<option value="">— Select Sub Category —</option>';
       data.sub_categories.forEach(sc => {
         const opt = document.createElement('option');
-        opt.value = sc.id; opt.textContent = sc.name;
+        opt.value = sc.id;
+        opt.textContent = sc.name;
         subCatSelect.appendChild(opt);
       });
     });
 });
 </script>
+
 {% endblock %}
