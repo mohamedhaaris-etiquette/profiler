@@ -446,7 +446,7 @@ class ReferralCode(models.Model):
         url = self.get_invite_url(request)
         org = self.organization
         msg = (
-            f"Hi!  I'm using OrgPortal to manage my business *{org.name}*. "
+            f"Hi!  I'm using Portal to manage my business *{org.name}*. "
             f"Register your business using my invite link and we both get bonus points!\n\n"
             f"{url}\n\n"
             f"Use referral code: *{self.code}*"
@@ -532,11 +532,34 @@ class InvitationToken(models.Model):
         ('revoked',  'Revoked'),
     ]
 
+
+    INVITE_TYPE_CHOICES = [
+        ('admin',  'Admin Invite'),
+        ('member', 'Member Invite'),
+    ]
+
     # Who sent it and to which email
     invited_by   = models.ForeignKey(
         'CustomUser', on_delete=models.SET_NULL, null=True, related_name='sent_invitations'
     )
     email        = models.EmailField(db_index=True)
+
+    referred_by_org = models.ForeignKey(
+        'Organization', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='sent_member_invitations',
+        help_text='Set when a member org sends the invite (for bonus tracking).'
+    )
+    invite_type = models.CharField(
+        max_length=10, choices=INVITE_TYPE_CHOICES, default='admin'
+    )
+    invite_bonus_points = models.PositiveIntegerField(
+        default=0,
+        help_text='OrgPoints to award to referred_by_org when this invite is accepted.'
+    )
+    bonus_rewarded = models.BooleanField(
+        default=False,
+        help_text='True once the referral bonus has been credited.'
+    )
 
     # Pre-assigned plan / category so they land on the right onboarding
     plan         = models.ForeignKey('Plan', on_delete=models.SET_NULL, null=True, blank=True)
@@ -789,7 +812,7 @@ class WhatsAppConfig(models.Model):
     whatsapp_number  = models.CharField(max_length=20,
                                         help_text='With country code, e.g. 919876543210')
     greeting_message = models.TextField(
-        default="Hi! I found your business on OrgPortal and I'd like to enquire.",
+        default="Hi! I found your business on Portal and I'd like to enquire.",
         help_text='Pre-filled WhatsApp message when customer taps the button'
     )
     show_float_button = models.BooleanField(default=True,
@@ -953,3 +976,114 @@ class CartItem(models.Model):
         if self.service:
             return 'service'
         return 'custom'
+    
+
+class MemberInviteConfig(models.Model):
+    """
+    Admin-controlled settings for the member-to-member invite feature.
+    Singleton pattern: always use MemberInviteConfig.get_config().
+    Editable via Django Admin.
+    """
+ 
+    bonus_points_per_invite = models.PositiveIntegerField(
+        default=50,
+        help_text='OrgPoints awarded to the inviting org when their invitee joins.'
+    )
+ 
+    # Per-plan invite caps (how many people each org can invite)
+    max_invites_trial    = models.PositiveIntegerField(default=2,   help_text='Trial plan: max invites allowed')
+    max_invites_silver   = models.PositiveIntegerField(default=5,   help_text='Silver plan: max invites allowed')
+    max_invites_gold     = models.PositiveIntegerField(default=20,  help_text='Gold plan: max invites allowed')
+    max_invites_platinum = models.PositiveIntegerField(default=100, help_text='Platinum plan: max invites allowed')
+ 
+    allow_member_invites = models.BooleanField(
+        default=True,
+        help_text='Master switch — disable to prevent all member-to-member invites.'
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        verbose_name        = 'Member Invite Configuration'
+        verbose_name_plural = 'Member Invite Configuration'
+ 
+    def __str__(self):
+        return f'MemberInviteConfig (bonus={self.bonus_points_per_invite} pts, active={self.allow_member_invites})'
+ 
+    # ── Singleton helper ──────────────────────────────────────────────────────
+    @classmethod
+    def get_config(cls):
+        """Return the single config row, creating it with defaults if absent."""
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+ 
+    # ── Per-org invite limit ──────────────────────────────────────────────────
+    def get_limit_for_org(self, org) -> int:
+        """Return how many member invites this org is allowed to send."""
+        if not org or not org.plan:
+            return self.max_invites_trial
+        return {
+            'trial':    self.max_invites_trial,
+            'silver':   self.max_invites_silver,
+            'gold':     self.max_invites_gold,
+            'platinum': self.max_invites_platinum,
+        }.get(org.plan.level, self.max_invites_trial)
+
+
+import hashlib
+from django.db import models
+from django.utils import timezone
+
+
+class PageView(models.Model):
+    """One row per public landing-page visit."""
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='page_views'
+    )
+    session_key  = models.CharField(max_length=64, db_index=True)
+    ip_hash      = models.CharField(max_length=16, blank=True)  # SHA-256 prefix, privacy-safe
+    referrer     = models.CharField(max_length=500, blank=True)
+    user_agent   = models.CharField(max_length=300, blank=True)
+    created_at   = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes  = [models.Index(fields=['organization', 'created_at'])]
+
+    def __str__(self):
+        return f"View — {self.organization.name} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+    @staticmethod
+    def hash_ip(ip: str) -> str:
+        return hashlib.sha256(ip.encode()).hexdigest()[:16]
+
+
+class AnalyticsEvent(models.Model):
+    """Tracks discrete user actions on public org pages."""
+    EVENT_CHOICES = [
+        ('enquiry_submit',  'Enquiry Submitted'),
+        ('whatsapp_click',  'WhatsApp Button Click'),
+        ('phone_click',     'Phone Number Click'),
+        ('product_view',    'Product Viewed'),
+        ('service_view',    'Service Viewed'),
+        ('vcard_download',  'vCard Downloaded'),
+        ('payment_qr_view', 'Payment QR Viewed'),
+        ('cart_add',        'Item Added to Cart'),
+        ('cart_checkout',   'Cart Checkout'),
+    ]
+
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='analytics_events'
+    )
+    event_type  = models.CharField(max_length=30, choices=EVENT_CHOICES, db_index=True)
+    session_key = models.CharField(max_length=64, blank=True, db_index=True)
+    object_id   = models.PositiveIntegerField(null=True, blank=True)
+    object_name = models.CharField(max_length=200, blank=True)
+    meta        = models.JSONField(default=dict, blank=True)
+    created_at  = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes  = [models.Index(fields=['organization', 'event_type', 'created_at'])]
+
+    def __str__(self):
+        return f"{self.get_event_type_display()} — {self.organization.name}"

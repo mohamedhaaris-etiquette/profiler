@@ -72,11 +72,11 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ['in_stock', 'is_active', 'is_featured']
 
 
-admin.site.site_header = 'OrgPortal Administration'
-admin.site.site_title = 'OrgPortal'
+admin.site.site_header = 'Portal Administration'
+admin.site.site_title = 'Portal'
 
 
-from .models import ReferralProgram, ReferralCode, Referral, ReferralBonus
+from .models import ReferralProgram, ReferralCode, Referral, ReferralBonus, MemberInviteConfig
 
 @admin.register(ReferralProgram)
 class ReferralProgramAdmin(admin.ModelAdmin):
@@ -98,6 +98,22 @@ class ReferralBonusAdmin(admin.ModelAdmin):
     list_display = ['organization', 'transaction_type', 'points', 'note', 'created_at']
     list_filter = ['transaction_type', 'organization']
 
+
+@admin.register(MemberInviteConfig)
+class MemberInviteConfigAdmin(admin.ModelAdmin):
+    list_display = ('bonus_points_per_invite', 'allow_member_invites', 'updated_at')
+    fieldsets = (
+        ('Bonus Settings', {
+            'fields': ('bonus_points_per_invite', 'allow_member_invites'),
+        }),
+        ('Plan Invite Limits', {
+            'description': 'How many member invites each plan tier is allowed to send.',
+            'fields': (
+                'max_invites_trial', 'max_invites_silver',
+                'max_invites_gold', 'max_invites_platinum',
+            ),
+        }),
+    )
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):

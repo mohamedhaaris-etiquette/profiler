@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Payment QR — {{ qr.label }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 560px;">
+
+  {# ── Breadcrumb ───────────────────────────────────────────────────────── #}
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{% url 'manage_payment_qr' %}" class="btn btn-sm btn-outline-secondary" title="Back">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h4 class="fw-semibold mb-0">Edit Payment QR</h4>
+      <p class="text-muted small mb-0">{{ qr.label }}</p>
+    </div>
+  </div>
+
+  {# ── Flash Messages ───────────────────────────────────────────────────── #}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+      {{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+
+  {# ── Form Card ────────────────────────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">Label <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            name="label"
+            class="form-control"
+            value="{{ qr.label }}"
+            required
+            maxlength="100"
+            placeholder="e.g. Pay Now, GPay, PhonePe"
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Payment method</label>
+          <select name="method" class="form-select">
+            {% for val, label in method_choices %}
+              <option value="{{ val }}" {% if qr.method == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">UPI ID</label>
+          <input
+            type="text"
+            name="upi_id"
+            class="form-control"
+            value="{{ qr.upi_id }}"
+            maxlength="100"
+            placeholder="e.g. business@okicici"
+          >
+          <div class="form-text">Used for copy-to-clipboard on the landing page.</div>
+        </div>
+
+        {# ── QR Image ──────────────────────────────────────────────────── #}
+        <div class="mb-3">
+          <label class="form-label">QR Image</label>
+          {% if qr.qr_image %}
+            <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-2" style="background: var(--bs-light, #f8f9fa);">
+              <img
+                src="{{ qr.qr_image.url }}"
+                alt="Current QR"
+                style="width:90px;height:90px;object-fit:contain;border:1px solid #dee2e6;border-radius:8px;background:#fff;"
+              >
+              <div>
+                <p class="fw-semibold mb-1 small">Current QR</p>
+                <p class="text-muted mb-0" style="font-size:12px;">Upload a new image below to replace it.</p>
+              </div>
+            </div>
+          {% endif %}
+          <input type="file" name="qr_image" class="form-control" accept="image/*" id="qrImageInput">
+          {# Live preview of newly selected image #}
+          <div id="newQrPreview" class="mt-2 d-none">
+            <p class="text-muted mb-1" style="font-size:12px;">New image preview:</p>
+            <img id="newQrPreviewImg"
+              style="width:90px;height:90px;object-fit:contain;border:1px solid #dee2e6;border-radius:8px;background:#fff;">
+          </div>
+        </div>
+
+        <div class="mb-3" style="max-width:160px;">
+          <label class="form-label">Display order</label>
+          <input
+            type="number"
+            name="order"
+            class="form-control"
+            value="{{ qr.order }}"
+            min="0"
+          >
+          <div class="form-text">Lower numbers appear first.</div>
+        </div>
+
+        <div class="d-flex gap-4 mb-4">
+          <div class="form-check">
+            <input
+              type="checkbox"
+              name="is_primary"
+              id="qrPrimary"
+              class="form-check-input"
+              {% if qr.is_primary %}checked{% endif %}
+            >
+            <label class="form-check-label" for="qrPrimary">Primary QR</label>
+          </div>
+          <div class="form-check">
+            <input
+              type="checkbox"
+              name="is_active"
+              id="qrActive"
+              class="form-check-input"
+              {% if qr.is_active %}checked{% endif %}
+            >
+            <label class="form-check-label" for="qrActive">Active</label>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2 me-1"></i>Save Changes
+          </button>
+          <a href="{% url 'manage_payment_qr' %}" class="btn btn-light">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  {# ── Danger Zone ──────────────────────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm mt-3" style="border-left: 3px solid #dc3545 !important;">
+    <div class="card-body d-flex align-items-center justify-content-between py-3">
+      <div>
+        <p class="fw-semibold mb-0 text-danger small">Delete this QR</p>
+        <p class="text-muted mb-0" style="font-size:12px;">This action cannot be undone.</p>
+      </div>
+      <button
+        class="btn btn-sm btn-outline-danger"
+        data-bs-toggle="modal"
+        data-bs-target="#deleteQrModal"
+        data-action="{% url 'delete_payment_qr' qr.pk %}"
+        data-label="{{ qr.label }}"
+      >
+        <i class="bi bi-trash3 me-1"></i>Delete
+      </button>
+    </div>
+  </div>
+
+</div>
+
+
+{# ══════════════════════════════════════════════════════════════════════════
+   DELETE CONFIRM MODAL
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="deleteQrModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>Delete Payment QR
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-0 text-secondary">
+          Delete <strong id="deleteQrLabel"></strong>? This cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" id="deleteQrForm">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3 me-1"></i>Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ── Delete modal ──────────────────────────────────────────────────────── */
+document.getElementById('deleteQrModal').addEventListener('show.bs.modal', function (e) {
+  const btn = e.relatedTarget;
+  document.getElementById('deleteQrForm').action      = btn.dataset.action;
+  document.getElementById('deleteQrLabel').textContent = btn.dataset.label;
+});
+
+/* ── New image preview ─────────────────────────────────────────────────── */
+document.getElementById('qrImageInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const wrap = document.getElementById('newQrPreview');
+  const img  = document.getElementById('newQrPreviewImg');
+  img.src = URL.createObjectURL(file);
+  wrap.classList.remove('d-none');
+});
+</script>
+{% endblock %}

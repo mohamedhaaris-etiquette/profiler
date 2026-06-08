@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -9,6 +10,8 @@ from .forms import (
     OrganizationSignupForm, CustomLoginForm, EnquiryForm,
     ServiceForm, OrganizationUpdateForm, ProductForm ,SuperAdminRegisterForm
 )
+
+
 
 
 def home(request):
@@ -76,7 +79,7 @@ def signup_view(request):
                             )
 
                     login(request, user)
-                    messages.success(request, f'Welcome to OrgPortal, {org.name}! Your profile is ready.')
+                    messages.success(request, f'Welcome to Portal, {org.name}! Your profile is ready.')
                     return redirect('dashboard')
             except Exception as e:
                 messages.error(request, f'Registration failed: {str(e)}')
@@ -366,7 +369,7 @@ def enquiries_list(request):
         page_org_name = 'All organizations'
     else:
         org = user.organization
-        enquiries = org.enquiries.all() if org else Enquiry.objects.none()
+        enquiries = org.enquiries.select_related('service').all() if org else Enquiry.objects.none()
         page_org_name = org.name if org else ''
 
     if status_filter:
@@ -381,9 +384,14 @@ def enquiries_list(request):
         'show_org_column': user.is_super_admin,
     })
 
+from django.http import JsonResponse
+import logging
+logger = logging.getLogger(__name__)
 
 @login_required
 def update_enquiry_status(request, pk):
+    logger.error(f"HIT update_enquiry_status pk={pk} method={request.method} POST={request.POST}")
+    print(f"HIT update_enquiry_status pk={pk} method={request.method} POST={request.POST}")
     user = request.user
     if user.is_super_admin:
         enq = get_object_or_404(Enquiry, pk=pk)
@@ -395,9 +403,10 @@ def update_enquiry_status(request, pk):
         enq.status = request.POST.get('status', enq.status)
         enq.notes = request.POST.get('notes', enq.notes)
         enq.save()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True})
         messages.success(request, 'Enquiry updated.')
     return redirect('enquiries')
-
 
 # ── PRODUCTS ──────────────────────────────────────────────────────────────────
 
@@ -584,7 +593,7 @@ def signup_with_ref(request, ref_code):
                             f'They earned {pts} OrgPoints!'
                         )
                     else:
-                        messages.success(request, f'Welcome to OrgPortal, {org.name}!')
+                        messages.success(request, f'Welcome to Portal, {org.name}!')
 
                     login(request, user)
                     return redirect('dashboard')
@@ -964,6 +973,12 @@ from .views_features import (
     edit_whatsapp_config, supply_chain_view, link_supply_chain, update_chain_link,
     discovery_home, discovery_category,
 )
+
+from .views_member_invite import (
+    member_send_invite, member_invite_list,
+    member_resend_invite, member_revoke_invite,
+    _award_member_invite_bonus,
+)
  
  
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1027,17 +1042,17 @@ def invite_member(request):
 def _send_invitation_email(invite: InvitationToken, request):
     """Send the magic-link email to the invited person."""
     onboard_url = invite.get_onboard_url(request)
-    subject = f"You're invited to join OrgPortal — Complete your profile"
+    subject = f"You're invited to join Portal — Complete your profile"
  
     # Plain-text body (also send HTML version below)
     body = (
         f"Hello,\n\n"
-        f"You have been invited to join OrgPortal by {invite.invited_by.get_full_name() or invite.invited_by.username}.\n\n"
+        f"You have been invited to join Portal by {invite.invited_by.get_full_name() or invite.invited_by.username}.\n\n"
         f"Click the link below to complete your profile and set your password:\n\n"
         f"{onboard_url}\n\n"
         f"This link expires in 7 days.\n\n"
         f"If you did not expect this invitation, you can ignore this email.\n\n"
-        f"— OrgPortal Team"
+        f"— Portal Team"
     )
  
     # Try HTML template first; fall back to plain text
@@ -1052,7 +1067,7 @@ def _send_invitation_email(invite: InvitationToken, request):
     send_mail(
         subject      = subject,
         message      = body,
-        from_email   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@orgportal.com'),
+        from_email   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@Portal.com'),
         recipient_list = [invite.email],
         html_message = html_body,
         fail_silently = False,
@@ -1091,12 +1106,13 @@ def onboard_accept(request, token):
                     invite.accepted_at  = timezone.now()
                     invite.organization = org
                     invite.save()
+                    _award_member_invite_bonus(invite)   # ← award bonus if member invite
  
                     from django.contrib.auth import login as auth_login
                     auth_login(request, user)
                     messages.success(
                         request,
-                        f'Welcome to OrgPortal, {org.name}! Your account is ready.'
+                        f'Welcome to Portal, {org.name}! Your account is ready.'
                     )
                     return redirect('onboard_done', token=token)
  
@@ -1265,6 +1281,22 @@ def invitation_list(request):
         'status_choices': InvitationToken.STATUS_CHOICES,
     })
  
+
+
+@login_required
+def delete_invitation(request, pk):
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+
+    invite = get_object_or_404(InvitationToken, pk=pk)
+
+    if request.method == 'POST':
+        invite.delete()
+        messages.success(request, f"Invitation to {invite.email} has been deleted.")
+        return redirect('invitation_list')
+
+    # GET → show confirmation page
+    return render(request, 'invitation_confirm_delete.html', {'invite': invite})
  
 @login_required
 def resend_invitation(request, pk):
@@ -1600,3 +1632,719 @@ def cart_view(request, slug):
     org  = get_object_or_404(Organization, slug=slug, is_active=True)
     cart = _get_cart(request, org)
     return render(request, 'cart.html', {'org': org, 'cart': cart})
+
+
+
+@login_required
+def member_delete_invite(request, pk):
+    """Hard-delete a member-sent InvitationToken belonging to this org."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+
+    # Only allow deletion of invites THIS org sent (invite_type='member')
+    invite = get_object_or_404(
+        InvitationToken,
+        pk=pk,
+        referred_by_org=org,
+        invite_type='member'
+    )
+
+    if request.method == 'POST':
+        email = invite.email  # capture before deletion
+        invite.delete()
+        messages.success(request, f'Invitation for {email} has been deleted.')
+
+    return redirect('member_invite_list')
+
+
+@login_required
+@require_POST
+def org_soft_delete(request, pk):
+    """
+    Soft-delete: sets status='inactive' and is_active=False.
+    Hard data (enquiries, products, etc.) is preserved.
+    Triggered by a modal confirm form — POST only.
+    """
+    if not request.user.is_super_admin:
+        return JsonResponse({'ok': False, 'error': 'Access denied.'}, status=403)
+ 
+    org = get_object_or_404(Organization, pk=pk)
+ 
+    # Prevent deleting the org the current super admin belongs to (safety guard)
+    if request.user.organization and request.user.organization.pk == pk:
+        messages.error(request, 'You cannot deactivate your own organisation.')
+        return redirect('member_list')
+ 
+    org.status    = 'inactive'
+    org.is_active = False
+    org.save(update_fields=['status', 'is_active'])
+ 
+    messages.success(request, f'"{org.name}" has been deactivated.')
+    return redirect('member_list')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  2. ENQUIRY — delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+@require_POST
+def delete_enquiry(request, pk):
+    """
+    Hard-delete an enquiry. Only the owning org_admin or super admin can do this.
+    Modal confirm → POST.
+    """
+    user = request.user
+    if user.is_super_admin:
+        enq = get_object_or_404(Enquiry, pk=pk)
+    else:
+        org = user.organization
+        if not org:
+            return redirect('dashboard')
+        enq = get_object_or_404(Enquiry, pk=pk, organization=org)
+ 
+    enq.delete()
+    messages.success(request, 'Enquiry deleted.')
+ 
+    # AJAX support (called from inline table row)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+    return redirect('enquiries')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  3. SUPPLY CHAIN LINK — delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+@require_POST
+def delete_chain_link(request, pk):
+    """
+    Hard-delete a supply-chain link.
+    Only the parent or child organisation can remove it.
+    """
+    org  = request.user.organization
+    link = get_object_or_404(SupplyChainLink, pk=pk)
+ 
+    if org not in (link.parent, link.child):
+        messages.error(request, 'Permission denied.')
+        return redirect('supply_chain')
+ 
+    other = link.child if link.parent == org else link.parent
+    link.delete()
+    messages.success(request, f'Connection with "{other.name}" removed.')
+    return redirect('supply_chain')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  4. INVITATION TOKEN (admin-sent) — delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+@require_POST
+def admin_delete_invite(request, pk):
+    """
+    Hard-delete an admin-sent InvitationToken (invite_type='admin').
+    Super admin only.
+    """
+    if not request.user.is_super_admin:
+        return redirect('dashboard')
+ 
+    invite = get_object_or_404(InvitationToken, pk=pk, invite_type='admin')
+    email  = invite.email
+    invite.delete()
+    messages.success(request, f'Invitation for {email} has been deleted.')
+    return redirect('invitation_list')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  5. STAFF — list / edit / toggle-active / delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def staff_list(request):
+    """
+    List all staff members belonging to the current organisation.
+    Super admins see all staff across all orgs (filtered by ?org=pk).
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        org_pk = request.GET.get('org')
+        members = CustomUser.objects.select_related('organization').exclude(role='super_admin')
+        if org_pk:
+            members = members.filter(organization_id=org_pk)
+        org = None
+    else:
+        org = user.organization
+        if not org:
+            return redirect('dashboard')
+        members = org.members.all()
+ 
+    return render(request, 'staff_list.html', {
+        'members': members,
+        'org':     org,
+    })
+ 
+ 
+@login_required
+def edit_staff(request, pk):
+    """
+    Edit a staff member's details.
+    Org admins can only edit staff in their own org.
+    Super admins can edit anyone.
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        member = get_object_or_404(CustomUser, pk=pk)
+    else:
+        org    = user.organization
+        member = get_object_or_404(CustomUser, pk=pk, organization=org)
+ 
+    if request.method == 'POST':
+        member.first_name     = request.POST.get('first_name', member.first_name).strip()
+        member.last_name      = request.POST.get('last_name',  member.last_name).strip()
+        member.phone          = request.POST.get('phone',      member.phone).strip()
+        member.landline       = request.POST.get('landline',   member.landline).strip()
+        member.gender         = request.POST.get('gender',     member.gender)
+        member.role           = request.POST.get('role',       member.role)
+ 
+        dob = request.POST.get('date_of_birth', '')
+        if dob:
+            from datetime import date
+            try:
+                member.date_of_birth = date.fromisoformat(dob)
+            except ValueError:
+                messages.error(request, 'Invalid date of birth format.')
+                return redirect('edit_staff', pk=pk)
+ 
+        if request.FILES.get('profile_pic'):
+            member.profile_pic = request.FILES['profile_pic']
+ 
+        # Password change (optional — only if both fields supplied)
+        new_password  = request.POST.get('new_password', '').strip()
+        confirm_pass  = request.POST.get('confirm_password', '').strip()
+        if new_password:
+            if new_password != confirm_pass:
+                messages.error(request, 'Passwords do not match.')
+                return redirect('edit_staff', pk=pk)
+            if len(new_password) < 8:
+                messages.error(request, 'Password must be at least 8 characters.')
+                return redirect('edit_staff', pk=pk)
+            member.set_password(new_password)
+ 
+        member.save()
+        messages.success(request, f'{member.get_full_name() or member.username} updated.')
+        return redirect('staff_list')
+ 
+    return render(request, 'staff_edit.html', {
+        'member': member,
+        'role_choices': CustomUser.ROLE_CHOICES,
+        'gender_choices': CustomUser.GENDER_CHOICES,
+    })
+ 
+ 
+@login_required
+@require_POST
+def toggle_staff_active(request, pk):
+    """
+    Toggle a staff member's is_active flag (enable / disable login).
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        member = get_object_or_404(CustomUser, pk=pk)
+    else:
+        org    = user.organization
+        member = get_object_or_404(CustomUser, pk=pk, organization=org)
+ 
+    # Prevent self-deactivation
+    if member.pk == user.pk:
+        messages.error(request, 'You cannot deactivate your own account.')
+        return redirect('staff_list')
+ 
+    member.is_active = not member.is_active
+    member.save(update_fields=['is_active'])
+ 
+    status = 'activated' if member.is_active else 'deactivated'
+    messages.success(request, f'{member.get_full_name() or member.username} {status}.')
+ 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'is_active': member.is_active})
+    return redirect('staff_list')
+ 
+ 
+@login_required
+@require_POST
+def delete_staff(request, pk):
+    """
+    Hard-delete a staff member.
+    Org admins can only delete staff in their own org.
+    Cannot delete super admins.
+    """
+    user = request.user
+ 
+    if user.is_super_admin:
+        member = get_object_or_404(CustomUser, pk=pk)
+    else:
+        org    = user.organization
+        member = get_object_or_404(CustomUser, pk=pk, organization=org)
+ 
+    if member.pk == user.pk:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('staff_list')
+ 
+    if member.role == 'super_admin':
+        messages.error(request, 'Super admin accounts cannot be deleted here.')
+        return redirect('staff_list')
+ 
+    name = member.get_full_name() or member.username
+    member.delete()
+    messages.success(request, f'Staff member "{name}" deleted.')
+    return redirect('staff_list')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  6. GALLERY IMAGE — list / add (single + bulk) / delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def manage_gallery(request):
+    """List all gallery images for the current org."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    images = org.gallery.all()
+    return render(request, 'manage_gallery.html', {
+        'org':    org,
+        'images': images,
+        'total':  images.count(),
+    })
+ 
+ 
+@login_required
+def add_gallery_images(request):
+    """
+    Upload one or multiple gallery images in a single POST.
+    The template should use:
+      <input type="file" name="images" multiple accept="image/*">
+    """
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    if request.method == 'POST':
+        files   = request.FILES.getlist('images')
+        caption = request.POST.get('caption', '').strip()
+ 
+        if not files:
+            messages.error(request, 'Please select at least one image.')
+            return redirect('manage_gallery')
+ 
+        # Determine next order value
+        last_order = org.gallery.order_by('-order').values_list('order', flat=True).first() or 0
+ 
+        created = 0
+        for idx, img_file in enumerate(files):
+            # Basic image validation
+            if not img_file.content_type.startswith('image/'):
+                messages.warning(request, f'"{img_file.name}" is not an image — skipped.')
+                continue
+            if img_file.size > 10 * 1024 * 1024:   # 10 MB guard
+                messages.warning(request, f'"{img_file.name}" exceeds 10 MB — skipped.')
+                continue
+ 
+            GalleryImage.objects.create(
+                organization = org,
+                image        = img_file,
+                caption      = caption,
+                order        = last_order + idx + 1,
+            )
+            created += 1
+ 
+        if created:
+            messages.success(request, f'{created} image(s) uploaded successfully.')
+        return redirect('manage_gallery')
+ 
+    # GET — just redirect; upload UI lives on manage_gallery
+    return redirect('manage_gallery')
+ 
+ 
+@login_required
+@require_POST
+def delete_gallery_image(request, pk):
+    """Delete a single gallery image."""
+    org   = request.user.organization
+    image = get_object_or_404(GalleryImage, pk=pk, organization=org)
+ 
+    # Remove the file from storage too
+    if image.image:
+        try:
+            image.image.delete(save=False)
+        except Exception:
+            pass   # storage error shouldn't block the DB delete
+ 
+    image.delete()
+    messages.success(request, 'Image removed.')
+ 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+    return redirect('manage_gallery')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  7. TESTIMONIAL — list / add / edit / delete
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def manage_testimonials(request):
+    """List all testimonials for the current org."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    testimonials = org.testimonials.all()
+    return render(request, 'manage_testimonials.html', {
+        'org':          org,
+        'testimonials': testimonials,
+        'total':        testimonials.count(),
+        'active':       testimonials.filter(is_active=True).count(),
+    })
+ 
+ 
+@login_required
+def add_testimonial(request):
+    """Add a new testimonial."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    if request.method == 'POST':
+        client_name = request.POST.get('client_name', '').strip()
+        if not client_name:
+            messages.error(request, 'Client name is required.')
+            return redirect('manage_testimonials')
+ 
+        rating = _safe_int(request.POST.get('rating'), default=5, min_val=1, max_val=5)
+ 
+        org.testimonials.create(
+            client_name = client_name,
+            client_role = request.POST.get('client_role', '').strip(),
+            message     = request.POST.get('message', '').strip(),
+            rating      = rating,
+            is_active   = request.POST.get('is_active') == 'on',
+        )
+        messages.success(request, f'Testimonial from "{client_name}" added.')
+        return redirect('manage_testimonials')
+ 
+    return redirect('manage_testimonials')
+ 
+ 
+@login_required
+def edit_testimonial(request, pk):
+    """Edit an existing testimonial."""
+    org         = request.user.organization
+    testimonial = get_object_or_404(Testimonial, pk=pk, organization=org)
+ 
+    if request.method == 'POST':
+        client_name = request.POST.get('client_name', '').strip()
+        if not client_name:
+            messages.error(request, 'Client name is required.')
+            return redirect('manage_testimonials')
+ 
+        testimonial.client_name = client_name
+        testimonial.client_role = request.POST.get('client_role', '').strip()
+        testimonial.message     = request.POST.get('message', '').strip()
+        testimonial.rating      = _safe_int(request.POST.get('rating'), default=5, min_val=1, max_val=5)
+        testimonial.is_active   = request.POST.get('is_active') == 'on'
+        testimonial.save()
+ 
+        messages.success(request, 'Testimonial updated.')
+        return redirect('manage_testimonials')
+ 
+    # GET — render inline edit form
+    return render(request, 'testimonial_edit.html', {
+        'org':         org,
+        'testimonial': testimonial,
+    })
+ 
+ 
+@login_required
+@require_POST
+def delete_testimonial(request, pk):
+    """Delete a testimonial."""
+    org         = request.user.organization
+    testimonial = get_object_or_404(Testimonial, pk=pk, organization=org)
+ 
+    client_name = testimonial.client_name
+    testimonial.delete()
+    messages.success(request, f'Testimonial from "{client_name}" deleted.')
+ 
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+    return redirect('manage_testimonials')
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  8. PAYMENT QR — edit
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+@login_required
+def edit_payment_qr(request, pk):
+    """Edit an existing PaymentQR entry."""
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+ 
+    qr = get_object_or_404(PaymentQR, pk=pk, organization=org)
+ 
+    if request.method == 'POST':
+        qr.label      = request.POST.get('label', qr.label).strip()
+        qr.method     = request.POST.get('method', qr.method)
+        qr.upi_id     = request.POST.get('upi_id', qr.upi_id).strip()
+        qr.is_primary = request.POST.get('is_primary') == 'on'
+        qr.is_active  = request.POST.get('is_active') == 'on'
+ 
+        order_raw = request.POST.get('order', '')
+        if order_raw.isdigit():
+            qr.order = int(order_raw)
+ 
+        if request.FILES.get('qr_image'):
+            # Delete old image from storage before replacing
+            if qr.qr_image:
+                try:
+                    qr.qr_image.delete(save=False)
+                except Exception:
+                    pass
+            qr.qr_image = request.FILES['qr_image']
+ 
+        qr.save()
+        messages.success(request, f'Payment QR "{qr.label}" updated.')
+        return redirect('manage_payment_qr')
+ 
+    # GET — render edit form
+    return render(request, 'payment_qr_edit.html', {
+        'org': org,
+        'qr':  qr,
+        'method_choices': PaymentQR.METHOD_CHOICES,
+    })
+ 
+ 
+# ══════════════════════════════════════════════════════════════════════════════
+#  SHARED HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+ 
+def _safe_int(value, default=0, min_val=None, max_val=None):
+    """Parse an integer safely, clamping to optional min/max bounds."""
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return default
+    if min_val is not None:
+        n = max(min_val, n)
+    if max_val is not None:
+        n = min(max_val, n)
+    return n
+
+
+from datetime import timedelta
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from django.utils import timezone
+from django.http import HttpResponse
+import csv
+
+from .models import PageView, AnalyticsEvent, Enquiry
+
+
+PLAN_DAYS = {'trial': 7, 'silver': 30, 'gold': 30, 'platinum': 90}
+
+PLAN_FEATURES = {
+    'trial':    {'chart': False, 'breakdown': False, 'export': False, 'compare': False},
+    'silver':   {'chart': True,  'breakdown': False, 'export': False, 'compare': False},
+    'gold':     {'chart': True,  'breakdown': True,  'export': True,  'compare': True},
+    'platinum': {'chart': True,  'breakdown': True,  'export': True,  'compare': True},
+}
+
+
+def _plan_level(org):
+    return org.plan.level if (org and org.plan) else 'trial'
+
+
+@login_required
+def analytics_dashboard(request):
+    org = request.user.organization
+    if not org:
+        return redirect('dashboard')
+
+    level    = _plan_level(org)
+    features = PLAN_FEATURES[level]
+    days     = PLAN_DAYS[level]
+    from_dt  = timezone.now() - timedelta(days=days)
+
+    # ── Core stats (all plans) ────────────────────────────────────────────────
+    total_views     = PageView.objects.filter(organization=org, created_at__gte=from_dt).count()
+    unique_visitors = (
+        PageView.objects
+        .filter(organization=org, created_at__gte=from_dt)
+        .values('session_key').distinct().count()
+    )
+    total_enquiries = Enquiry.objects.filter(organization=org, created_at__gte=from_dt).count()
+    new_enquiries   = Enquiry.objects.filter(organization=org, status='new', created_at__gte=from_dt).count()
+    wa_clicks       = AnalyticsEvent.objects.filter(
+        organization=org, event_type='whatsapp_click', created_at__gte=from_dt
+    ).count()
+    phone_clicks    = AnalyticsEvent.objects.filter(
+        organization=org, event_type='phone_click', created_at__gte=from_dt
+    ).count()
+    vcard_downloads = AnalyticsEvent.objects.filter(
+        organization=org, event_type='vcard_download', created_at__gte=from_dt
+    ).count()
+    conversion_rate = round(total_enquiries / total_views * 100, 1) if total_views else 0.0
+
+    # ── Daily trend chart (Silver+) ───────────────────────────────────────────
+    chart_labels, daily_views, daily_enquiries = [], [], []
+    if features['chart']:
+        date_range = [
+            (timezone.now().date() - timedelta(days=i))
+            for i in range(days - 1, -1, -1)
+        ]
+        views_map = {
+            r['day']: r['count']
+            for r in (
+                PageView.objects
+                .filter(organization=org, created_at__gte=from_dt)
+                .annotate(day=TruncDate('created_at'))
+                .values('day').annotate(count=Count('id'))
+            )
+        }
+        enq_map = {
+            r['day']: r['count']
+            for r in (
+                Enquiry.objects
+                .filter(organization=org, created_at__gte=from_dt)
+                .annotate(day=TruncDate('created_at'))
+                .values('day').annotate(count=Count('id'))
+            )
+        }
+        for d in date_range:
+            chart_labels.append(d.strftime('%-d %b'))
+            daily_views.append(views_map.get(d, 0))
+            daily_enquiries.append(enq_map.get(d, 0))
+
+    # ── Product / service breakdown (Gold+) ───────────────────────────────────
+    top_products, top_services = [], []
+    if features['breakdown']:
+        top_products = list(
+            AnalyticsEvent.objects
+            .filter(organization=org, event_type='product_view', created_at__gte=from_dt)
+            .values('object_name').annotate(views=Count('id')).order_by('-views')[:6]
+        )
+        top_services = list(
+            AnalyticsEvent.objects
+            .filter(organization=org, event_type='service_view', created_at__gte=from_dt)
+            .values('object_name').annotate(views=Count('id')).order_by('-views')[:6]
+        )
+
+    # ── Period-over-period (Gold+) ────────────────────────────────────────────
+    prev_views = prev_enquiries = view_delta = enq_delta = None
+    if features['compare']:
+        prev_from      = from_dt - timedelta(days=days)
+        prev_views     = PageView.objects.filter(
+            organization=org, created_at__range=(prev_from, from_dt)
+        ).count()
+        prev_enquiries = Enquiry.objects.filter(
+            organization=org, created_at__range=(prev_from, from_dt)
+        ).count()
+        view_delta = total_views - prev_views
+        enq_delta  = total_enquiries - prev_enquiries
+
+    # ── CSV export (Gold+) ────────────────────────────────────────────────────
+    if request.GET.get('export') == 'csv' and features['export']:
+        return _export_csv(org, from_dt)
+
+    return render(request, 'analytics.html', {
+        'org': org, 'level': level, 'features': features, 'days': days,
+        'total_views': total_views, 'unique_visitors': unique_visitors,
+        'total_enquiries': total_enquiries, 'new_enquiries': new_enquiries,
+        'wa_clicks': wa_clicks, 'phone_clicks': phone_clicks,
+        'vcard_downloads': vcard_downloads, 'conversion_rate': conversion_rate,
+        'chart_labels': chart_labels, 'daily_views': daily_views,
+        'daily_enquiries': daily_enquiries,
+        'top_products': top_products, 'top_services': top_services,
+        'prev_views': prev_views, 'prev_enquiries': prev_enquiries,
+        'view_delta': view_delta, 'enq_delta': enq_delta,
+    })
+
+
+def _export_csv(org, from_dt):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{org.slug}_analytics.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Page Views', 'Enquiries'])
+    from django.db.models.functions import TruncDate
+    views_map = {
+        r['day']: r['count']
+        for r in (
+            PageView.objects
+            .filter(organization=org, created_at__gte=from_dt)
+            .annotate(day=TruncDate('created_at'))
+            .values('day').annotate(count=Count('id'))
+        )
+    }
+    enq_map = {
+        r['day']: r['count']
+        for r in (
+            Enquiry.objects
+            .filter(organization=org, created_at__gte=from_dt)
+            .annotate(day=TruncDate('created_at'))
+            .values('day').annotate(count=Count('id'))
+        )
+    }
+    for r in sorted(views_map.keys() | enq_map.keys()):
+        writer.writerow([r, views_map.get(r, 0), enq_map.get(r, 0)])
+    return response
+
+
+# ── Logging helpers — call these from existing views ─────────────────────────
+
+def log_page_view(request, org):
+    """Add to public_landing(), product_detail(), visiting_card()."""
+    try:
+        if not request.session.session_key:
+            request.session.create()
+        ip = (
+            request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+            or request.META.get('REMOTE_ADDR', '')
+        )
+        PageView.objects.create(
+            organization=org,
+            session_key=request.session.session_key or '',
+            ip_hash=PageView.hash_ip(ip) if ip else '',
+            referrer=request.META.get('HTTP_REFERER', '')[:500],
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:300],
+        )
+    except Exception:
+        pass
+
+
+def log_event(request, org, event_type, object_id=None, object_name='', meta=None):
+    """Call from cart_add, enquiry submit, WhatsApp button click handler, etc."""
+    try:
+        if not request.session.session_key:
+            request.session.create()
+        AnalyticsEvent.objects.create(
+            organization=org,
+            event_type=event_type,
+            session_key=request.session.session_key or '',
+            object_id=object_id,
+            object_name=object_name,
+            meta=meta or {},
+        )
+    except Exception:
+        pass

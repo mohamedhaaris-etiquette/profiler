@@ -1,0 +1,421 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Invite a Business — {{ org.name }}{% endblock %}
+
+{% block dash_css %}
+<style>
+/* ── Page tokens ─────────────────────────────── */
+.inv-page { --gold: #d97706; --gold-lt: #fef3c7; --gold-bd: #fde68a; }
+
+/* ── Hero banner ─────────────────────────────── */
+.inv-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f2040 100%);
+  border-radius: 20px; padding: 36px 40px; margin-bottom: 28px;
+  position: relative; overflow: hidden;
+}
+.inv-hero::before {
+  content: '';
+  position: absolute; top: -50px; right: -50px;
+  width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(249,115,22,.18) 0%, transparent 70%);
+}
+.inv-hero-title {
+  font-family: var(--font-display); font-size: 1.8rem;
+  font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 6px;
+}
+.inv-hero-title span { color: #fbbf24; }
+.inv-hero-sub { color: rgba(255,255,255,.6); font-size: 0.88rem; }
+
+/* ── Quota pill ──────────────────────────────── */
+.quota-pill {
+  background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: 14px; padding: 16px 22px; text-align: center;
+  backdrop-filter: blur(10px); min-width: 100px;
+}
+.quota-pill .q-num {
+  font-family: var(--font-display); font-size: 2.2rem;
+  font-weight: 800; color: #fbbf24; line-height: 1;
+}
+.quota-pill .q-num.danger { color: #f87171; }
+.quota-pill .q-lbl {
+  color: rgba(255,255,255,.5); font-size: 0.68rem;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;
+}
+
+/* ── How it works steps ──────────────────────── */
+.how-step {
+   border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 16px; text-align: center; height: 100%;
+}
+.how-step .step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #0f172a; color: #fbbf24;
+  font-family: var(--font-display); font-size: 0.9rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;
+}
+.how-step .step-icon { font-size: 1.6rem; display: block; margin-bottom: 10px; color: #d97706; }
+.how-step h6 { font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; }
+.how-step p { color: var(--muted); font-size: 0.77rem; margin: 0; line-height: 1.5; }
+
+/* ── Invite form card ────────────────────────── */
+.invite-form-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 18px; overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,.04);
+}
+.invite-form-card .card-head {
+  background: #0f172a; color: #fff;
+  padding: 16px 24px; font-weight: 700; font-size: 0.9rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.invite-form-card .card-head .bonus-badge {
+  background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.3);
+  border-radius: 50px; padding: 3px 12px;
+  font-size: 0.72rem; color: #fbbf24; font-weight: 700; margin-left: auto;
+}
+
+/* ── Form controls ───────────────────────────── */
+.form-label-bold { font-weight: 600; font-size: 0.85rem; color: #1e293b; margin-bottom: 6px; }
+.form-ctrl {
+  border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; font-size: 0.88rem; font-family: var(--font-body);
+  transition: border-color .2s, box-shadow .2s; width: 100%;
+}
+.form-ctrl:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+}
+.form-ctrl::placeholder { color: #94a3b8; }
+
+/* ── Submit button ───────────────────────────── */
+.btn-send-invite {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #fff; border: none; border-radius: 12px;
+  padding: 13px 28px; font-weight: 700; font-size: 0.92rem;
+  cursor: pointer; transition: all .2s; display: inline-flex;
+  align-items: center; gap: 9px; letter-spacing: 0.01em;
+}
+.btn-send-invite:hover {
+  transform: translateY(-2px); box-shadow: 0 8px 24px rgba(249,115,22,.35);
+}
+.btn-send-invite:disabled { opacity: .55; pointer-events: none; }
+
+/* ── Recent invite rows ──────────────────────── */
+.invite-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-bottom: 1px solid var(--border); gap: 12px;
+}
+.invite-row:last-child { border-bottom: none; }
+.invite-email { font-weight: 600; font-size: 0.85rem; }
+.invite-sub { font-size: 0.72rem; color: var(--muted); }
+
+/* ── Status badges ───────────────────────────── */
+.badge-pending  { background:#fef3c7; color:#92400e; }
+.badge-accepted { background:#dcfce7; color:#166534; }
+.badge-expired  { background:#f1f5f9; color:#64748b; }
+.badge-revoked  { background:#fee2e2; color:#991b1b; }
+.inv-badge {
+  border-radius: 50px; padding: 3px 11px;
+  font-size: 0.72rem; font-weight: 700;
+}
+
+/* ── Upgrade nudge ───────────────────────────── */
+.upgrade-nudge {
+  background: linear-gradient(135deg, #fef3c7, #fff);
+  border: 1.5px solid var(--gold-bd, #fde68a); border-radius: 14px;
+  padding: 20px 24px; display: flex; align-items: center; gap: 16px;
+}
+.upgrade-nudge i { font-size: 2rem; color: #d97706; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block dash_content %}
+<div class="inv-page">
+
+  <!-- ── Hero ─────────────────────────────────── -->
+  <div class="inv-hero">
+    <div class="row align-items-center g-3">
+      <div class="col">
+        <div class="inv-hero-title">
+          Invite a Business,<br><span>Earn OrgPoints</span>
+        </div>
+        <div class="inv-hero-sub">
+          Send an invite link to another business. When they join,
+          you earn <strong style="color:#fbbf24;">{{ config.bonus_points_per_invite }} OrgPoints</strong> automatically.
+        </div>
+      </div>
+      <div class="col-auto d-flex gap-3 flex-wrap justify-content-end">
+        <div class="quota-pill">
+          <div class="q-num {% if invites_left == 0 %}danger{% endif %}">{{ invites_left }}</div>
+          <div class="q-lbl">Invites left</div>
+        </div>
+        <div class="quota-pill">
+          <div class="q-num">{{ total_bonus_earned }}</div>
+          <div class="q-lbl">Pts earned</div>
+        </div>
+        <div class="quota-pill">
+          <div class="q-num">{{ invites_sent }}</div>
+          <div class="q-lbl">Sent</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── LEFT: How it works + Form ─────────── -->
+    <div class="col-xl-7 col-lg-8">
+
+      <!-- How it works -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="how-step">
+            <div class="step-num">1</div>
+            <i class="bi bi-envelope-plus step-icon"></i>
+            <h6>Enter email</h6>
+            <p>Type the business owner's email address below.</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="how-step">
+            <div class="step-num">2</div>
+            <i class="bi bi-send step-icon"></i>
+            <h6>They get a link</h6>
+            <p>A magic link lands in their inbox — no password needed yet.</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="how-step">
+            <div class="step-num">3</div>
+            <i class="bi bi-building-add step-icon"></i>
+            <h6>They register</h6>
+            <p>They click, fill their details, and go live instantly.</p>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="how-step">
+            <div class="step-num" style="background:var(--success);color:#fff;">✓</div>
+            <i class="bi bi-gift step-icon" style="color:var(--success);"></i>
+            <h6>You earn points</h6>
+            <p><strong>{{ config.bonus_points_per_invite }} OrgPoints</strong> credited to your wallet.</p>
+          </div>
+        </div>
+      </div>
+
+      {% if invites_left == 0 %}
+      <!-- Upgrade nudge -->
+      <div class="upgrade-nudge mb-4">
+        <i class="bi bi-lock-fill"></i>
+        <div>
+          <div class="fw-700" style="font-size:0.9rem;">You've used all your invite slots</div>
+          <div class="text-muted small mt-1">
+            Your current plan allows {{ invite_limit }} invite{{ invite_limit|pluralize }}.
+            Upgrade to Silver, Gold, or Platinum for more.
+          </div>
+          <a href="{% url 'org_settings' %}" class="btn btn-sm btn-warning mt-2" style="border-radius:8px;font-weight:700;">
+            <i class="bi bi-arrow-up-circle me-1"></i> View Plans
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Invite form -->
+      <div class="invite-form-card">
+        <div class="card-head">
+          <i class="bi bi-person-plus-fill"></i>
+          Send an Invitation
+          {% if config.bonus_points_per_invite %}
+          <span class="bonus-badge"><i class="bi bi-star-fill me-1"></i>+{{ config.bonus_points_per_invite }} pts on join</span>
+          {% endif %}
+        </div>
+        <div class="p-4">
+
+          {% if not config.allow_member_invites %}
+          <div class="alert alert-warning rounded-3" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            The member invite feature is currently paused by the administrator.
+          </div>
+          {% else %}
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label-bold">
+                <i class="bi bi-envelope me-1 text-muted"></i>
+                Their email address <span class="text-danger">*</span>
+              </label>
+              <input
+                type="email"
+                name="email"
+                class="form-ctrl"
+                placeholder="owner@theirbusiness.com"
+                required
+                {% if invites_left == 0 %}disabled{% endif %}
+              >
+              <div class="mt-1" style="font-size:0.75rem; color:var(--muted);">
+                They'll receive a setup link. One invite per email address.
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label-bold">
+                <i class="bi bi-chat-quote me-1 text-muted"></i>
+                Personal message <span class="text-muted fw-normal">(optional)</span>
+              </label>
+              <textarea
+                name="personal_message"
+                class="form-ctrl"
+                rows="3"
+                placeholder="Hi! I've been using Portal for my business and thought you might find it useful too…"
+                style="resize:vertical;"
+                {% if invites_left == 0 %}disabled{% endif %}
+              ></textarea>
+              <div class="mt-1" style="font-size:0.75rem; color:var(--muted);">
+                This message is included in the invitation email.
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <button
+                type="submit"
+                class="btn-send-invite"
+                {% if invites_left == 0 %}disabled{% endif %}
+              >
+                <i class="bi bi-send-fill"></i>
+                Send Invitation
+              </button>
+              <a href="{% url 'member_invite_list' %}" class="text-muted small">
+                <i class="bi bi-clock-history me-1"></i>View all sent invites →
+              </a>
+            </div>
+          </form>
+
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: Stats sidebar ──────────────── -->
+    <div class="col-xl-5 col-lg-4">
+
+      <!-- Points earned from member invites -->
+      <div class="card-modern mb-3">
+        <div class="card-header" style="background:#0f172a;">
+          <i class="bi bi-wallet2 me-2"></i>Invite Earnings
+        </div>
+        <div class="p-4 text-center">
+          <div style="font-family:var(--font-display); font-size:2.8rem; font-weight:800; color:#f59e0b; line-height:1;">
+            {{ total_bonus_earned }}
+          </div>
+          <div class="text-muted small mt-1">OrgPoints earned from invites</div>
+          <div class="mt-3 d-flex justify-content-center gap-4">
+            <div class="text-center">
+              <div style="font-size:1.4rem;font-weight:800;color:var(--brand);">{{ invites_sent }}</div>
+              <div class="text-muted" style="font-size:0.72rem;">Sent</div>
+            </div>
+            <div style="border-left:1px solid var(--border);"></div>
+            <div class="text-center">
+              <div style="font-size:1.4rem;font-weight:800;color:var(--success);">{{ invites_sent|add:"-"|add:invites_sent }}</div>
+              <div class="text-muted" style="font-size:0.72rem;">Joined</div>
+            </div>
+            <div style="border-left:1px solid var(--border);"></div>
+            <div class="text-center">
+              <div style="font-size:1.4rem;font-weight:800;color:var(--accent);">{{ invites_left }}</div>
+              <div class="text-muted" style="font-size:0.72rem;">Remaining</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quota / plan info -->
+      <div class="card-modern mb-3">
+        <div class="card-header" style="background:#0f172a;">
+          <i class="bi bi-bar-chart me-2"></i>Your Invite Quota
+        </div>
+        <div class="p-3">
+          {% with pct=invites_sent|floatformat:0 %}
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small fw-600">{{ invites_sent }} / {{ invite_limit }} used</span>
+            <span class="small text-muted">{{ invites_left }} left</span>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:999px;overflow:hidden;">
+            {% with width=invites_sent|floatformat:0 %}
+            <div style="
+              height:100%;
+              width:{% widthratio invites_sent invite_limit 100 %}%;
+              background:{% if invites_left == 0 %}#ef4444{% else %}var(--accent){% endif %};
+              border-radius:999px; transition:width .6s;
+            "></div>
+            {% endwith %}
+          </div>
+          {% endwith %}
+          <div class="mt-3" style="font-size:0.78rem; color:var(--muted); line-height:1.6;">
+            Plan:
+            <strong>
+              {% if org.plan %}{{ org.plan.name }}{% else %}Trial{% endif %}
+            </strong>
+            — allows <strong>{{ invite_limit }}</strong> invite{{ invite_limit|pluralize }}.
+            {% if org.plan and org.plan.level != 'platinum' %}
+            <a href="{% url 'org_settings' %}" class="text-accent">Upgrade for more →</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent invites -->
+      {% if recent_invites %}
+      <div class="card-modern">
+        <div class="card-header" style="background:#0f172a;">
+          <i class="bi bi-clock-history me-2"></i>Recent Invites
+          <a href="{% url 'member_invite_list' %}" class="ms-auto small" style="color:rgba(255,255,255,.6);">See all →</a>
+        </div>
+        <div class="p-3">
+       {% for inv in recent_invites %}
+<div class="invite-row">
+  <div class="overflow-hidden flex-grow-1">
+    <div class="invite-email text-truncate">{{ inv.email }}</div>
+    <div class="invite-sub">{{ inv.created_at|date:"d M Y" }}</div>
+  </div>
+
+  <div class="d-flex align-items-center gap-2 flex-shrink-0">
+    {% if inv.bonus_rewarded %}
+      <span style="color:#f59e0b;font-size:0.75rem;font-weight:700;">
+        +{{ config.bonus_points_per_invite }}pts
+      </span>
+    {% endif %}
+
+    <span class="inv-badge badge-{{ inv.status }}">
+      {{ inv.get_status_display }}
+    </span>
+
+    <!-- Delete button -->
+    <form method="post"
+          action="{% url 'member_delete_invite' inv.pk %}"
+          style="margin:0;"
+          onsubmit="return confirm('Delete invite for {{ inv.email }}?')">
+      {% csrf_token %}
+      <button type="submit"
+              title="Delete invite"
+              style="
+                background: none; border: 1px solid transparent;
+                border-radius: 6px; padding: 2px 7px;
+                color: #ef4444; cursor: pointer; font-size: 0.78rem;
+                transition: all .15s;
+              "
+              onmouseover="this.style.background='#fee2e2';this.style.borderColor='#fca5a5';"
+              onmouseout="this.style.background='none';this.style.borderColor='transparent';">
+        <i class="bi bi-trash"></i>
+      </button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

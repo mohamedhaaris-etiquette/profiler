@@ -487,8 +487,8 @@ function shareNative() {
   const url = document.getElementById('inviteUrl').value;
   if (navigator.share) {
     navigator.share({
-      title: '{{ org.name }} — Join OrgPortal',
-      text: 'Register your business on OrgPortal using my invite link!',
+      title: '{{ org.name }} — Join Portal',
+      text: 'Register your business on Portal using my invite link!',
       url: url,
     });
   } else {

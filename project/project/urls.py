@@ -84,6 +84,12 @@ urlpatterns = [
     # Referrals
     path('dashboard/referrals/', views.referral_dashboard, name='referral_dashboard'),
 
+    # ── Member-to-member invite + bonus ──────────────────────────────────────
+    path('dashboard/my-invites/',                      views.member_send_invite,   name='member_send_invite'),
+    path('dashboard/my-invites/list/',                 views.member_invite_list,   name='member_invite_list'),
+    path('dashboard/my-invites/<int:pk>/resend/',      views.member_resend_invite, name='member_resend_invite'),
+    path('dashboard/my-invites/<int:pk>/revoke/',      views.member_revoke_invite, name='member_revoke_invite'),
+
     # Super Admin — Member management
     path('dashboard/members/',                 views.member_list,  name='member_list'),
     path('dashboard/members/add/',             views.add_member,   name='add_member'),
@@ -106,10 +112,50 @@ urlpatterns = [
     path('org/<slug:slug>/product/<int:pk>/catalog/', views.download_product_catalog, name='download_product_catalog'),
 
     # ── PUBLIC — Digital Visiting Card ────────────────────────────────────────
+   path('invites/<int:pk>/delete/', views.member_delete_invite, name='member_delete_invite'),
 
 
-    path('card/<slug:slug>/',            views.visiting_card,  name='visiting_card'),
-    path('card/<slug:slug>/download.vcf', views.download_vcard, name='download_vcard'),
+
+    path('card/<slug:slug>/', views.visiting_card, name='visiting_card'),
+    
+    # VCF download (for phone contacts)
+    path('card/<slug:slug>/vcard/', views.download_vcard, name='download_vcard'),
+
+     # Organisation
+    path('admin/members/<int:pk>/delete/',      views.org_soft_delete,        name='org_soft_delete'),
+ 
+    # Enquiry
+    path('enquiries/<int:pk>/delete/',           views.delete_enquiry,         name='delete_enquiry'),
+ 
+    # Supply chain
+    path('supply-chain/link/<int:pk>/delete/',  views.delete_chain_link,      name='delete_chain_link'),
+ 
+    # Invitations (admin-sent)
+    path('admin/invitations/<int:pk>/delete/',  views.admin_delete_invite,    name='admin_delete_invite'),
+ 
+    # Staff
+    path('staff/',                              views.staff_list,             name='staff_list'),
+    path('staff/<int:pk>/edit/',               views.edit_staff,             name='edit_staff'),
+    path('staff/<int:pk>/toggle-active/',      views.toggle_staff_active,    name='toggle_staff_active'),
+    path('staff/<int:pk>/delete/',             views.delete_staff,           name='delete_staff'),
+ 
+    # Gallery
+    path('gallery/',                            views.manage_gallery,         name='manage_gallery'),
+    path('gallery/add/',                        views.add_gallery_images,     name='add_gallery_images'),
+    path('gallery/<int:pk>/delete/',           views.delete_gallery_image,   name='delete_gallery_image'),
+ 
+    # Testimonials
+    path('testimonials/',                       views.manage_testimonials,    name='manage_testimonials'),
+    path('testimonials/add/',                   views.add_testimonial,        name='add_testimonial'),
+    path('testimonials/<int:pk>/edit/',        views.edit_testimonial,       name='edit_testimonial'),
+    path('testimonials/<int:pk>/delete/',      views.delete_testimonial,     name='delete_testimonial'),
+ 
+    # Payment QR
+    path('payment-qr/<int:pk>/edit/',          views.edit_payment_qr,        name='edit_payment_qr'),
+    path('invitations/<int:pk>/delete/', views.delete_invitation, name='delete_invitation'),
+
+    path('dashboard/analytics/', views.analytics_dashboard, name='analytics'),
+    
 ]
 
 if settings.DEBUG:
