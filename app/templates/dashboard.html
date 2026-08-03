@@ -1,0 +1,345 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Dashboard — {{ org.name }}{% endblock %}
+
+{% block dash_content %}
+
+<!-- ── Page Header ── -->
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <div class="text-muted" style="font-size:12px;margin-top:3px;">
+      Overview of {{ org.name }}
+      {% if org.sub_category %}
+      <span style="margin-left:8px;background:rgba(124,58,237,0.12);color:#a78bfa;border:1px solid rgba(124,58,237,0.25);font-size:9.5px;font-weight:700;padding:2px 10px;border-radius:20px;">
+        <i class="bi bi-tag me-1"></i>{{ org.sub_category.name }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <div class="org-badge">
+      <div class="dot" style="background:{% if org.status == 'active' %}#22c55e{% elif org.status == 'suspended' %}#ef4444{% elif org.status == 'pending' %}#f59e0b{% else %}#94a3b8{% endif %};"></div>
+      {% if org.is_verified %}Verified{% else %}{{ org.get_status_display }}{% endif %}
+    </div>
+    {% if org.subdomain %}
+    <a href="{% url 'public_landing' org.slug %}" target="_blank" class="subdomain-link">
+      <i class="bi bi-globe2"></i>{{ org.subdomain }}
+    </a>
+    {% endif %}
+    <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn-dark-outline">
+      <i class="bi bi-eye"></i>View Public Page
+    </a>
+  </div>
+</div>
+
+<!-- ── Plan Status Alert ── -->
+{% if org.plan %}
+<div class="plan-alert">
+  <div class="plan-alert-icon"
+    style="background:{% if not org.is_plan_active %}rgba(239,68,68,0.1){% elif org.plan.level == 'trial' %}rgba(245,158,11,0.1){% elif org.plan.level == 'silver' %}rgba(14,165,233,0.1){% elif org.plan.level == 'gold' %}rgba(245,158,11,0.1){% else %}rgba(124,58,237,0.1){% endif %};
+    color:{{ org.plan_badge_color }};">
+    <i class="bi bi-award-fill"></i>
+  </div>
+  <div style="flex:1;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:5px;">
+      <span class="sb-plan-badge" style="background:{{ org.plan_badge_color }};">
+        {{ org.plan.name }} Plan
+      </span>
+      {% if not org.is_plan_active %}
+      <span style="background:rgba(239,68,68,0.12);color:var(--fire);border:1px solid rgba(239,68,68,0.25);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;">Plan Expired — Contact Admin</span>
+      {% elif org.plan.level == 'trial' %}
+      <span style="color:var(--gold);font-size:12px;">Trial active — upgrade for full features</span>
+      {% else %}
+      <span style="color:var(--go);font-size:12px;"><i class="bi bi-check-circle me-1"></i>Active</span>
+      {% endif %}
+    </div>
+    <div class="plan-meta" style="display:flex;gap:14px;flex-wrap:wrap;">
+      {% if org.plan_start_date %}<span><i class="bi bi-calendar-check me-1"></i>Started {{ org.plan_start_date|date:"d M Y" }}</span>{% endif %}
+      {% if org.plan_end_date   %}<span><i class="bi bi-calendar-x me-1"></i>Expires {{ org.plan_end_date|date:"d M Y" }}</span>{% endif %}
+      <span><i class="bi bi-briefcase me-1"></i>Max {{ org.plan.max_services }} Services</span>
+      <span><i class="bi bi-box-seam me-1"></i>Max {{ org.plan.max_products }} Products</span>
+      <span><i class="bi bi-people me-1"></i>Max {{ org.plan.max_staff }} Staff</span>
+    </div>
+  </div>
+  <a href="{% url 'org_settings' %}" class="btn-dark-outline">
+    <i class="bi bi-gear"></i>Settings
+  </a>
+</div>
+{% endif %}
+
+<!-- ── Stats Row ── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:rgba(37,99,235,0.12);color:#60a5fa;">
+        <i class="bi bi-briefcase-fill"></i>
+      </div>
+      <div class="value">{{ services.count }}</div>
+      <div class="label">Active Services</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:rgba(124,58,237,0.12);color:#a78bfa;">
+        <i class="bi bi-box-seam-fill"></i>
+      </div>
+      <div class="value">{{ total_products }}</div>
+      <div class="label">Active Products</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:rgba(245,158,11,0.12);color:var(--gold);">
+        <i class="bi bi-chat-dots-fill"></i>
+      </div>
+      <div class="value">{{ total_enquiries }}</div>
+      <div class="label">Total Enquiries</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:rgba(239,68,68,0.12);color:var(--fire);">
+        <i class="bi bi-bell-fill"></i>
+      </div>
+      <div class="value">{{ new_enquiries }}</div>
+      <div class="label">New / Unread</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Body ── -->
+<div class="row g-4">
+
+  <!-- ── Org Info Card ── -->
+ <!-- ── Org Info Card ── -->
+  <div class="col-lg-4">
+    <div class="card-modern h-100">
+      <div class="card-header">
+        <span><i class="bi bi-building me-2"></i>Your Organization</span>
+        {% if org.is_verified %}
+        <span style="background:rgba(34,197,94,0.12);color:var(--go);border:1px solid rgba(34,197,94,0.25);font-size:9.5px;font-weight:800;padding:2px 9px;border-radius:20px;">
+          <i class="bi bi-patch-check-fill me-1"></i>Verified
+        </span>
+        {% endif %}
+      </div>
+      <div class="p-4">
+        <div class="text-center mb-4">
+          {% if org.logo %}
+          <img src="{{ org.logo_url }}" alt="Logo" class="org-logo-box">
+          {% else %}
+          <div class="org-logo-ph"><i class="bi bi-building"></i></div>
+          {% endif %}
+          <h5 style="font-family:var(--fh);font-weight:800;margin:14px 0 8px;color:var(--white);">{{ org.name }}</h5>
+          <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">
+            {% if org.category %}
+            <span style="background:rgba(245,158,11,0.1);color:var(--gold);border:1px solid rgba(245,158,11,0.2);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;">
+              <i class="bi bi-{{ org.category.icon }} me-1"></i>{{ org.category.name }}
+            </span>
+            {% endif %}
+            {% if org.sub_category %}
+            <span style="background:rgba(124,58,237,0.1);color:#a78bfa;border:1px solid rgba(124,58,237,0.2);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;">
+              <i class="bi bi-tag me-1"></i>{{ org.sub_category.name }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div class="contact-row"><i class="bi bi-telephone"></i><span>{{ org.phone }}</span></div>
+          {% if org.landline %}
+          <div class="contact-row"><i class="bi bi-telephone-outbound"></i><span>{{ org.landline }}</span></div>
+          {% endif %}
+          <div class="contact-row">
+  <i class="bi bi-envelope"></i>
+  <a href="mailto:{{ org.email }}" style="color:var(--white);">Mail us</a>
+</div>
+          <div class="contact-row"><i class="bi bi-geo-alt"></i><span>{{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}, {{ org.state }}</span></div>
+          {% if org.working_hours %}
+          <div class="contact-row"><i class="bi bi-clock"></i><span>{{ org.working_hours }}</span></div>
+          {% endif %}
+          {% if org.website %}
+        <div class="contact-row">
+  <i class="bi bi-globe"></i>
+  <a href="{{ org.website }}" target="_blank" style="color:var(--white);">Visit here</a>
+</div>
+          {% endif %}
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;">
+          {% if org.home_service_available %}
+          <span class="feat-tag feat-tag-blue"><i class="bi bi-house"></i>Home Service</span>
+          {% endif %}
+          {% if org.accepts_online_payment %}
+          <span class="feat-tag feat-tag-green"><i class="bi bi-credit-card"></i>Online Pay</span>
+          {% endif %}
+          {% if org.is_open_sunday %}
+          <span class="feat-tag feat-tag-yellow"><i class="bi bi-sun"></i>Open Sunday</span>
+          {% endif %}
+          <span class="feat-tag" style="
+            color:{% if org.status == 'active' %}var(--go){% elif org.status == 'suspended' %}var(--fire){% elif org.status == 'pending' %}var(--gold){% else %}rgba(255,255,255,0.35){% endif %};
+            border-color:{% if org.status == 'active' %}rgba(34,197,94,0.25){% elif org.status == 'suspended' %}rgba(239,68,68,0.25){% elif org.status == 'pending' %}rgba(245,158,11,0.25){% else %}var(--border){% endif %};
+            background:{% if org.status == 'active' %}rgba(34,197,94,0.07){% elif org.status == 'suspended' %}rgba(239,68,68,0.07){% elif org.status == 'pending' %}rgba(245,158,11,0.07){% else %}rgba(255,255,255,0.02){% endif %};">
+            <i class="bi bi-circle-fill" style="font-size:6px;"></i>{{ org.get_status_display }}
+          </span>
+        </div>
+
+        {% if org.plan_start_date or org.plan_end_date %}
+        <div class="plan-dates-strip">
+          <div class="plan-dates-label">Plan Period</div>
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.5);">
+            <span><i class="bi bi-play-circle me-1" style="color:var(--go);"></i>{{ org.plan_start_date|date:"d M Y"|default:"—" }}</span>
+            <span style="color:rgba(255,255,255,0.2);">→</span>
+            <span><i class="bi bi-stop-circle me-1" style="color:{% if not org.is_plan_active %}var(--fire){% else %}var(--gold){% endif %};"></i>{{ org.plan_end_date|date:"d M Y"|default:"—" }}</span>
+          </div>
+        </div>
+        {% endif %}
+
+        <a href="{% url 'org_settings' %}" class="btn-dark-outline" style="width:100%;justify-content:center;margin-top:14px;padding:9px;">
+          <i class="bi bi-pencil"></i>Edit Profile
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right Column ── -->
+  <div class="col-lg-8">
+
+    <!-- Recent Enquiries -->
+    <div class="card-modern mb-4">
+      <div class="card-header">
+        <span><i class="bi bi-chat-left-dots me-2"></i>Recent Enquiries</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          {% if new_enquiries > 0 %}
+          <span style="background:var(--fire);color:#fff;font-size:9.5px;font-weight:800;padding:2px 9px;border-radius:20px;">
+            {{ new_enquiries }} New
+          </span>
+          {% endif %}
+          <a href="{% url 'enquiries' %}" class="btn-dark-outline" style="padding:4px 11px;font-size:10px;">View All</a>
+        </div>
+      </div>
+      <div>
+        {% if enquiries %}
+        <table class="table-modern">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Subject / Item</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for enq in enquiries %}
+          <tr>
+            <td>
+              <div class="fw-600">{{ enq.name }}</div>
+              <div style="color:rgba(255,255,255,0.28);font-size:11px;">{{ enq.phone }}</div>
+            </td>
+            <td>
+              <span style="font-size:12.5px;">{{ enq.subject|truncatechars:35 }}</span>
+              {% if enq.service %}
+              <div style="color:rgba(255,255,255,0.28);font-size:10.5px;margin-top:2px;">
+                <i class="bi bi-briefcase me-1" style="color:#60a5fa;"></i>{{ enq.service.name }}
+              </div>
+              {% endif %}
+              {% if enq.product %}
+              <div style="color:rgba(255,255,255,0.28);font-size:10.5px;margin-top:2px;">
+                <i class="bi bi-box-seam me-1" style="color:#a78bfa;"></i>{{ enq.product.name }}
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ enq.status }}" style="border-radius:20px;">
+                {{ enq.get_status_display }}
+              </span>
+            </td>
+            <td style="color:rgba(255,255,255,0.3);font-size:11.5px;">{{ enq.created_at|date:"d M" }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center;padding:40px 20px;">
+          <i class="bi bi-inbox" style="font-size:2.5rem;color:rgba(255,255,255,0.1);display:block;margin-bottom:12px;"></i>
+          <p style="color:rgba(255,255,255,0.3);margin-bottom:14px;font-size:13px;">No enquiries yet. Share your public page to start receiving them!</p>
+          <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn-gold">
+            <i class="bi bi-share"></i>View Your Page
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3">
+      <div class="col-md-4">
+        <a href="{% url 'add_service' %}" class="quick-action-card">
+          <i class="bi bi-plus-circle" style="font-size:1.8rem;color:#60a5fa;display:block;margin-bottom:4px;"></i>
+          <div class="label" style="color:#60a5fa;">Add Service</div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a href="{% url 'add_product' %}" class="quick-action-card">
+          <i class="bi bi-box-seam" style="font-size:1.8rem;color:#a78bfa;display:block;margin-bottom:4px;"></i>
+          <div class="label" style="color:#a78bfa;">Add Product</div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a href="{% url 'enquiries' %}" class="quick-action-card">
+          <i class="bi bi-chat-text" style="font-size:1.8rem;color:var(--gold);display:block;margin-bottom:4px;"></i>
+          <div class="label" style="color:var(--gold);">
+            Enquiries
+            {% if new_enquiries > 0 %}
+            <span style="background:var(--fire);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:20px;vertical-align:middle;margin-left:4px;">{{ new_enquiries }}</span>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Plan Features -->
+    {% if org.plan and org.plan.features %}
+    <div class="card-modern mt-4">
+      <div class="card-header">
+        <span><i class="bi bi-list-check me-2"></i>Your {{ org.plan.name }} Plan Includes</span>
+      </div>
+      <div class="p-3">
+        <div class="row g-2">
+          {% for feature in org.plan.features %}
+          <div class="col-md-6">
+            <div class="plan-feat-item">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>{{ feature }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Testimonials -->
+    {% if testimonials %}
+    <div class="card-modern mt-4">
+      <div class="card-header">
+        <span><i class="bi bi-star-fill me-2"></i>Recent Testimonials</span>
+        <span style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:9.5px;font-weight:700;padding:2px 9px;border-radius:20px;">{{ testimonials.count }}</span>
+      </div>
+      <div class="p-3" style="display:flex;flex-direction:column;gap:8px;">
+        {% for t in testimonials %}
+        <div class="test-mini">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span class="t-name">{{ t.client_name }}</span>
+            <span class="stars">{% for i in "12345" %}{% if forloop.counter <= t.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          </div>
+          <p class="t-text">{{ t.message|truncatechars:100 }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div><!-- /right col -->
+
+</div><!-- /row -->
+{% endblock %}

@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+{% block title %}Register Super Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ====== PAGE - NO SCROLL ====== */
+.sa-page {
+    min-height: calc(100vh - 130px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 5px 0;
+}
+.sa-page::before {
+    content: '';
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 70%);
+    top: -100px;
+    right: -60px;
+    border-radius: 50%;
+}
+.sa-page::after {
+    content: '';
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(249,115,22,0.05) 0%, transparent 70%);
+    bottom: -50px;
+    left: -50px;
+    border-radius: 50%;
+}
+
+/* ====== CARD - ULTRA COMPACT ====== */
+.sa-card {
+    background: rgba(255,255,255,0.97);
+    border-radius: 16px;
+    padding: 16px 24px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 2;
+    max-width: 450px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* ====== HEADER - TIGHT ====== */
+.sa-logo {
+    font-family: var(--font-display, sans-serif);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #0F172A;
+}
+.sa-logo span { color: #F97316; }
+.sa-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #FEF9C3;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+    border-radius: 50px;
+    padding: 2px 8px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+.sa-title {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-top: 6px;
+    margin-bottom: 1px;
+    color: #0F172A;
+}
+.sa-sub {
+    color: #64748B;
+    font-size: 0.72rem;
+    margin-bottom: 6px;
+}
+
+/* ====== SECTION LABELS - TIGHT ====== */
+.section-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #1F549F;
+    margin: 6px 0 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #CBD5E1;
+}
+
+/* ====== INPUTS - ULTRA COMPACT ====== */
+.form-label {
+    color: #334155 !important;
+    font-size: 0.6rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 1px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.input-icon-wrap {
+    position: relative;
+}
+.input-icon-wrap i.prefix {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94A3B8;
+    font-size: 0.75rem;
+    z-index: 2;
+}
+.input-icon-wrap .form-control,
+.input-icon-wrap .form-select {
+    padding-left: 30px !important;
+    color: #0F172A !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 6px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    font-size: 0.75rem !important;
+    height: auto !important;
+}
+.input-icon-wrap .form-control:focus {
+    border-color: #F97316 !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1) !important;
+}
+
+/* ====== TWO COLUMNS ====== */
+.form-row-2 {
+    display: flex;
+    gap: 8px;
+}
+.form-row-2 > div {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ====== PASSWORD TOGGLE ====== */
+.pw-toggle {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #94A3B8;
+    z-index: 3;
+    font-size: 0.75rem;
+}
+
+/* ====== BUTTON - TIGHT ====== */
+.btn-sa {
+    width: 100%;
+    padding: 7px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 8px;
+    background: #0F172A;
+    border: none;
+    color: #fff;
+    transition: all .3s;
+    margin-top: 8px;
+}
+.btn-sa:hover {
+    background: #F97316;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(249,115,22,0.35);
+}
+
+/* ====== NOTICE ====== */
+.already-notice {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 6px;
+    padding: 6px 8px;
+    display: flex;
+    gap: 5px;
+    align-items: flex-start;
+    margin-bottom: 6px;
+    font-size: 0.68rem;
+}
+
+/* ====== MESSAGES ====== */
+.alert {
+    padding: 5px 8px !important;
+    font-size: 0.7rem !important;
+    margin-bottom: 6px !important;
+}
+
+/* ====== BACK LINK ====== */
+.back-link {
+    margin-top: 6px;
+    text-align: center;
+}
+.back-link a {
+    color: #64748B;
+    font-size: 0.7rem;
+    text-decoration: none;
+}
+.back-link a:hover { color: #F97316; }
+
+/* ====== KILL ALL BOOTSTRAP SPACING ====== */
+.mb-1 { margin-bottom: 0.15rem !important; }
+.mb-2 { margin-bottom: 0.25rem !important; }
+.mb-3 { margin-bottom: 0.3rem !important; }
+.mb-4 { margin-bottom: 0.4rem !important; }
+.mt-1 { margin-top: 0.15rem !important; }
+.mt-2 { margin-top: 0.25rem !important; }
+.mt-3 { margin-top: 0.3rem !important; }
+.mt-4 { margin-top: 0.4rem !important; }
+.g-3 { --bs-gutter-x: 0.4rem !important; --bs-gutter-y: 0.3rem !important; }
+
+/* ====== ERROR ====== */
+.text-danger.small {
+    font-size: 0.62rem !important;
+    margin-top: 1px !important;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 576px) {
+    .sa-card {
+        padding: 12px 16px;
+        margin: 5px;
+        border-radius: 12px;
+    }
+    .sa-page { padding: 5px 0; }
+    .form-row-2 {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sa-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4 col-xl-4">
+                <div class="sa-card">
+
+                    <div class="sa-logo">Org<span>Portal</span></div>
+                    <div class="sa-badge"><i class="bi bi-shield-fill-check"></i> Super Admin Setup</div>
+                    <h2 class="sa-title">Create Super Admin</h2>
+                    <p class="sa-sub">
+                        {% if already_exists %}
+                            Add another Super Admin account to the platform.
+                        {% else %}
+                            First-time setup — create the platform's Super Admin.
+                        {% endif %}
+                    </p>
+
+                    {% if already_exists %}
+                    <div class="already-notice">
+                        <i class="bi bi-info-circle-fill text-warning mt-1"></i>
+                        <div class="text-muted">
+                            A Super Admin already exists. Only an existing Super Admin can create additional ones.
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if messages %}
+                        {% for msg in messages %}
+                        <div class="alert alert-{{ msg.tags }} mt-2">{{ msg }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Personal Info -->
+                        <div class="section-label"><i class="bi bi-person"></i> Personal Info</div>
+                        <div class="form-row-2 mb-2">
+                            <div>
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-person prefix"></i>
+                                    {{ form.first_name }}
+                                </div>
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small">{{ form.first_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label">Last Name</label>
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-person prefix"></i>
+                                    {{ form.last_name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Phone</label>
+                            <div class="input-icon-wrap">
+                                <i class="bi bi-telephone prefix"></i>
+                                {{ form.phone }}
+                            </div>
+                        </div>
+
+                        <!-- Account Info -->
+                        <div class="section-label"><i class="bi bi-at"></i> Account Info</div>
+                        <div class="mb-2">
+                            <label class="form-label">Username <span class="text-danger">*</span></label>
+                            <div class="input-icon-wrap">
+                                <i class="bi bi-person-badge prefix"></i>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="text-danger small">{{ form.username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <div class="input-icon-wrap">
+                                <i class="bi bi-envelope prefix"></i>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div class="section-label"><i class="bi bi-lock"></i> Password</div>
+                        <div class="form-row-2 mb-2">
+                            <div>
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-lock prefix"></i>
+                                    {{ form.password1 }}
+                                    <i class="bi bi-eye pw-toggle" onclick="togglePw('id_password1', this)"></i>
+                                </div>
+                                {% if form.password1.errors %}
+                                    <div class="text-danger small">{{ form.password1.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label">Confirm <span class="text-danger">*</span></label>
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-lock prefix"></i>
+                                    {{ form.password2 }}
+                                    <i class="bi bi-eye pw-toggle" onclick="togglePw('id_password2', this)"></i>
+                                </div>
+                                {% if form.password2.errors %}
+                                    <div class="text-danger small">{{ form.password2.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-sa">
+                            <i class="bi bi-shield-check me-2"></i>Create Super Admin
+                        </button>
+                    </form>
+
+                    <div class="back-link">
+                        <a href="{% url 'login' %}">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Login
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw(fieldId, icon) {
+    const f = document.getElementById(fieldId);
+    const isHidden = f.type === 'password';
+    f.type = isHidden ? 'text' : 'password';
+    icon.classList.toggle('bi-eye', !isHidden);
+    icon.classList.toggle('bi-eye-slash', isHidden);
+}
+</script>
+{% endblock %}

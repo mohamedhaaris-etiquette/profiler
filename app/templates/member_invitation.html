@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You've been invited to Portal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', Arial, sans-serif; background: #f1f5f9; color: #1e293b; }
+    .wrapper { max-width: 580px; margin: 32px auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+    .header { background: linear-gradient(135deg, #0f172a, #1e293b); padding: 36px 40px; text-align: center; }
+    .header .logo { font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .header .logo span { color: #f97316; }
+    .body { padding: 36px 40px; }
+    .invited-by {
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .invited-by .avatar {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: linear-gradient(135deg, #f97316, #fbbf24);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .invited-by .name { font-weight: 700; font-size: 0.95rem; }
+    .invited-by .sub  { color: #64748b; font-size: 0.8rem; margin-top: 2px; }
+    h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; line-height: 1.3; }
+    h1 span { color: #f97316; }
+    .desc { color: #475569; font-size: 0.92rem; line-height: 1.7; margin-bottom: 20px; }
+    /* Personal message */
+    .personal-msg {
+      background: #fff7ed; border-left: 3px solid #f97316;
+      border-radius: 0 10px 10px 0; padding: 14px 18px;
+      margin-bottom: 24px; font-style: italic;
+      color: #92400e; font-size: 0.88rem; line-height: 1.6;
+    }
+    /* Bonus badge */
+    .bonus-box {
+      background: linear-gradient(135deg, #fef3c7, #fffbeb);
+      border: 1.5px solid #fde68a; border-radius: 14px;
+      padding: 18px 22px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .bonus-box .pts { font-size: 2rem; font-weight: 800; color: #d97706; line-height: 1; }
+    .bonus-box .pts-lbl { font-size: 0.75rem; color: #92400e; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .bonus-box .pts-desc { font-size: 0.82rem; color: #78350f; margin-top: 4px; }
+    /* Steps */
+    .steps { margin-bottom: 28px; }
+    .step {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .step:last-child { border-bottom: none; }
+    .step .num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #0f172a; color: #fbbf24;
+      font-size: 0.8rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step .txt { font-size: 0.85rem; color: #475569; line-height: 1.5; padding-top: 4px; }
+    .step .txt strong { color: #1e293b; }
+    /* CTA */
+    .cta-wrap { text-align: center; margin-bottom: 28px; }
+    .cta {
+      display: inline-block; background: #f97316; color: #fff !important;
+      text-decoration: none; padding: 15px 36px; border-radius: 12px;
+      font-weight: 700; font-size: 1rem; letter-spacing: 0.02em;
+    }
+    .cta-sub { color: #94a3b8; font-size: 0.75rem; margin-top: 10px; }
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+    .url-box {
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 10px; padding: 12px 16px;
+      font-family: monospace; font-size: 0.78rem; color: #475569;
+      word-break: break-all;
+    }
+    .footer { background: #f8fafc; padding: 24px 40px; text-align: center; color: #94a3b8; font-size: 0.78rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">Org<span>Portal</span></div>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <!-- Invited by -->
+      <div class="invited-by">
+        <div class="avatar">{{ referrer_org.name|first|upper }}</div>
+        <div>
+          <div class="name">{{ referrer_org.name }}</div>
+          <div class="sub">invited you to join Portal</div>
+        </div>
+      </div>
+
+      <h1>Get your business<br>online — for <span>free</span> 🚀</h1>
+
+      <p class="desc">
+        {{ referrer_org.name }} thinks your business deserves a professional online presence.
+        Portal gives you a free business page, enquiry management, digital visiting card, and more — in minutes.
+      </p>
+
+      {% if personal_message %}
+      <div class="personal-msg">
+        "{{ personal_message }}"<br>
+        <strong style="font-style:normal;font-size:0.82rem;margin-top:6px;display:block;">— {{ referrer_org.name }}</strong>
+      </div>
+      {% endif %}
+
+      {% if bonus_points %}
+      <!-- Bonus info -->
+      <div class="bonus-box">
+        <div style="flex-shrink:0;">
+          <div class="pts">{{ bonus_points }}</div>
+          <div class="pts-lbl">OrgPoints</div>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.88rem;color:#78350f;">Join & both of you benefit!</div>
+          <div class="pts-desc">
+            When you create your profile, <strong>{{ referrer_org.name }}</strong> earns
+            <strong>{{ bonus_points }} OrgPoints</strong> — a small thank-you for spreading the word.
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- How it works -->
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <div class="txt"><strong>Click the button below</strong> — no password required yet.</div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div class="txt"><strong>Fill in your business details</strong> — name, address, services, logo.</div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div class="txt"><strong>Set a password</strong> and your free business page goes live instantly.</div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-wrap">
+        <a href="{{ onboard_url }}" class="cta">Create My Free Business Page →</a>
+        <div class="cta-sub">This link expires in 7 days.</div>
+      </div>
+
+      <hr class="divider">
+      <p style="font-size:0.8rem;color:#64748b;margin-bottom:8px;">Or copy and paste this link into your browser:</p>
+      <div class="url-box">{{ onboard_url }}</div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>You received this because <strong>{{ referrer_org.name }}</strong> invited {{ invite.email }}.</p>
+      <p>If you weren't expecting this, you can safely ignore it.</p>
+      <p style="margin-top:8px;"><strong>Portal</strong> — Your local business, online.</p>
+    </div>
+
+  </div>
+</body>
+</html>

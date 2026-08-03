@@ -1,0 +1,563 @@
+{% extends 'base.html' %}
+{% block title %}Add Member — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Page Layout ─────────────────────────────────────────────── */
+.am-page {
+  background: #07110b;
+  color: #fff;
+  min-height: calc(100vh - 70px);
+  padding: 36px 0 60px;
+}
+.am-card {
+  background: #0d1b12;
+  border: 1px solid rgba(116,198,157,.2);
+  border-radius: 20px;
+  box-shadow: 0 18px 52px rgba(0,0,0,.35);
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.am-sidebar {
+  background: linear-gradient(170deg, #0f172a, #1e293b);
+  padding: 36px 28px;
+  min-height: 100%;
+  position: sticky;
+  top: 90px;
+}
+.am-sidebar-logo {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+}
+.am-sidebar-logo .logo-box {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--accent, #f97316);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; color: #fff;
+}
+.am-sidebar h3 { color: #fff; font-weight: 800; font-size: 1.3rem; margin-bottom: 6px; }
+.am-sidebar p  { color: rgba(255,255,255,0.5); font-size: 0.82rem; }
+
+/* ── Step Indicators ─────────────────────────────────────────── */
+.step-track { margin-top: 28px; }
+.step-row   { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 6px; position: relative; }
+.step-row:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 15px; top: 32px;
+  width: 2px; height: 28px;
+  background: rgba(255,255,255,0.1);
+}
+.step-circle {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  transition: all .3s;
+}
+.step-circle.active { background: #f97316; border-color: #f97316; color: #fff; }
+.step-circle.done   { background: #22c55e; border-color: #22c55e; color: #fff; }
+.step-info { padding-top: 5px; }
+.step-info .title { color: rgba(255,255,255,0.9); font-size: 0.85rem; font-weight: 700; }
+.step-info .sub   { color: rgba(255,255,255,0.4); font-size: 0.72rem; margin-top: 1px; }
+
+/* ── Progress Bar ────────────────────────────────────────────── */
+.am-progress { height: 5px; background: rgba(255,255,255,.1); border-radius: 99px; margin-bottom: 32px; }
+.am-progress .fill {
+  height: 100%; background: linear-gradient(90deg, #f97316, #fb923c);
+  border-radius: 99px; transition: width .4s ease;
+}
+
+/* ── Form Body ───────────────────────────────────────────────── */
+.am-body { padding: 36px 40px; }
+@media(max-width: 576px){ .am-body { padding: 24px 18px; } }
+
+.section-title {
+  font-weight: 800; font-size: 1.35rem; color: #fff;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+}
+.section-title i { color: #f97316; }
+.section-sub { color: rgba(255,255,255,.58); font-size: 0.85rem; margin-bottom: 28px; }
+
+/* ── Form Sections ───────────────────────────────────────────── */
+.form-section { display: none; }
+.form-section.active { display: block; }
+
+/* ── Field Groups ────────────────────────────────────────────── */
+.field-group {
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(116,198,157,.22);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.field-group-title {
+  font-size: 0.68rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: rgba(255,255,255,.5); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 6px;
+}
+.field-group-title i { color: #f97316; }
+
+/* ── Labels & inputs ─────────────────────────────────────────── */
+label.field-lbl {
+  display: block; font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: rgba(255,255,255,.72); margin-bottom: 5px;
+}
+.form-control, .form-select {
+  background: rgba(255,255,255,.055) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  border: 1.5px solid rgba(116,198,157,.3);
+  border-radius: 9px;
+  font-size: 0.88rem;
+  padding: 9px 14px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.form-control:focus, .form-select:focus {
+  background: rgba(255,255,255,.08) !important;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+}
+.form-control::placeholder { color: rgba(255,255,255,.38); -webkit-text-fill-color: rgba(255,255,255,.38); }
+.form-select option { background: #13251a; color: #fff; }
+
+/* ── Phone prefix ────────────────────────────────────────────── */
+.phone-group { display: flex; gap: 0; }
+.phone-prefix {
+  background: rgba(255,255,255,.07); border: 1.5px solid rgba(116,198,157,.3);
+  border-right: none; border-radius: 9px 0 0 9px;
+  padding: 9px 12px; font-size: 0.82rem; font-weight: 700;
+  color: rgba(255,255,255,.72); white-space: nowrap;
+}
+.phone-group .form-control { border-radius: 0 9px 9px 0; }
+
+/* ── Gender radio ────────────────────────────────────────────── */
+.gender-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.gender-option {
+  border: 1.5px solid rgba(116,198,157,.25); border-radius: 10px;
+  padding: 8px 20px; cursor: pointer; font-size: 0.85rem;
+  font-weight: 600; transition: all .2s;
+  display: flex; align-items: center; gap: 8px;
+}
+.gender-option input { accent-color: #f97316; }
+.gender-option:has(input:checked) {
+  border-color: #f97316; background: rgba(249,115,22,0.06); color: #f97316;
+}
+
+/* ── Plan badge ──────────────────────────────────────────────── */
+.plan-preview {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+}
+.plan-badge {
+  border-radius: 20px; padding: 4px 14px; font-size: 0.72rem;
+  font-weight: 700; border: 2px solid transparent;
+}
+
+/* ── Nav Buttons ─────────────────────────────────────────────── */
+.am-nav { display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(116,198,157,.2); }
+.am-nav .btn { flex: 1; padding: 12px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; }
+.btn-continue {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 12px 28px; font-weight: 700; font-size: 0.85rem;
+  transition: box-shadow .2s, transform .15s;
+}
+.btn-continue:hover { box-shadow: 0 6px 20px rgba(249,115,22,0.35); transform: translateY(-1px); }
+.btn-back-step {
+  background: rgba(255,255,255,.07); color: rgba(255,255,255,.75);
+  border: none; border-radius: 10px;
+  padding: 12px 20px; font-weight: 600; font-size: 0.85rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="am-page">
+<div class="container">
+<div class="row g-4">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────────── -->
+  <div class="col-lg-3 d-none d-lg-block">
+    <div class="am-sidebar rounded-4">
+      <div class="am-sidebar-logo">
+        <div class="logo-box"><i class="bi bi-person-plus-fill"></i></div>
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:1rem;">Add Member</div>
+          <div style="color:rgba(255,255,255,0.4);font-size:0.72rem;">Admin Console</div>
+        </div>
+      </div>
+      <p>Create a new member organisation with plan, category, and admin account in two quick steps.</p>
+
+      <div class="step-track">
+        <div class="step-row">
+          <div class="step-circle {% if current_step == 1 %}active{% elif current_step > 1 %}done{% endif %}" id="sc-1">
+            {% if current_step > 1 %}<i class="bi bi-check2"></i>{% else %}1{% endif %}
+          </div>
+          <div class="step-info">
+            <div class="title">Site & Plan Setup</div>
+            <div class="sub">Subdomain · Category · Plan</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-circle {% if current_step == 2 %}active{% endif %}" id="sc-2">2</div>
+          <div class="step-info">
+            <div class="title">Contact & Account</div>
+            <div class="sub">Profile · Address · Role · Dates</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,0.1);">
+        <div class="d-flex gap-2 mb-2">
+          <i class="bi bi-check-circle-fill text-success"></i>
+          <span style="color:rgba(255,255,255,0.75);font-size:0.82rem;">Subdomain auto-assigned</span>
+        </div>
+        <div class="d-flex gap-2 mb-2">
+          <i class="bi bi-check-circle-fill text-success"></i>
+          <span style="color:rgba(255,255,255,0.75);font-size:0.82rem;">Plan limits enforced</span>
+        </div>
+        <div class="d-flex gap-2">
+          <i class="bi bi-check-circle-fill text-success"></i>
+          <span style="color:rgba(255,255,255,0.75);font-size:0.82rem;">Services pre-filled</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form Card ─────────────────────────────────────────────────── -->
+  <div class="col-lg-9">
+    <div class="am-card">
+      <div class="am-body">
+
+        <div class="am-progress">
+          <div class="fill" style="width: {% if current_step == 1 %}50{% else %}100{% endif %}%;"></div>
+        </div>
+
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags|default:'info' }} alert-dismissible mb-4">
+          {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- ════════════════ STEP 1 ════════════════ -->
+        <div class="form-section {% if current_step == 1 %}active{% endif %}" id="step-1">
+          <div class="section-title">
+            <i class="bi bi-grid-3x3-gap"></i> Site & Plan Setup
+          </div>
+          <p class="section-sub">Configure the subdomain, business category, and subscription plan for this member.</p>
+
+          <form method="post" id="step1Form">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="1">
+
+            <!-- Site Details -->
+            <div class="field-group">
+              <div class="field-group-title"><i class="bi bi-globe2"></i> Site Configuration</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="field-lbl">Site URL — Subdomain *</label>
+                  {{ form1.site_url }}
+                  {% if form1.site_url.errors %}
+                  <div class="text-danger small mt-1">{{ form1.site_url.errors.0 }}</div>
+                  {% endif %}
+                  <div class="text-muted small mt-1">
+                    <i class="bi bi-info-circle me-1"></i>e.g. <code>johns-electricals</code> → site will be at <code>johns-electricals.yourportal.com</code>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Site Title — Business Name *</label>
+                  {{ form1.site_title }}
+                  {% if form1.site_title.errors %}
+                  <div class="text-danger small mt-1">{{ form1.site_title.errors.0 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Category -->
+            <div class="field-group">
+              <div class="field-group-title"><i class="bi bi-tags"></i> Business Category</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="field-lbl">Main Category *</label>
+                  {{ form1.main_category }}
+                  {% if form1.main_category.errors %}
+                  <div class="text-danger small mt-1">{{ form1.main_category.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Sub Category</label>
+                  {{ form1.sub_category }}
+                  {% if form1.sub_category.errors %}
+                  <div class="text-danger small mt-1">{{ form1.sub_category.errors.0 }}</div>
+                  {% endif %}
+                  <div class="text-muted small mt-1">Loaded dynamically after selecting Main Category</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plan -->
+            <div class="field-group">
+              <div class="field-group-title"><i class="bi bi-award"></i> Subscription Plan</div>
+              <label class="field-lbl">Select Plan *</label>
+              {{ form1.plan }}
+              {% if form1.plan.errors %}
+              <div class="text-danger small mt-1">{{ form1.plan.errors.0 }}</div>
+              {% endif %}
+              <div class="plan-preview mt-2">
+                <span class="plan-badge" style="background:#f3f4f6;border-color:#d1d5db;color:#374151;">Trial — Free</span>
+                <span class="plan-badge" style="background:#f0f9ff;border-color:#bae6fd;color:#0369a1;">Silver</span>
+                <span class="plan-badge" style="background:#fffbeb;border-color:#fcd34d;color:#92400e;">Gold</span>
+                <span class="plan-badge" style="background:#f5f3ff;border-color:#c4b5fd;color:#5b21b6;">Platinum</span>
+              </div>
+              <div class="text-muted small mt-2">
+                <i class="bi bi-info-circle me-1"></i>Plan dates are set in Step 2. Plans can be edited later from Member Settings.
+              </div>
+            </div>
+
+            <div class="am-nav">
+              <a href="{% url 'member_list' %}" class="btn-back-step btn">
+                <i class="bi bi-arrow-left me-1"></i> Cancel
+              </a>
+              <button type="submit" class="btn-continue">
+                Next: Contact Details <i class="bi bi-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ════════════════ STEP 2 ════════════════ -->
+        <div class="form-section {% if current_step == 2 %}active{% endif %}" id="step-2">
+          <div class="section-title">
+            <i class="bi bi-person-badge"></i> Contact & Account Details
+          </div>
+          <p class="section-sub">Enter the member's contact information, address, login credentials, and plan dates.</p>
+
+          {% if step1_data %}
+          <div class="alert alert-light border mb-4 d-flex align-items-center gap-3">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <div>
+              <strong>Step 1 Complete:</strong>
+              Subdomain: <code>{{ step1_data.site_url }}</code> |
+              Plan: <strong>{{ step1_data.plan }}</strong>
+              {% if step1_data.main_category %} | Category: {{ step1_data.main_category }}{% endif %}
+            </div>
+          </div>
+          {% endif %}
+
+          <form method="post" enctype="multipart/form-data" id="step2Form">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="2">
+
+            {% if form2.non_field_errors %}
+            <div class="alert alert-danger">{{ form2.non_field_errors }}</div>
+            {% endif %}
+
+            <!-- ── Contact Info ──────────────────────────── -->
+            <div class="field-group">
+              <div class="field-group-title"><i class="bi bi-person-lines-fill"></i> Contact Information</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="field-lbl">Contact Name *</label>
+                  {{ form2.contact_name }}
+                  {% if form2.contact_name.errors %}<div class="text-danger small mt-1">{{ form2.contact_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Company Name *</label>
+                  {{ form2.company_name }}
+                  {% if form2.company_name.errors %}<div class="text-danger small mt-1">{{ form2.company_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Email *</label>
+                  {{ form2.email }}
+                  {% if form2.email.errors %}<div class="text-danger small mt-1">{{ form2.email.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Mobile *</label>
+                  <div class="phone-group">
+                    <span class="phone-prefix">+91</span>
+                    {{ form2.mobile }}
+                  </div>
+                  {% if form2.mobile.errors %}<div class="text-danger small mt-1">{{ form2.mobile.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">WhatsApp</label>
+                  <div class="phone-group">
+                    <span class="phone-prefix">+91</span>
+                    {{ form2.whatsapp }}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Landline No</label>
+                  {{ form2.landline }}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Profile Picture</label>
+                  {{ form2.profile_picture }}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Date of Birth</label>
+                  {{ form2.date_of_birth }}
+                </div>
+                <div class="col-12">
+                  <label class="field-lbl">Gender</label>
+                  <div class="gender-row">
+                    {% for val, lbl in form2.fields.gender.choices %}
+                    <label class="gender-option">
+                      <input type="radio" name="gender" value="{{ val }}"
+                        {% if form2.initial.gender == val or val == 'male' and not form2.initial.gender %}checked{% endif %}>
+                      {% if val == 'male' %}<i class="bi bi-gender-male"></i>
+                      {% elif val == 'female' %}<i class="bi bi-gender-female"></i>
+                      {% else %}<i class="bi bi-person"></i>{% endif %}
+                      {{ lbl }}
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Login Account ─────────────────────────── -->
+            <div class="field-group">
+              <div class="field-group-title"><i class="bi bi-shield-lock"></i> Login Account</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="field-lbl">Username <span class="text-muted fw-normal">(auto if blank)</span></label>
+                  {{ form2.username }}
+                  {% if form2.username.errors %}<div class="text-danger small mt-1">{{ form2.username.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Password *</label>
+                  {{ form2.password }}
+                  {% if form2.password.errors %}<div class="text-danger small mt-1">{{ form2.password.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">User Role *</label>
+                  {{ form2.user_role }}
+                  {% if form2.user_role.errors %}<div class="text-danger small mt-1">{{ form2.user_role.errors.0 }}</div>{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Address ───────────────────────────────── -->
+            <div class="field-group">
+              <div class="field-group-title"><i class="bi bi-geo-alt"></i> Address</div>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="field-lbl">Address *</label>
+                  {{ form2.address }}
+                  {% if form2.address.errors %}<div class="text-danger small mt-1">{{ form2.address.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                  <label class="field-lbl">City *</label>
+                  {{ form2.city }}
+                  {% if form2.city.errors %}<div class="text-danger small mt-1">{{ form2.city.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                  <label class="field-lbl">District</label>
+                  {{ form2.district }}
+                </div>
+                <div class="col-md-4">
+                  <label class="field-lbl">State *</label>
+                  {{ form2.state }}
+                  {% if form2.state.errors %}<div class="text-danger small mt-1">{{ form2.state.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                  <label class="field-lbl">Pincode *</label>
+                  {{ form2.pincode }}
+                  {% if form2.pincode.errors %}<div class="text-danger small mt-1">{{ form2.pincode.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-8">
+                  <label class="field-lbl">Website</label>
+                  <div class="input-group">
+                    <span class="input-group-text" style="border-radius:9px 0 0 9px;border:1.5px solid #e2e8f0;background:#f8faff;font-size:0.82rem;color:#64748b;">https://</span>
+                    {{ form2.website }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Plan Dates & Status ────────────────────── -->
+            <div class="field-group">
+              <div class="field-group-title"><i class="bi bi-calendar2-range"></i> Plan Dates & Status</div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="field-lbl">Plan Start Date</label>
+                  {{ form2.plan_start_date }}
+                  {% if form2.plan_start_date.errors %}<div class="text-danger small mt-1">{{ form2.plan_start_date.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Plan End Date</label>
+                  {{ form2.plan_end_date }}
+                  {% if form2.plan_end_date.errors %}<div class="text-danger small mt-1">{{ form2.plan_end_date.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">Status *</label>
+                  {{ form2.status }}
+                  {% if form2.status.errors %}<div class="text-danger small mt-1">{{ form2.status.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                  <label class="field-lbl">File Attachment</label>
+                  {{ form2.file_attachment }}
+                  <div class="text-muted small mt-1">Agreement, certificate, or any document</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="am-nav">
+              <a href="{% url 'add_member' %}?step=1" class="btn-back-step btn">
+                <i class="bi bi-arrow-left me-1"></i> Back
+              </a>
+              <button type="submit" class="btn-continue">
+                <i class="bi bi-rocket-takeoff me-2"></i>Create Member
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div><!-- /am-body -->
+    </div><!-- /am-card -->
+  </div><!-- /col -->
+
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Dynamic sub-category loader ───────────────────────────────
+const mainCatSelect = document.getElementById('id_main_category');
+const subCatSelect  = document.getElementById('id_sub_category');
+
+if (mainCatSelect && subCatSelect) {
+  mainCatSelect.addEventListener('change', function () {
+    const catId = this.value;
+    subCatSelect.innerHTML = '<option value="">Loading…</option>';
+    if (!catId) {
+      subCatSelect.innerHTML = '<option value="">Please select sub category</option>';
+      return;
+    }
+    fetch(`/ajax/subcategories/?category_id=${catId}`)
+      .then(r => r.json())
+      .then(data => {
+        subCatSelect.innerHTML = '<option value="">Please select sub category</option>';
+        data.sub_categories.forEach(sc => {
+          const opt = document.createElement('option');
+          opt.value = sc.id;
+          opt.textContent = sc.name;
+          subCatSelect.appendChild(opt);
+        });
+      })
+      .catch(() => {
+        subCatSelect.innerHTML = '<option value="">Error loading sub categories</option>';
+      });
+  });
+}
+</script>
+{% endblock %}

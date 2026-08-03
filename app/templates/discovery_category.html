@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+{% load app_filters %}
+
+{% block title %}{{ cat.name }} Businesses — Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── CATEGORY PAGE ───────────────────────────────────────── */
+.cat-hero {
+  padding: 56px 0 40px;
+  background: var(--ink2);
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.cat-hero::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 50% 80% at 10% 50%, rgba(245,158,11,0.09) 0%, transparent 70%);
+}
+.cat-hero-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.06));
+  border: 1.5px solid rgba(245,158,11,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; color: var(--gold); margin-bottom: 16px;
+}
+.cat-hero-title {
+  font-family: var(--fh); font-size: clamp(1.8rem,4vw,2.8rem);
+  font-weight: 800; color: var(--white); margin-bottom: 8px;
+}
+.breadcrumb-dark a { color: var(--gold); text-decoration: none; }
+.breadcrumb-dark .breadcrumb-item.active { color: rgba(255,255,255,0.4); }
+.breadcrumb-dark .breadcrumb-item + .breadcrumb-item::before { color: rgba(255,255,255,0.25); }
+
+/* ── SIDEBAR FILTERS ─────────────────────────────────────── */
+.filter-panel {
+  background: var(--ink2); border: 1.5px solid var(--border); border-radius: 16px;
+  padding: 20px; position: sticky; top: 80px;
+}
+.filter-panel-title {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--gold); margin-bottom: 16px;
+}
+.filter-group { margin-bottom: 20px; }
+.filter-group-label { font-size: 0.8rem; font-weight: 700; color: rgba(255,255,255,0.7); margin-bottom: 10px; }
+.filter-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 10px; cursor: pointer;
+  text-decoration: none; color: rgba(255,255,255,0.6); font-size: 0.85rem;
+  transition: all .2s; border: 1px solid transparent;
+}
+.filter-option:hover { background: var(--ink3); color: var(--white); }
+.filter-option.active {
+  background: rgba(245,158,11,0.1);
+  border-color: rgba(245,158,11,0.3);
+  color: var(--gold);
+}
+.filter-option .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid currentColor; flex-shrink: 0;
+}
+.filter-option.active .dot { background: currentColor; }
+.filter-divider { border-color: var(--border); margin: 16px 0; }
+
+/* ── SEARCH BAR (inline) ─────────────────────────────────── */
+.inline-search-bar {
+  background: var(--ink2); border: 1.5px solid var(--border); border-radius: 14px;
+  display: flex; gap: 10px; padding: 12px 16px; align-items: center; margin-bottom: 24px;
+}
+.inline-search-bar input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--white); font-size: 0.95rem;
+}
+.inline-search-bar input::placeholder { color: rgba(255,255,255,0.3); }
+.inline-search-bar .bi { color: var(--gold); }
+
+/* ── SORT TOOLBAR ────────────────────────────────────────── */
+.sort-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.sort-btn {
+  background: var(--ink2); border: 1px solid var(--border);
+  color: rgba(255,255,255,0.6); border-radius: 8px;
+  padding: 6px 14px; font-size: 0.8rem; cursor: pointer;
+  text-decoration: none; transition: all .2s;
+}
+.sort-btn:hover, .sort-btn.active {
+  background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.35);
+  color: var(--gold);
+}
+.results-meta { color: rgba(255,255,255,0.35); font-size: 0.82rem; margin-left: auto; }
+
+/* ── ORG LIST ITEM ───────────────────────────────────────── */
+.org-list-item {
+  background: var(--ink2); border: 1.5px solid var(--border); border-radius: 18px;
+  padding: 20px; display: flex; gap: 18px; align-items: flex-start;
+  text-decoration: none; color: var(--white); transition: all .25s; margin-bottom: 16px;
+}
+.org-list-item:hover {
+  border-color: rgba(245,158,11,0.4);
+  transform: translateX(4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+  color: var(--white);
+}
+.org-list-logo {
+  width: 72px; height: 72px; border-radius: 16px; object-fit: cover;
+  border: 1px solid var(--border); flex-shrink: 0;
+}
+.org-list-placeholder {
+  width: 72px; height: 72px; border-radius: 16px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--ink3), var(--ink4));
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fh); font-size: 1.5rem; font-weight: 800; color: var(--gold);
+}
+.org-list-body { flex: 1; min-width: 0; }
+.org-list-name { font-family: var(--fh); font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
+.org-list-meta { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-bottom: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+.org-list-tagline { font-size: 0.85rem; color: rgba(255,255,255,0.55); margin-bottom: 10px;
+  display: -webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.org-list-services { display: flex; flex-wrap: wrap; gap: 6px; }
+.svc-chip {
+  background: var(--ink3); border: 1px solid var(--border); border-radius: 6px;
+  padding: 3px 9px; font-size: 0.72rem; color: rgba(255,255,255,0.55);
+}
+.org-list-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; align-items: flex-end; }
+.btn-call {
+  background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+  color: #4ade80; border-radius: 10px; padding: 8px 16px;
+  font-size: 0.82rem; font-weight: 700; white-space: nowrap;
+  text-decoration: none; display: flex; align-items: center; gap: 6px;
+  transition: all .2s;
+}
+.btn-call:hover { background: rgba(34,197,94,0.2); color: #4ade80; }
+.btn-view {
+  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25);
+  color: var(--gold); border-radius: 10px; padding: 8px 16px;
+  font-size: 0.82rem; font-weight: 700; white-space: nowrap;
+  text-decoration: none; display: flex; align-items: center; gap: 6px;
+  transition: all .2s;
+}
+.btn-view:hover { background: rgba(245,158,11,0.2); color: var(--gold); }
+
+/* ── SUBCATEGORY TABS ────────────────────────────────────── */
+.subcat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.subcat-tab {
+  background: var(--ink2); border: 1.5px solid var(--border); border-radius: 50px;
+  padding: 6px 18px; font-size: 0.82rem; font-weight: 600;
+  color: rgba(255,255,255,0.6); text-decoration: none; transition: all .2s;
+}
+.subcat-tab:hover { border-color: rgba(245,158,11,0.4); color: var(--gold); }
+.subcat-tab.active { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.5); color: var(--gold); }
+
+/* ── EMPTY / PAGINATION ──────────────────────────────────── */
+.empty-state { text-align:center; padding:80px 20px; color:rgba(255,255,255,0.4); }
+.empty-state .icon { font-size:3rem; color:var(--border); margin-bottom:16px; }
+.pagination .page-link { background: var(--ink2) !important; border-color: var(--border) !important; color: rgba(255,255,255,0.7) !important; border-radius: 8px !important; }
+.pagination .page-link:hover { background: var(--ink3) !important; color: var(--gold) !important; }
+.pagination .page-item.active .page-link { background: var(--gold) !important; border-color: var(--gold) !important; color: var(--ink) !important; }
+
+@media (max-width: 991px) {
+  .filter-panel { position: static; margin-bottom: 24px; }
+  .org-list-actions { flex-direction: row; }
+}
+@media (max-width: 576px) {
+  .org-list-item { flex-direction: column; }
+  .org-list-actions { flex-direction: row; width: 100%; }
+  .btn-call, .btn-view { flex: 1; justify-content: center; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ──────────────────────────────────────────────────── -->
+<section class="cat-hero">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="breadcrumb-dark mb-3">
+      <ol class="breadcrumb mb-0" style="font-size:0.82rem;">
+        <li class="breadcrumb-item"><a href="{% url 'discovery_home' %}">Discover</a></li>
+        <li class="breadcrumb-item active">{{ cat.name }}</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center gap-4 flex-wrap">
+      <div class="cat-hero-icon" style="color:{{ cat.color_primary }};background:{{ cat.color_primary }}22;">
+        <i class="bi bi-{{ cat.icon }}"></i>
+      </div>
+      <div>
+        <h1 class="cat-hero-title">{{ cat.name }}</h1>
+        <p style="color:rgba(255,255,255,0.5);margin:0;font-size:0.95rem;">
+          {{ page_obj.paginator.count }} business{{ page_obj.paginator.count|pluralize:"es" }} listed
+          {% if q %} · matching "{{ q }}"{% endif %}
+          {% if city %} · in {{ city }}{% endif %}
+        </p>
+        {% if cat.description %}
+        <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-top:6px;max-width:600px;">{{ cat.description }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── BODY ───────────────────────────────────────────────────── -->
+<div style="background:var(--ink);min-height:60vh;">
+  <div class="container py-5">
+    <div class="row g-4">
+
+      <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+      <div class="col-lg-3">
+        <form method="GET" id="filterForm">
+
+          <div class="filter-panel">
+            <div class="filter-panel-title"><i class="bi bi-funnel me-1"></i> Filter Results</div>
+
+            <!-- Search within category -->
+            <div class="filter-group">
+              <div class="filter-group-label">Search</div>
+              <div style="position:relative;">
+                <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:0.85rem;"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Business name..."
+                  style="width:100%;background:var(--ink3);border:1.5px solid var(--border);color:var(--white);
+                  border-radius:10px;padding:9px 10px 9px 32px;font-size:0.85rem;"
+                  class="filter-input">
+              </div>
+            </div>
+
+            <hr class="filter-divider">
+
+            <!-- City -->
+            <div class="filter-group">
+              <div class="filter-group-label">City</div>
+              <div style="position:relative;">
+                <i class="bi bi-geo-alt" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:0.85rem;"></i>
+                <input type="text" name="city" value="{{ city }}" placeholder="Any city..."
+                  style="width:100%;background:var(--ink3);border:1.5px solid var(--border);color:var(--white);
+                  border-radius:10px;padding:9px 10px 9px 32px;font-size:0.85rem;"
+                  class="filter-input">
+              </div>
+            </div>
+
+            <!-- Sub-categories -->
+            {% if subcats %}
+            <hr class="filter-divider">
+            <div class="filter-group">
+              <div class="filter-group-label">Specialisation</div>
+              <a href="?{% query_string request sub='' %}" class="filter-option {% if not sub %}active{% endif %}">
+                <span class="dot"></span> All
+              </a>
+              {% for sc in subcats %}
+              <a href="?{% query_string request sub=sc.pk %}" class="filter-option {% if sub == sc.pk|stringformat:'s' %}active{% endif %}">
+                <span class="dot"></span> {{ sc.name }}
+              </a>
+              {% endfor %}
+            </div>
+            {% endif %}
+
+            <hr class="filter-divider">
+            <button type="submit" class="btn btn-warning w-100" style="border-radius:10px;font-weight:700;">
+              <i class="bi bi-search me-1"></i> Apply Filters
+            </button>
+            {% if q or city or sub %}
+            <a href="{% url 'discovery_category' cat.slug %}" class="btn btn-outline-secondary w-100 mt-2" style="border-radius:10px;font-size:0.85rem;">
+              Clear All
+            </a>
+            {% endif %}
+          </div>
+
+        </form>
+
+        <!-- Other categories -->
+        <div class="filter-panel mt-3">
+          <div class="filter-panel-title">Other Categories</div>
+          {% for other_cat in all_categories %}
+          {% if other_cat.slug != cat.slug %}
+          <a href="{% url 'discovery_category' other_cat.slug %}" class="filter-option">
+            <i class="bi bi-{{ other_cat.icon }}" style="color:{{ other_cat.color_primary }};width:16px;text-align:center;"></i>
+            {{ other_cat.name }}
+          </a>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ── MAIN CONTENT ─────────────────────────────────────── -->
+      <div class="col-lg-9">
+
+        <!-- Sub-category tabs -->
+        {% if subcats %}
+        <div class="subcat-tabs">
+          <a href="?{% query_string request sub='' %}" class="subcat-tab {% if not sub %}active{% endif %}">
+            All
+          </a>
+          {% for sc in subcats %}
+          <a href="?{% query_string request sub=sc.pk %}" class="subcat-tab {% if sub == sc.pk|stringformat:'s' %}active{% endif %}">
+            {{ sc.name }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Sort toolbar -->
+        <div class="sort-toolbar">
+          <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);">Sort:</span>
+          <a href="?{% query_string request sort='verified' %}" class="sort-btn {% if sort == 'verified' or not sort %}active{% endif %}">
+            <i class="bi bi-patch-check me-1"></i> Top Rated
+          </a>
+          <a href="?{% query_string request sort='newest' %}" class="sort-btn {% if sort == 'newest' %}active{% endif %}">
+            <i class="bi bi-clock me-1"></i> Newest
+          </a>
+          <a href="?{% query_string request sort='name' %}" class="sort-btn {% if sort == 'name' %}active{% endif %}">
+            <i class="bi bi-sort-alpha-down me-1"></i> A-Z
+          </a>
+          <span class="results-meta">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</span>
+        </div>
+
+        <!-- Org list -->
+        {% if page_obj %}
+          {% for org in page_obj %}
+          <a href="{% url 'public_landing' org.slug %}" class="org-list-item">
+            {% if org.logo %}
+            <img src="{{ org.logo_url }}" alt="{{ org.name }}" class="org-list-logo">
+            {% else %}
+            <div class="org-list-placeholder">{{ org.name|initials }}</div>
+            {% endif %}
+
+            <div class="org-list-body">
+              <div class="d-flex align-items-start gap-2 flex-wrap mb-1">
+                <div class="org-list-name">{{ org.name }}</div>
+                {% if org.is_verified %}
+                <span style="font-size:0.72rem;color:#4ade80;display:flex;align-items:center;gap:3px;margin-top:2px;">
+                  <i class="bi bi-patch-check-fill"></i> Verified
+                </span>
+                {% endif %}
+                {% if org.plan %}
+                <span style="font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:4px;background:{{ org.plan_badge_color }}22;color:{{ org.plan_badge_color }};">
+                  {{ org.plan.name }}
+                </span>
+                {% endif %}
+              </div>
+              <div class="org-list-meta">
+                {% if org.sub_category %}
+                <span><i class="bi bi-tag me-1"></i>{{ org.sub_category.name }}</span>
+                {% endif %}
+                <span><i class="bi bi-geo-alt me-1"></i>{{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}</span>
+                {% if org.established_year %}
+                <span><i class="bi bi-calendar3 me-1"></i>Est. {{ org.established_year }}</span>
+                {% endif %}
+                {% if org.home_service_available %}
+                <span style="color:#4ade80;"><i class="bi bi-house-check me-1"></i>Home service</span>
+                {% endif %}
+              </div>
+              {% if org.tagline %}
+              <div class="org-list-tagline">{{ org.tagline }}</div>
+              {% endif %}
+              {% if org.get_services %}
+              <div class="org-list-services">
+                {% for svc in org.get_services|slice:":5" %}
+                <span class="svc-chip">{{ svc.name }}</span>
+                {% endfor %}
+                {% if org.get_services.count > 5 %}
+                <span class="svc-chip">+{{ org.get_services.count|add:"-5" }}</span>
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="org-list-actions" onclick="event.preventDefault();">
+              <a href="tel:{{ org.phone }}" class="btn-call" onclick="event.stopPropagation();">
+                <i class="bi bi-telephone-fill"></i> Call
+              </a>
+              <span class="btn-view">
+                <i class="bi bi-arrow-right"></i> View
+              </span>
+            </div>
+          </a>
+          {% endfor %}
+
+          <!-- Pagination -->
+          {% if page_obj.has_other_pages %}
+          <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{% query_string request page=page_obj.previous_page_number %}">
+                  <i class="bi bi-chevron-left"></i>
+                </a>
+              </li>
+              {% endif %}
+              {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?{% query_string request page=num %}">{{ num }}</a>
+                </li>
+                {% endif %}
+              {% endfor %}
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{% query_string request page=page_obj.next_page_number %}">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+          <div class="icon"><i class="bi bi-building"></i></div>
+          <h5>No businesses found in this category</h5>
+          <p>Be the first! <a href="{% url 'signup' %}">Register your business</a> and appear here.</p>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit filter form on sub-cat/sort link click (already done via <a> tags)
+// Live search debounce
+let searchTimer;
+document.querySelectorAll('.filter-input').forEach(inp => {
+  inp.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => inp.closest('form').submit(), 600);
+  });
+});
+</script>
+{% endblock %}

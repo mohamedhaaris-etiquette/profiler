@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Cancelled</title>
+    <style>
+        body {
+            background: #0a0f0d;
+            color: #fff;
+            font-family: Inter, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .box { text-align: center; padding: 40px; }
+        .icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #f59e0b;
+        }
+        h1 { font-size: 2rem; margin-bottom: 12px; }
+        p { color: rgba(255,255,255,0.4); margin-bottom: 24px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            background: #f59e0b;
+            color: #0a0f0d;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="icon">⟲</div>
+
+        <h1>Payment Cancelled</h1>
+
+        <p>You cancelled the payment. No charges were made.</p>
+
+        <a href="{% url 'payment_page' %}" class="btn">Back to Payment</a>
+    </div>
+</body>
+</html>

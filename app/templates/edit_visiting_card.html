@@ -1,0 +1,93 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Edit Visiting Card — {{ org.name }}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1><i class="bi bi-person-badge me-2"></i>Visiting Card</h1>
+    <div class="text-muted small">Edit the digital card shown on your public page.</div>
+  </div>
+  <a href="{{ card_url }}" target="_blank" class="btn btn-outline-primary btn-sm" style="border-radius:10px;">
+    <i class="bi bi-box-arrow-up-right me-1"></i>Preview Card
+  </a>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card-modern p-4">
+        <div class="mb-3">
+          <label class="form-label">Contact Name</label>
+          <input type="text" name="contact_name" class="form-control" value="{{ card.contact_name }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Designation</label>
+          <input type="text" name="designation" class="form-control" value="{{ card.designation }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Tagline</label>
+          <input type="text" name="tagline" class="form-control" value="{{ card.tagline }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Card Theme</label>
+          <select name="theme" class="form-select">
+            <option value="classic" {% if card.theme == 'classic' %}selected{% endif %}>Classic</option>
+            <option value="modern" {% if card.theme == 'modern' %}selected{% endif %}>Modern</option>
+            <option value="bold" {% if card.theme == 'bold' %}selected{% endif %}>Bold</option>
+            <option value="minimal" {% if card.theme == 'minimal' %}selected{% endif %}>Minimal</option>
+            <option value="gradient" {% if card.theme == 'gradient' %}selected{% endif %}>Gradient</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Profile Photo</label>
+          <input type="file" name="profile_photo" class="form-control">
+          {% if card.profile_photo %}
+          <div class="mt-2"><img src="{{ card.profile_photo.url }}" alt="Profile" style="max-width:140px;border-radius:12px;"></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card-modern p-4">
+        <div class="mb-3">
+          <label class="form-label">Direct Phone</label>
+          <input type="text" name="direct_phone" class="form-control" value="{{ card.direct_phone }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Direct WhatsApp</label>
+          <input type="text" name="direct_whatsapp" class="form-control" value="{{ card.direct_whatsapp }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Direct Email</label>
+          <input type="email" name="direct_email" class="form-control" value="{{ card.direct_email }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">LinkedIn URL</label>
+          <input type="url" name="linkedin_url" class="form-control" value="{{ card.linkedin_url }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Instagram URL</label>
+          <input type="url" name="instagram_url" class="form-control" value="{{ card.instagram_url }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Twitter URL</label>
+          <input type="url" name="twitter_url" class="form-control" value="{{ card.twitter_url }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">YouTube URL</label>
+          <input type="url" name="youtube_url" class="form-control" value="{{ card.youtube_url }}">
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" name="is_active" id="isActive" {% if card.is_active %}checked{% endif %}>
+          <label class="form-check-label" for="isActive">Card Active</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary mt-3" style="border-radius:10px;">
+    <i class="bi bi-save me-1"></i>Save Visiting Card
+  </button>
+</form>
+{% endblock %}

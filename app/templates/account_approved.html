@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family:Arial,sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:#16a34a;padding:24px 32px;">
+    <h2 style="color:#fff;margin:0;font-size:1.1rem;">🎉 Your account is approved!</h2>
+  </div>
+  <div style="padding:28px 32px;">
+    <p style="color:#374151;">Hello <strong>{{ org.name }}</strong>,</p>
+    <p style="color:#374151;line-height:1.7;">
+      Great news! Your Portal account has been reviewed and <strong style="color:#16a34a;">approved</strong>.
+      You can now log in and start managing your business.
+    </p>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="{{ login_url }}" style="display:inline-block;background:#2563eb;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:1rem;">
+        Go to Dashboard →
+      </a>
+    </div>
+    <p style="color:#6b7280;font-size:0.85rem;">
+      Use your email <strong>{{ invite.email }}</strong> and the password you set during registration.
+    </p>
+  </div>
+  <div style="background:#f1f5f9;padding:14px 32px;text-align:center;">
+    <p style="color:#6b7280;font-size:0.78rem;margin:0;">Portal Team — Welcome aboard!</p>
+  </div>
+</div>
+</body>
+</html>
+ 

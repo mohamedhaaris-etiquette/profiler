@@ -1,0 +1,56 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}{{ title }} — {{ org.name }}{% endblock %}
+
+{% block dash_content %}
+<style>
+#cms-content-card{max-width:1120px;margin:0 auto;background:var(--ink2);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+#cms-content-card .form-label{color:rgba(255,255,255,.78);font-size:.75rem}
+#cms-content-card .form-control,#cms-content-card .form-select{
+  width:100%;min-height:46px;background:rgba(255,255,255,.055)!important;
+  border:1px solid rgba(255,255,255,.16)!important;color:#fff!important;border-radius:10px
+}
+#cms-content-card textarea.form-control{min-height:112px}
+#cms-content-card .form-control:focus,#cms-content-card .form-select:focus{
+  border-color:rgba(245,158,11,.68)!important;box-shadow:0 0 0 3px rgba(245,158,11,.12)!important
+}
+#cms-content-card input[type=file]::file-selector-button{background:rgba(245,158,11,.15);color:#fff;border:0;padding:11px 15px;margin:-1px 12px -1px -1px}
+#cms-content-card .form-text{color:rgba(255,255,255,.5)}
+#cms-content-card .border-top{border-color:var(--border)!important}
+</style>
+<div class="page-header">
+  <div>
+    <h1>{{ title }}</h1>
+    <div class="text-muted small">{{ org.name }} single-page CMS</div>
+  </div>
+  <a href="{% url 'page_cms' %}" class="btn btn-outline-dark">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+</div>
+
+<div class="card-modern" id="cms-content-card">
+  <div class="card-body p-4">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+      <div class="row g-3">
+        {% for field in form %}
+        <div class="{% if field.name == 'subtitle' or field.name == 'description' or field.name == 'image' or field.name == 'answer' or field.name == 'story' or field.name == 'address' %}col-12{% else %}col-md-6{% endif %}">
+          <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+          {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="d-flex flex-wrap justify-content-end gap-2 mt-4 pt-3 border-top">
+        <a href="{% url 'page_cms' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-dark">
+          <i class="bi bi-check2 me-1"></i>Save Content
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

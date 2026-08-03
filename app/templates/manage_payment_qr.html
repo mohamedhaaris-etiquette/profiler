@@ -1,0 +1,157 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Payment QR — {{ org.name }}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1><i class="bi bi-qr-code me-2"></i>Payment QR</h1>
+    <div class="text-muted small">Add or remove payment QR codes for your public page.</div>
+  </div>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+{% endif %}
+
+<div class="row g-4">
+
+  <!-- ── ADD NEW QR ─────────────────────────────────────────────── -->
+  <div class="col-lg-6">
+    <div class="card-modern p-4">
+      <h2 class="h5 mb-4"><i class="bi bi-plus-circle me-2 text-primary"></i>Add New QR</h2>
+
+      {# ★ KEY FIX: action points to add_payment_qr, not this page #}
+      <form method="post" action="{% url 'add_payment_qr' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Label</label>
+          <input type="text" name="label" class="form-control" placeholder="e.g. Advance payment" required>
+          <div class="form-text">Shown to customers on your public page.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Payment Method</label>
+          <select name="method" class="form-select">
+            <option value="upi">UPI</option>
+            <option value="bank">Bank Transfer</option>
+            <option value="paypal">PayPal</option>
+            <option value="stripe">Stripe</option>
+            <option value="razorpay">Razorpay</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Fixed Amount</label>
+          <input type="number" name="amount" class="form-control" min="0.01" step="0.01" placeholder="Optional">
+          <div class="form-text">Leave empty when the customer may pay any amount.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">UPI ID / Reference</label>
+          <input type="text" name="upi_id" class="form-control" placeholder="business@upi">
+          <div class="form-text">Optional — shown below the QR image.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">QR Image</label>
+          <input type="file" name="qr_image" class="form-control" accept="image/*">
+          <div class="form-text">PNG or JPG recommended. Max 2 MB.</div>
+        </div>
+
+        <div class="form-check form-switch mb-4">
+          <input class="form-check-input" type="checkbox" name="is_primary" id="isPrimary">
+          <label class="form-check-label" for="isPrimary">
+            Set as <strong>primary</strong> payment QR
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="border-radius:10px;">
+          <i class="bi bi-plus-lg me-1"></i>Add QR Code
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── EXISTING QR CODES ─────────────────────────────────────── -->
+  <div class="col-lg-6">
+    <div class="card-modern p-4">
+      <h2 class="h5 mb-4">
+        <i class="bi bi-collection me-2 text-primary"></i>Existing QR Codes
+        <span class="badge bg-secondary ms-1" style="font-size:.75rem;">{{ payment_qrs.count }}</span>
+      </h2>
+
+      {% if payment_qrs %}
+        <div class="d-flex flex-column gap-3">
+          {% for qr in payment_qrs %}
+          <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap p-3"
+               style="border:1px solid var(--border); border-radius:14px; background:var(--fog2);">
+
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fw-semibold">{{ qr.label }}</span>
+                {% if qr.is_primary %}
+                  <span class="badge bg-primary" style="font-size:.7rem;">Primary</span>
+                {% endif %}
+                {% if qr.is_active %}
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success" style="font-size:.7rem;">Active</span>
+                {% else %}
+                  <span class="badge bg-danger bg-opacity-10 text-danger border border-danger" style="font-size:.7rem;">Inactive</span>
+                {% endif %}
+              </div>
+              <div class="small text-muted">
+                <i class="bi bi-credit-card me-1"></i>{{ qr.method|upper }}
+                {% if qr.amount %}
+                  &nbsp;·&nbsp; ₹{{ qr.amount }}
+                {% endif %}
+                {% if qr.upi_id %}
+                  &nbsp;·&nbsp;
+                  <span class="font-monospace">{{ qr.upi_id }}</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 align-items-center">
+              {% if qr.qr_image %}
+              <img src="{{ qr.qr_image.url }}"
+                   width="72" height="72"
+                   alt="{{ qr.label }}"
+                   style="border-radius:10px; border:1px solid #dee2e6; object-fit:cover;">
+              {% else %}
+              <div class="d-flex align-items-center justify-content-center bg-light"
+                   style="width:72px;height:72px;border-radius:10px;border:1px dashed #ced4da;">
+                <i class="bi bi-image text-muted"></i>
+              </div>
+              {% endif %}
+
+              <a href="{% url 'delete_payment_qr' qr.pk %}"
+                 class="btn btn-sm btn-outline-danger"
+                 style="border-radius:8px;"
+                 onclick="return confirm('Remove \'{{ qr.label }}\' QR code?')">
+                <i class="bi bi-trash"></i>
+              </a>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-qr-code display-3 text-muted mb-3 d-block"></i>
+          <p class="fw-semibold mb-1">No QR codes yet</p>
+          <p class="text-muted small">Use the form on the left to add your first payment QR code.</p>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

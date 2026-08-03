@@ -1,0 +1,912 @@
+{% load app_filters %}
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ org.name }} — Visiting Card</title>
+  <meta name="description" content="Digital visiting card for {{ org.name }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      color-scheme: light;
+      --page-bg: #e9ece8;
+      --page-text: #142019;
+      --page-muted: #68736d;
+      --paper: #fffefb;
+      --line: #e4e8e4;
+      --shadow: 0 28px 70px rgba(22, 31, 26, .20);
+    }
+
+    html, body { margin: 0; min-height: 100%; }
+
+    body {
+      min-height: 100vh;
+      padding: clamp(20px, 4vw, 48px) 18px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255,255,255,.85), transparent 28%),
+        linear-gradient(145deg, #f4f5f2 0%, var(--page-bg) 60%, #dde1dd 100%);
+      color: var(--page-text);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .22;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
+    }
+
+    button, a { font: inherit; }
+
+    .page-shell {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 960px);
+      margin: 0 auto;
+    }
+
+    .page-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 9px 15px;
+      border: 1px solid rgba(20,32,25,.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,.68);
+      color: var(--page-text);
+      box-shadow: 0 5px 18px rgba(20,32,25,.05);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+      transition: .2s ease;
+    }
+
+    .back-link:hover {
+      transform: translateY(-1px);
+      background: #fff;
+      color: #0c1711;
+    }
+
+    .preview-label {
+      color: var(--page-muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .card-frame {
+      padding: clamp(7px, 1.2vw, 11px);
+      border: 1px solid rgba(20,32,25,.10);
+      border-radius: 20px;
+      background: rgba(255,255,255,.44);
+      box-shadow: var(--shadow);
+    }
+
+    /* Standard business-card proportion: 85.6 × 54 mm. */
+    .business-card {
+      --brand: #12372b;
+      --brand-deep: #09241b;
+      --accent: #caa65a;
+      --accent-soft: #f0e3c2;
+
+      position: relative;
+      display: grid;
+      grid-template-columns: 36% 64%;
+      width: 100%;
+      aspect-ratio: 85.6 / 54;
+      overflow: hidden;
+      container-type: inline-size;
+      border-radius: 13px;
+      background: var(--paper);
+      color: #17211b;
+      isolation: isolate;
+    }
+
+    .business-card.theme-classic {
+      --brand: #17324d;
+      --brand-deep: #0c2135;
+      --accent: #b99052;
+      --accent-soft: #efe1ca;
+    }
+
+    .business-card.theme-bold {
+      --brand: #232323;
+      --brand-deep: #101010;
+      --accent: #d96d31;
+      --accent-soft: #f5ded1;
+    }
+
+    .business-card.theme-minimal {
+      --brand: #2b302d;
+      --brand-deep: #171b19;
+      --accent: #a6a69b;
+      --accent-soft: #e9e9e3;
+    }
+
+    .business-card.theme-gradient {
+      --brand: #153d35;
+      --brand-deep: #12263f;
+      --accent: #d2ad5d;
+      --accent-soft: #f0e3c4;
+    }
+
+    .brand-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: clamp(14px, 3.6cqw, 34px);
+      overflow: hidden;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.08), transparent 42%),
+        linear-gradient(150deg, var(--brand) 0%, var(--brand-deep) 100%);
+      color: #fff;
+    }
+
+    .brand-panel::before {
+      content: "";
+      position: absolute;
+      top: -18%;
+      right: -32%;
+      width: 92%;
+      aspect-ratio: 1;
+      border: clamp(10px, 2.2cqw, 22px) solid rgba(255,255,255,.055);
+      border-radius: 50%;
+    }
+
+    .brand-panel::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: clamp(4px, .8cqw, 8px);
+      background: var(--accent);
+    }
+
+    .brand-logo {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: clamp(42px, 8.8cqw, 84px);
+      height: clamp(42px, 8.8cqw, 84px);
+      margin-bottom: clamp(10px, 2.2cqw, 22px);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.26);
+      border-radius: 18%;
+      background: rgba(255,255,255,.10);
+      color: #fff;
+      font-size: clamp(20px, 4.3cqw, 42px);
+      font-weight: 800;
+      box-shadow: inset 0 1px rgba(255,255,255,.16);
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      padding: 8%;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .brand-copy {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+    }
+
+    .brand-name {
+      max-width: 100%;
+      margin: 0;
+      color: #fff;
+      font-size: clamp(15px, 3.2cqw, 31px);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -.035em;
+      overflow-wrap: anywhere;
+    }
+
+    .brand-tagline {
+      margin: clamp(6px, 1.1cqw, 11px) 0 0;
+      color: rgba(255,255,255,.68);
+      font-size: clamp(7px, 1.25cqw, 12px);
+      line-height: 1.45;
+    }
+
+    .brand-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: clamp(10px, 2cqw, 20px);
+    }
+
+    .category-label,
+    .verified-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: rgba(255,255,255,.72);
+      font-size: clamp(6px, 1.05cqw, 10px);
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .verified-label { color: var(--accent-soft); white-space: nowrap; }
+
+    .details-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: clamp(14px, 3.5cqw, 34px) clamp(16px, 4cqw, 40px);
+      background:
+        linear-gradient(90deg, rgba(202,166,90,.055), transparent 22%),
+        var(--paper);
+    }
+
+    .details-panel::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 34%;
+      height: 33%;
+      opacity: .42;
+      background: linear-gradient(135deg, transparent 49%, var(--accent-soft) 50%);
+      clip-path: polygon(65% 0, 100% 0, 100% 100%);
+      pointer-events: none;
+    }
+
+    .identity-row {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 0;
+      gap: clamp(9px, 2cqw, 20px);
+      padding-bottom: clamp(9px, 1.7cqw, 17px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .identity-copy { min-width: 0; }
+
+    .person-name {
+      margin: 0;
+      color: #17211b;
+      font-size: clamp(15px, 3cqw, 29px);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -.035em;
+      overflow-wrap: anywhere;
+    }
+
+    .person-designation {
+      margin-top: clamp(4px, .8cqw, 8px);
+      color: var(--brand);
+      font-size: clamp(7px, 1.2cqw, 12px);
+      font-weight: 800;
+      letter-spacing: .12em;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .profile-photo {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: clamp(42px, 8.3cqw, 80px);
+      height: clamp(42px, 8.3cqw, 80px);
+      overflow: hidden;
+      border: clamp(2px, .35cqw, 4px) solid #fff;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      font-size: clamp(18px, 3.6cqw, 35px);
+      font-weight: 800;
+      box-shadow: 0 6px 22px rgba(23,33,27,.16), 0 0 0 1px var(--line);
+    }
+
+    .profile-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(7px, 1.35cqw, 14px) clamp(12px, 2.6cqw, 26px);
+      margin-top: clamp(10px, 2.2cqw, 22px);
+    }
+
+    .contact-item {
+      display: grid;
+      grid-template-columns: clamp(20px, 3.7cqw, 36px) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(6px, 1cqw, 10px);
+      min-width: 0;
+    }
+
+    .contact-icon {
+      display: grid;
+      place-items: center;
+      width: clamp(20px, 3.7cqw, 36px);
+      height: clamp(20px, 3.7cqw, 36px);
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--brand);
+      font-size: clamp(8px, 1.45cqw, 14px);
+    }
+
+    .contact-content { min-width: 0; }
+
+    .contact-label {
+      margin-bottom: 2px;
+      color: #8a948e;
+      font-size: clamp(5px, .8cqw, 8px);
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .contact-value,
+    .contact-value a {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      color: #1d2822;
+      font-size: clamp(7px, 1.22cqw, 12px);
+      font-weight: 650;
+      line-height: 1.3;
+      text-decoration: none;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .contact-value a:hover { color: var(--brand); }
+
+    .details-footer {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: clamp(10px, 2cqw, 20px);
+      min-width: 0;
+      margin-top: auto;
+      padding-top: clamp(9px, 1.8cqw, 18px);
+    }
+
+    .footer-copy {
+      min-width: 0;
+      color: #6d7771;
+      font-size: clamp(6px, .98cqw, 10px);
+      line-height: 1.55;
+    }
+
+    .card-id {
+      display: block;
+      margin-top: 3px;
+      color: #28342d;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+
+    .social-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(5px, .8cqw, 8px);
+      margin-bottom: clamp(4px, .8cqw, 8px);
+    }
+
+    .social-row a {
+      display: grid;
+      place-items: center;
+      width: clamp(18px, 3cqw, 29px);
+      height: clamp(18px, 3cqw, 29px);
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--brand);
+      font-size: clamp(7px, 1.2cqw, 12px);
+      text-decoration: none;
+    }
+
+    .qr-wrap {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: clamp(6px, 1cqw, 10px);
+    }
+
+    .qr-copy {
+      color: #738078;
+      font-size: clamp(5px, .76cqw, 8px);
+      font-weight: 800;
+      line-height: 1.35;
+      letter-spacing: .08em;
+      text-align: right;
+      text-transform: uppercase;
+    }
+
+    .qr-code {
+      display: grid;
+      place-items: center;
+      width: clamp(42px, 8.3cqw, 80px);
+      height: clamp(42px, 8.3cqw, 80px);
+      padding: clamp(3px, .6cqw, 6px);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .qr-code img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .action-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid rgba(20,32,25,.13);
+      border-radius: 10px;
+      background: rgba(255,255,255,.72);
+      color: #213029;
+      box-shadow: 0 6px 18px rgba(20,32,25,.05);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(18,55,43,.35);
+      background: #fff;
+      color: #12372b;
+      box-shadow: 0 9px 24px rgba(20,32,25,.09);
+    }
+
+    .action-btn.primary {
+      border-color: #12372b;
+      background: #12372b;
+      color: #fff;
+    }
+
+    .action-btn.primary:hover { background: #0b2a20; color: #fff; }
+
+    .helper-text {
+      margin: 13px 0 0;
+      color: var(--page-muted);
+      font-size: 11px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .toast-message {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      z-index: 1000;
+      max-width: calc(100vw - 32px);
+      padding: 11px 18px;
+      border-radius: 10px;
+      background: #17231d;
+      color: #fff;
+      box-shadow: 0 12px 34px rgba(0,0,0,.22);
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      transform: translate(-50%, 20px);
+      transition: .25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast-message.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 680px) {
+      body { padding: 18px 10px 26px; }
+      .preview-label { display: none; }
+      .page-topbar { margin: 0 4px 14px; }
+      .card-frame { border-radius: 13px; }
+      .business-card { border-radius: 8px; }
+      .action-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .action-btn { min-height: 42px; font-size: 11px; }
+    }
+
+    @media (max-width: 380px) {
+      .contact-grid { gap: 5px 7px; }
+      .action-bar { gap: 8px; }
+      .action-btn span { display: none; }
+      .action-btn i { font-size: 16px; }
+    }
+
+    @media print {
+      @page { size: 85.6mm 54mm; margin: 0; }
+      body { padding: 0; background: #fff; }
+      body::before, .page-topbar, .action-bar, .helper-text { display: none !important; }
+      .page-shell { width: 85.6mm; margin: 0; }
+      .card-frame { padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .business-card { width: 85.6mm; height: 54mm; border-radius: 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page-shell">
+    <header class="page-topbar">
+      <a href="{% url 'public_landing' org.slug %}" class="back-link">
+        <i class="bi bi-arrow-left"></i>
+        Back to website
+      </a>
+      <div class="preview-label">Digital visiting card</div>
+    </header>
+
+    <div class="card-frame">
+      <article id="businessCard" class="business-card theme-{{ card.theme|default:'modern' }}">
+        <section class="brand-panel">
+          <div class="brand-logo">
+            {% if org.logo %}
+              <img src="{{ org.logo_url }}" alt="{{ org.name }} logo" crossorigin="anonymous">
+            {% else %}
+              <span>{{ org.name|slice:":1"|upper }}</span>
+            {% endif %}
+          </div>
+
+          <div class="brand-copy">
+            <h2 class="brand-name">{{ org.name }}</h2>
+            {% firstof card.tagline org.tagline as business_tagline %}
+            {% if business_tagline %}
+              <p class="brand-tagline">{{ business_tagline }}</p>
+            {% endif %}
+          </div>
+
+          <div class="brand-meta">
+            {% if org.category %}
+              <span class="category-label">{{ org.category.name }}</span>
+            {% endif %}
+            {% if org.is_verified %}
+              <span class="verified-label">
+                <i class="bi bi-patch-check-fill"></i> Verified
+              </span>
+            {% endif %}
+          </div>
+        </section>
+
+        <section class="details-panel">
+          <div class="identity-row">
+            <div class="identity-copy">
+              {% if card.contact_name %}
+                <h1 class="person-name">{{ card.contact_name }}</h1>
+              {% else %}
+                <h1 class="person-name">{{ org.name }}</h1>
+              {% endif %}
+              <div class="person-designation">
+                {% firstof card.designation org.visiting_card_designation org.category.name %}
+              </div>
+            </div>
+
+            {% if card.profile_photo %}
+              <div class="profile-photo">
+                <img src="{{ card.profile_photo.url }}"
+                     alt="{{ card.contact_name|default:org.name }}"
+                     crossorigin="anonymous">
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="contact-grid">
+            {% with phone_num=card.direct_phone|default:org.phone %}
+              {% if phone_num %}
+              <div class="contact-item">
+                <span class="contact-icon"><i class="bi bi-telephone"></i></span>
+                <div class="contact-content">
+                  <div class="contact-label">Phone</div>
+                  <div class="contact-value">
+                    <a href="tel:{{ phone_num }}">{{ phone_num }}</a>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            {% endwith %}
+
+            {% firstof card.direct_whatsapp org.whatsapp wa_config.whatsapp_number as wa_num %}
+            {% if wa_num %}
+            <div class="contact-item">
+              <span class="contact-icon"><i class="bi bi-whatsapp"></i></span>
+              <div class="contact-content">
+                <div class="contact-label">WhatsApp</div>
+                <div class="contact-value">
+                  <a href="https://wa.me/{{ wa_num|cut:'+'|cut:' ' }}"
+                     target="_blank"
+                     rel="noopener"
+                     class="wa-btn"
+                     data-org-slug="{{ org.slug }}"
+                     data-source="general">{{ wa_num }}</a>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% with email_addr=card.direct_email|default:org.email %}
+              {% if email_addr %}
+              <div class="contact-item">
+                <span class="contact-icon"><i class="bi bi-envelope"></i></span>
+                <div class="contact-content">
+                  <div class="contact-label">Email</div>
+                  <div class="contact-value">
+                    <a href="mailto:{{ email_addr }}" title="{{ email_addr }}">{{ email_addr }}</a>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            {% endwith %}
+
+            {% if org.website %}
+            <div class="contact-item">
+              <span class="contact-icon"><i class="bi bi-globe2"></i></span>
+              <div class="contact-content">
+                <div class="contact-label">Website</div>
+                <div class="contact-value">
+                  <a href="{{ org.website }}" target="_blank" rel="noopener" title="{{ org.website }}">
+                    {{ org.website|cut:"https://"|cut:"http://"|cut:"www." }}
+                  </a>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if org.city or org.state %}
+            <div class="contact-item">
+              <span class="contact-icon"><i class="bi bi-geo-alt"></i></span>
+              <div class="contact-content">
+                <div class="contact-label">Location</div>
+                <div class="contact-value">
+                  {{ org.city }}{% if org.city and org.state %}, {% endif %}{{ org.state }}
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if org.established_year %}
+            <div class="contact-item">
+              <span class="contact-icon"><i class="bi bi-calendar3"></i></span>
+              <div class="contact-content">
+                <div class="contact-label">Established</div>
+                <div class="contact-value">{{ org.established_year }}</div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="details-footer">
+            <div class="footer-copy">
+              {% if card.linkedin_url or card.instagram_url or card.twitter_url or card.youtube_url %}
+              <div class="social-row">
+                {% if card.linkedin_url %}
+                  <a href="{{ card.linkedin_url }}" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                {% endif %}
+                {% if card.instagram_url %}
+                  <a href="{{ card.instagram_url }}" target="_blank" rel="noopener" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                {% endif %}
+                {% if card.twitter_url %}
+                  <a href="{{ card.twitter_url }}" target="_blank" rel="noopener" aria-label="Twitter"><i class="bi bi-twitter-x"></i></a>
+                {% endif %}
+                {% if card.youtube_url %}
+                  <a href="{{ card.youtube_url }}" target="_blank" rel="noopener" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                {% endif %}
+              </div>
+              {% endif %}
+              Digital business card
+              <span class="card-id">ID {{ org.slug|upper|slice:":10" }}</span>
+            </div>
+
+            {% if payment_qrs and payment_qrs.0.qr_image %}
+            <div class="qr-wrap">
+              <div class="qr-copy">Scan<br>to pay</div>
+              <div class="qr-code">
+                <img src="{{ payment_qrs.0.qr_image.url }}" alt="Payment QR" crossorigin="anonymous">
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </section>
+      </article>
+    </div>
+
+    <div class="action-bar">
+      <a href="{% url 'download_vcard' org.slug %}" class="action-btn primary">
+        <i class="bi bi-person-plus"></i><span>Save contact</span>
+      </a>
+      <button type="button" onclick="downloadAsImage()" class="action-btn">
+        <i class="bi bi-image"></i><span>Save image</span>
+      </button>
+      <button type="button" onclick="downloadAsPDF()" class="action-btn">
+        <i class="bi bi-file-earmark-pdf"></i><span>Print PDF</span>
+      </button>
+      <button type="button" onclick="shareBusinessCard()" class="action-btn">
+        <i class="bi bi-share"></i><span>Share</span>
+      </button>
+    </div>
+
+    <p class="helper-text">The downloaded PDF uses the standard 85.6 × 54 mm business-card size.</p>
+  </main>
+
+  <script>
+    const businessCard = document.getElementById('businessCard');
+
+    async function captureBusinessCard() {
+      return html2canvas(businessCard, {
+        scale: 3,
+        backgroundColor: null,
+        logging: false,
+        useCORS: true,
+        allowTaint: false
+      });
+    }
+
+    async function downloadAsImage() {
+      try {
+        showToast('Preparing high-resolution card…');
+        const canvas = await captureBusinessCard();
+        const link = document.createElement('a');
+        link.download = '{{ org.slug }}_visiting_card.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('Visiting card saved.');
+      } catch (error) {
+        console.error(error);
+        showToast('Could not create the image.');
+      }
+    }
+
+    async function downloadAsPDF() {
+      try {
+        showToast('Preparing print-size PDF…');
+        const canvas = await captureBusinessCard();
+        const imageData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'landscape',
+          unit: 'mm',
+          format: [85.6, 54]
+        });
+        pdf.addImage(imageData, 'PNG', 0, 0, 85.6, 54, undefined, 'FAST');
+        pdf.save('{{ org.slug }}_visiting_card.pdf');
+        showToast('Print-size PDF saved.');
+      } catch (error) {
+        console.error(error);
+        showToast('Could not create the PDF.');
+      }
+    }
+
+    function shareBusinessCard() {
+      const shareData = {
+        title: '{{ card.contact_name|default:org.name|escapejs }} — Visiting Card',
+        text: '{{ org.name|escapejs }} digital visiting card',
+        url: window.location.href
+      };
+
+      if (navigator.share) {
+        navigator.share(shareData).catch(function () {
+          copyCardLink();
+        });
+      } else {
+        copyCardLink();
+      }
+    }
+
+    function copyCardLink() {
+      const url = window.location.href;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url)
+          .then(function () { showToast('Card link copied.'); })
+          .catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+    }
+
+    function fallbackCopy() {
+      const textarea = document.createElement('textarea');
+      textarea.value = window.location.href;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+      showToast('Card link copied.');
+    }
+
+    function showToast(message) {
+      let toast = document.querySelector('.toast-message');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast-message';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(window.cardToastTimer);
+      window.cardToastTimer = setTimeout(function () {
+        toast.classList.remove('show');
+      }, 2400);
+    }
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.wa-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (event) {
+          const slug = btn.dataset.orgSlug || '';
+          const source = btn.dataset.source || 'general';
+          const objectId = btn.dataset.objectId || '';
+          const whatsappUrl = btn.getAttribute('href');
+
+          if (!slug) return;
+          event.preventDefault();
+
+          fetch('/org/' + slug + '/whatsapp-click/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source: source,
+              object_id: objectId,
+              visitor_name: '',
+              visitor_phone: ''
+            })
+          })
+          .catch(function () {})
+          .finally(function () {
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>

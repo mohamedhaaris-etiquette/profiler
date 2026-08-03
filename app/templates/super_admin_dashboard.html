@@ -1,0 +1,542 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Super Admin — Portal{% endblock %}
+{% block dash_content %}
+
+<!-- ── Page Header ────────────────────────────────────────────── -->
+<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1><i class="bi bi-shield-check me-2"></i>Super Admin</h1>
+    <div class="text-muted small">Platform-wide overview &amp; management</div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'add_member' %}" class="btn btn-primary" style="border-radius:10px;">
+      <i class="bi bi-plus-lg me-1"></i> Add Member
+    </a>
+    <a href="{% url 'member_list' %}" class="btn btn-outline-secondary" style="border-radius:10px;">
+      <i class="bi bi-people me-1"></i> All Members
+    </a>
+  </div>
+</div>
+
+<!-- ── WhatsApp Notification Panel (Integrated) ────────────────── -->
+{% if admin_notifications %}
+<div class="card mb-4 border-0 shadow-sm" id="wa-notif-panel">
+  <div class="card-header d-flex justify-content-between align-items-center
+              bg-success bg-opacity-10 border-bottom border-success border-opacity-25">
+    <span class="fw-bold text-success">
+      <i class="bi bi-whatsapp me-2"></i>
+      WhatsApp Enquiries
+      <span class="badge bg-success ms-2">{{ admin_notification_count }}</span>
+    </span>
+    <button class="btn btn-sm btn-outline-success"
+            onclick="markAllRead()"
+            title="Mark all as read">
+      <i class="bi bi-check2-all me-1"></i>Mark All Read
+    </button>
+  </div>
+
+  <div class="card-body p-0">
+    <ul class="list-group list-group-flush" id="wa-notif-list">
+      {% for notif in admin_notifications %}
+      <li class="list-group-item d-flex justify-content-between align-items-start
+                 py-3 px-4" id="notif-{{ notif.pk }}">
+        <div class="me-3">
+          <span class="badge rounded-circle bg-success p-2 me-2"
+                style="font-size:.75rem;">
+            <i class="bi bi-whatsapp"></i>
+          </span>
+        </div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold" style="font-size:.9rem;">
+            {{ notif.title }}
+          </div>
+          <div class="text-muted" style="font-size:.78rem; white-space:pre-line;">
+            {{ notif.message }}
+          </div>
+          {% if notif.organization %}
+          <a href="{% url 'member_list' %}?q={{ notif.organization.name|urlencode }}"
+             class="badge bg-primary bg-opacity-10 text-primary text-decoration-none mt-1"
+             style="font-size:.72rem;">
+            <i class="bi bi-building me-1"></i>{{ notif.organization.name }}
+          </a>
+          {% endif %}
+          <div class="text-muted mt-1" style="font-size:.72rem;">
+            <i class="bi bi-clock me-1"></i>{{ notif.created_at|timesince }} ago
+          </div>
+        </div>
+        <button class="btn btn-sm btn-link text-muted p-0 ms-2"
+                onclick="markOneRead({{ notif.pk }})"
+                title="Dismiss">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<script>
+const MARK_READ_URL = "{% url 'mark_admin_notifications_read' %}";
+const CSRF = "{{ csrf_token }}";
+
+function markOneRead(id) {
+  fetch(MARK_READ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ id: id }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      const el = document.getElementById('notif-' + id);
+      if (el) el.remove();
+      updateBadge(data.unread_count);
+      if (!document.querySelector('#wa-notif-list li')) {
+        document.getElementById('wa-notif-panel').remove();
+      }
+    }
+  });
+}
+
+function markAllRead() {
+  fetch(MARK_READ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      document.getElementById('wa-notif-panel').remove();
+      updateBadge(0);
+    }
+  });
+}
+
+function updateBadge(count) {
+  // Update any badge in the nav that shows notification count
+  document.querySelectorAll('.wa-notif-badge').forEach(el => {
+    el.textContent = count;
+    el.style.display = count > 0 ? '' : 'none';
+  });
+}
+</script>
+{% endif %}
+
+<!-- ── Stat Cards ─────────────────────────────────────────────── -->
+<div class="row g-4 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#dbeafe;color:#2563eb;">
+        <i class="bi bi-building-fill"></i>
+      </div>
+      <div class="value">{{ orgs.count }}</div>
+      <div class="label">Organizations</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#fef3c7;color:#d97706;">
+        <i class="bi bi-chat-dots-fill"></i>
+      </div>
+      <div class="value">{{ total_enquiries }}</div>
+      <div class="label">Total Enquiries</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#fee2e2;color:#ef4444;">
+        <i class="bi bi-bell-fill"></i>
+      </div>
+      <div class="value">{{ new_enquiries }}</div>
+      <div class="label">New Enquiries</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#ede9fe;color:#7c3aed;">
+        <i class="bi bi-box-seam-fill"></i>
+      </div>
+      <div class="value">{{ total_products }}</div>
+      <div class="label">Total Products</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Table ─────────────────────────────────────────────── -->
+<div class="card-modern">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-building me-2"></i>All Registered Organizations</span>
+    <div class="d-flex align-items-center gap-2">
+      {% if pending_approval_count %}
+      <span class="badge" style="background:#fef3c7;color:#d97706;border-radius:50px;padding:4px 12px;font-size:0.75rem;">
+        <i class="bi bi-hourglass-split me-1"></i>{{ pending_approval_count }} pending approval
+      </span>
+      {% endif %}
+      <span class="badge bg-secondary" style="border-radius:50px;">{{ orgs.count }} total</span>
+      <a href="{% url 'member_list' %}" class="btn btn-sm btn-outline-light" style="border-radius:8px;font-size:0.78rem;">
+        <i class="bi bi-sliders me-1"></i>Manage
+      </a>
+    </div>
+  </div>
+
+  <div class="p-0">
+    {% if orgs %}
+    <div class="table-responsive">
+      <table class="table table-modern mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Organization</th>
+            <th>Category</th>
+            <th>Plan</th>
+            <th>Location</th>
+            <th>Contact</th>
+            <th>Status</th>
+            <th>Registered</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for org in orgs %}
+          <tr {% if org.status == 'pending_approval' %}style="background:rgba(254,243,199,0.15);"{% endif %}>
+            <td class="text-muted small">{{ forloop.counter }}</td>
+
+            <!-- Org Name + Logo -->
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                {% if org.logo %}
+                  <img src="{{ org.logo_url }}"
+                    style="width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;">
+                {% else %}
+                  <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0f172a,var(--accent,#f97316));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0;">
+                    <i class="bi bi-building"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <div class="fw-600" style="font-size:0.88rem;">{{ org.name }}</div>
+                  <div class="text-muted" style="font-size:0.73rem;">{{ org.email }}</div>
+                  {% if org.subdomain %}
+                  <div style="font-size:0.68rem;color:#0369a1;margin-top:2px;">
+                    <i class="bi bi-link-45deg"></i>{{ org.subdomain }}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+
+            <!-- Category -->
+            <td>
+              {% if org.category %}
+              <span class="badge" style="background:#dbeafe;color:#1d4ed8;border-radius:50px;padding:4px 10px;font-size:0.72rem;">
+                {{ org.category.name }}
+              </span>
+              {% endif %}
+              {% if org.sub_category %}
+              <div style="font-size:0.68rem;color:#7c3aed;margin-top:3px;">
+                <i class="bi bi-tag me-1"></i>{{ org.sub_category.name }}
+              </div>
+              {% endif %}
+            </td>
+
+            <!-- Plan Badge -->
+            <td>
+              {% if org.plan %}
+                {% with lvl=org.plan.level %}
+                  {% if lvl == 'trial' %}
+                    <span class="badge" style="background:#f3f4f6;color:#6b7280;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Trial</span>
+                  {% elif lvl == 'silver' %}
+                    <span class="badge" style="background:#e2e8f0;color:#334155;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Silver</span>
+                  {% elif lvl == 'gold' %}
+                    <span class="badge" style="background:#fef3c7;color:#d97706;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Gold</span>
+                  {% elif lvl == 'platinum' %}
+                    <span class="badge" style="background:#ede9fe;color:#7c3aed;border-radius:50px;padding:4px 10px;font-size:0.72rem;">Platinum</span>
+                  {% else %}
+                    <span class="badge" style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:4px 10px;font-size:0.72rem;">{{ org.plan.name }}</span>
+                  {% endif %}
+                {% endwith %}
+                {% if org.plan_end_date %}
+                <div style="font-size:0.67rem;margin-top:3px;color:{% if org.is_plan_active %}#16a34a{% else %}#dc2626{% endif %};">
+                  <i class="bi bi-calendar3 me-1"></i>{{ org.plan_end_date|date:"d M Y" }}
+                </div>
+                {% endif %}
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Location -->
+            <td class="small text-muted">
+              {{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}<br>
+              <span style="font-size:0.72rem;">{{ org.state }}</span>
+            </td>
+
+            <!-- Contact -->
+            <td class="small">
+              <div>{{ org.phone }}</div>
+              {% if org.whatsapp %}
+              <div style="color:#16a34a;font-size:0.72rem;">
+                <i class="bi bi-whatsapp me-1"></i>{{ org.whatsapp }}
+              </div>
+              {% endif %}
+            </td>
+
+            <!-- Status -->
+            <td>
+              {% if org.status == 'active' %}
+                <span class="badge" style="background:#dcfce7;color:#166534;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Active
+                </span>
+              {% elif org.status == 'pending_approval' %}
+                <span class="badge" style="background:#fef3c7;color:#92400e;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                  <i class="bi bi-hourglass-split me-1"></i>Pending Approval
+                </span>
+              {% elif org.status == 'inactive' %}
+                <span class="badge" style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Inactive
+                </span>
+              {% elif org.status == 'suspended' %}
+                <span class="badge" style="background:#fee2e2;color:#991b1b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Suspended
+                </span>
+              {% elif org.status == 'rejected' %}
+                <span class="badge" style="background:#fee2e2;color:#991b1b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                  <i class="bi bi-x-circle me-1"></i>Rejected
+                </span>
+              {% elif org.status == 'pending' %}
+                <span class="badge" style="background:#fef9c3;color:#92400e;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                  <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;vertical-align:middle;"></i>Pending
+                </span>
+              {% else %}
+                <span class="badge" style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:4px 11px;font-size:0.72rem;">
+                  {{ org.status }}
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Registered date -->
+            <td class="small text-muted" style="white-space:nowrap;">
+              {{ org.created_at|date:"d M Y" }}
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if org.status == 'pending_approval' %}
+                  <button type="button"
+                          class="btn btn-sm btn-success" style="border-radius:8px;font-size:0.75rem;"
+                          data-bs-toggle="modal"
+                          data-bs-target="#approveModal{{ org.pk }}">
+                    <i class="bi bi-check-lg me-1"></i>Approve
+                  </button>
+                  <button type="button"
+                          class="btn btn-sm btn-outline-danger" style="border-radius:8px;font-size:0.75rem;"
+                          data-bs-toggle="modal"
+                          data-bs-target="#rejectModal{{ org.pk }}">
+                    <i class="bi bi-x-lg me-1"></i>Reject
+                  </button>
+                  <a href="{% url 'edit_member' org.pk %}"
+                     class="btn btn-sm btn-outline-secondary" style="border-radius:8px;" title="View Details">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                {% else %}
+                  <a href="{% url 'public_landing' org.slug %}" target="_blank"
+                     class="btn btn-sm btn-outline-primary" style="border-radius:8px;" title="View Site">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <a href="{% url 'edit_member' org.pk %}"
+                     class="btn btn-sm btn-outline-secondary" style="border-radius:8px;" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <button type="button"
+                          class="btn btn-sm btn-outline-danger" style="border-radius:8px;"
+                          title="Deactivate"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteModal{{ org.pk }}">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Show only latest 10, link to full list -->
+    {% if orgs.count > 10 %}
+    <div class="text-center py-3" style="border-top:1px solid var(--border);">
+      <a href="{% url 'member_list' %}" class="btn btn-outline-primary btn-sm" style="border-radius:8px;">
+        <i class="bi bi-arrow-right me-1"></i>View All {{ orgs.count }} Members
+      </a>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-building fs-1 d-block opacity-25 mb-3"></i>
+      <p class="mb-3">No organizations registered yet.</p>
+      <a href="{% url 'add_member' %}" class="btn btn-primary" style="border-radius:10px;">
+        <i class="bi bi-plus-lg me-1"></i> Add First Member
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── APPROVE MODALS ──────────────────────────────────────────────────────── -->
+{% for org in orgs %}
+{% if org.status == 'pending_approval' %}
+{% with invite=org.invitation %}
+<div class="modal fade" id="approveModal{{ org.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="background:var(--ink2) !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:12px !important;">
+      <div class="modal-header" style="background:var(--ink3) !important;border-bottom:1px solid var(--border) !important;padding:16px 20px !important;">
+        <h5 class="modal-title" style="color:#fff !important;font-weight:700 !important;">
+          <i class="bi bi-check-circle-fill text-success me-2"></i>Approve Member
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:20px !important;">
+        <p style="color:rgba(255,255,255,.82) !important;margin-bottom:14px !important;">
+          Approving <strong style="color:#166534 !important;">{{ org.name }}</strong> will activate their
+          account and send them a welcome email.
+        </p>
+        <div style="background:var(--fog2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:0.83rem;">
+          <div class="d-flex justify-content-between mb-2">
+            <span style="color:rgba(255,255,255,.55);">Business</span>
+            <span style="color:#fff;font-weight:600;">{{ org.name }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span style="color:rgba(255,255,255,.55);">Email</span>
+            <span style="color:#fff;">{{ org.email }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span style="color:rgba(255,255,255,.55);">Phone</span>
+            <span style="color:#fff;">{{ org.phone }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span style="color:rgba(255,255,255,.55);">Plan</span>
+            <span style="color:#fff;">{{ invite.plan.name|default:"—" }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span style="color:rgba(255,255,255,.55);">Category</span>
+            <span style="color:#fff;">{{ org.category.name|default:"—" }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span style="color:rgba(255,255,255,.55);">Location</span>
+            <span style="color:#fff;">{{ org.city }}{% if org.state %}, {{ org.state }}{% endif %}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span style="color:rgba(255,255,255,.55);">Submitted</span>
+            <span style="color:#fff;">{{ invite.accepted_at|date:"d M Y, H:i"|default:"—" }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="background:var(--ink3) !important;border-top:1px solid var(--border) !important;padding:12px 20px !important;">
+        <button type="button" class="btn btn-sm" data-bs-dismiss="modal"
+                style="background:var(--fog2) !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:8px !important;padding:6px 16px !important;">
+          Cancel
+        </button>
+        {% if invite %}
+        <form method="POST" action="{% url 'approve_member' invite.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-success"
+                  style="border-radius:8px !important;padding:6px 20px !important;">
+            <i class="bi bi-check-lg me-1"></i>Yes, Approve
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endif %}
+{% endfor %}
+
+<!-- ── REJECT MODALS ───────────────────────────────────────────────────────── -->
+{% for org in orgs %}
+{% if org.status == 'pending_approval' %}
+{% with invite=org.invitation %}
+<div class="modal fade" id="rejectModal{{ org.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="background:var(--ink2) !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:12px !important;">
+      <div class="modal-header" style="background:var(--ink3) !important;border-bottom:1px solid var(--border) !important;padding:16px 20px !important;">
+        <h5 class="modal-title" style="color:#fff !important;font-weight:700 !important;">
+          <i class="bi bi-x-circle-fill text-danger me-2"></i>Reject Submission
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      {% if invite %}
+      <form method="POST" action="{% url 'reject_member' invite.pk %}">
+        {% csrf_token %}
+        <div class="modal-body" style="padding:20px !important;">
+          <p style="color:rgba(255,255,255,.82) !important;margin-bottom:14px !important;">
+            Rejecting <strong style="color:#dc2626 !important;">{{ org.name }}</strong>'s application.
+            They will be notified by email.
+          </p>
+          <label class="small fw-600 mb-1 d-block" style="color:rgba(255,255,255,.82) !important;">
+            Reason <span style="color:#9ca3af;font-weight:400;">(optional — will be sent to applicant)</span>
+          </label>
+          <textarea name="rejection_reason" rows="3"
+            class="form-control"
+            style="border-radius:8px;font-size:0.85rem;background:rgba(255,255,255,.055);color:#fff;border:1px solid var(--border);"
+            placeholder="e.g. Incomplete documents, duplicate registration, outside service area…"></textarea>
+        </div>
+        <div class="modal-footer" style="background:var(--ink3) !important;border-top:1px solid var(--border) !important;padding:12px 20px !important;">
+          <button type="button" class="btn btn-sm" data-bs-dismiss="modal"
+                  style="background:var(--fog2) !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:8px !important;padding:6px 16px !important;">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-sm btn-danger"
+                  style="border-radius:8px !important;padding:6px 20px !important;">
+            <i class="bi bi-x-lg me-1"></i>Confirm Reject
+          </button>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endif %}
+{% endfor %}
+
+<!-- ── DEACTIVATE MODALS ───────────────────────────────────────────────────── -->
+{% for org in orgs %}
+{% if org.status != 'pending_approval' %}
+<div class="modal fade" id="deleteModal{{ org.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content" style="background:var(--ink2) !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:12px !important;">
+      <div class="modal-header" style="background:var(--ink3) !important;border-bottom:1px solid var(--border) !important;padding:16px !important;">
+        <h5 class="modal-title" style="color:#fff !important;font-weight:600 !important;">Deactivate Organization</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="padding:20px !important;">
+        <p style="color:rgba(255,255,255,.82) !important;margin-bottom:8px !important;">
+          Are you sure you want to deactivate <strong style="color:#dc2626 !important;">{{ org.name }}</strong>?
+        </p>
+        <small style="color:rgba(255,255,255,.55) !important;">The profile will be hidden and staff cannot log in. All data is preserved.</small>
+      </div>
+      <div class="modal-footer" style="background:var(--ink3) !important;border-top:1px solid var(--border) !important;padding:12px 16px !important;">
+        <button type="button" class="btn btn-sm" data-bs-dismiss="modal"
+                style="background:var(--fog2) !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:8px !important;padding:6px 16px !important;">
+          Cancel
+        </button>
+        <form method="POST" action="{% url 'org_soft_delete' org.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-danger"
+                  style="background:#dc2626 !important;color:white !important;border:none !important;border-radius:8px !important;padding:6px 16px !important;">
+            Deactivate
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}

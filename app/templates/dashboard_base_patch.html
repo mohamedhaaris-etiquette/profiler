@@ -1,0 +1,26 @@
+{% comment %}
+dashboard_base_patch.html
+==========================
+Step 6 of 7 — ONLY the changed sidebar section.
+
+Find this block in your existing dashboard_base.html
+(the non-super-admin "Grow" section that has the referral link):
+
+  <a href="{% url 'referral_dashboard' %}" ...>
+    <i class="bi bi-gift"></i> Invite & Earn
+    ...
+  </a>
+
+ADD the block below immediately AFTER it (still inside the
+{% if not user.is_super_admin %} guard).
+{% endcomment %}
+
+{# ── PASTE THIS AFTER the existing "Invite & Earn" nav-link ── #}
+
+<a href="{% url 'member_send_invite' %}"
+   class="nav-link {% if 'member_send_invite' in request.resolver_match.url_name or 'member_invite_list' in request.resolver_match.url_name %}active{% endif %}"
+   style="color:rgba(250,204,21,0.85);">
+  <i class="bi bi-person-plus"></i> Invite a Business
+  <span style="background:#f97316;color:#fff;font-size:0.58rem;font-weight:700;
+               padding:2px 7px;border-radius:50px;margin-left:auto;">EARN</span>
+</a>

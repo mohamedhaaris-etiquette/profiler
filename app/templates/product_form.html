@@ -1,0 +1,269 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}{{ action }} Product — {{ org.name }}{% endblock %}
+{% block dash_css %}
+<style>
+.img-preview { width: 100%; height: 160px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border); }
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: 14px; padding: 24px;
+  text-align: center; cursor: pointer; transition: all .2s; background: var(--surface);
+}
+.upload-zone:hover { border-color: var(--gold); background: rgba(245,158,11,.06); }
+.form-section-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+</style>
+{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-box-seam me-2"></i>{{ action }} Product</h1>
+    {% if product %}<div class="text-muted small">Editing: {{ product.name }}</div>{% endif %}
+  </div>
+  <a href="{% url 'manage_products' %}" class="btn btn-outline-secondary" style="border-radius:10px;">
+    <i class="bi bi-arrow-left me-1"></i>Back to Products
+  </a>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+{{ form.order }}
+{% include 'includes/form_errors.html' %}
+<div class="row g-4">
+  <!-- Main Form -->
+  <div class="col-lg-8">
+    <div class="card-modern">
+      <div class="card-header" style="background:#4c1d95;"><i class="bi bi-info-circle me-2"></i>Product Details</div>
+      <div class="p-4">
+        <div class="form-section-title">Basic Information</div>
+        <div class="row g-3 mb-4">
+          <div class="col-12">
+            <label class="form-label fw-600">Product Name *</label>
+            {{ form.name }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">Brand</label>
+            {{ form.brand }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">Category</label>
+            {{ form.category }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">SKU / Product Code</label>
+            {{ form.sku }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">Condition</label>
+            {{ form.condition }}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-600">Description</label>
+            {{ form.description }}
+          </div>
+        </div>
+
+        <div class="form-section-title">Pricing & Stock</div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label fw-600">Price (₹) *</label>
+            {{ form.price }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-600">Sale Price (₹)</label>
+            {{ form.discount_price }}
+            <div class="text-muted" style="font-size:0.75rem;">Leave blank if no discount</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-600">Unit</label>
+            {{ form.unit }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">Stock Quantity</label>
+            {{ form.stock_quantity }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">Bootstrap Icon Name</label>
+            {{ form.icon }}
+            <div class="text-muted" style="font-size:0.75rem;">Used when no image. e.g. cpu, tools, lightbulb</div>
+          </div>
+        </div>
+
+        <div class="form-section-title">Visibility Options</div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="p-3 rounded-3" style="border:1px solid var(--border);">
+              <div class="form-check form-switch">
+                {{ form.is_active }}
+                <label class="form-check-label fw-600">Active (visible)</label>
+              </div>
+              <div class="text-muted small mt-1">Show product on public page</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded-3" style="border:1px solid var(--border);">
+              <div class="form-check form-switch">
+                {{ form.in_stock }}
+                <label class="form-check-label fw-600">In Stock</label>
+              </div>
+              <div class="text-muted small mt-1">Toggle stock availability</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 rounded-3" style="border:1px solid #e9d5ff;">
+              <div class="form-check form-switch">
+                {{ form.is_featured }}
+                <label class="form-check-label fw-600" style="color:#7c3aed;">Featured</label>
+              </div>
+              <div class="text-muted small mt-1">Highlight on landing page</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Images Panel -->
+  <div class="col-lg-4">
+    <div class="card-modern">
+      <div class="card-header" style="background:#4c1d95;"><i class="bi bi-images me-2"></i>Product Images</div>
+      <div class="p-4">
+        <div class="mb-4">
+          <label class="form-label fw-600">Main Image</label>
+          {% if product and product.image %}
+          <img src="{{ product.image.url }}" class="img-preview mb-2" alt="Current image">
+          <div class="text-muted small mb-2">Current image above — upload to replace</div>
+          {% endif %}
+          <div class="upload-zone" onclick="document.getElementById('id_image').click()">
+            <i class="bi bi-cloud-upload fs-3 text-muted d-block mb-2"></i>
+            <span class="fw-600 small">Click to upload</span>
+            <div class="text-muted" style="font-size:0.75rem;">PNG, JPG up to 5MB</div>
+          </div>
+          <div style="display:none;">{{ form.image }}</div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-600">Image 2 <span class="text-muted fw-400">(Optional)</span></label>
+          {% if product and product.image2 %}
+          <img src="{{ product.image2.url }}" class="img-preview mb-2" style="height:100px;" alt="">
+          {% endif %}
+          <div class="upload-zone" style="padding:16px;" onclick="document.getElementById('id_image2').click()">
+            <i class="bi bi-plus-circle text-muted"></i> <span class="small text-muted">Add image 2</span>
+          </div>
+          <div style="display:none;">{{ form.image2 }}</div>
+        </div>
+
+        <div class="mb-0">
+          <label class="form-label fw-600">Image 3 <span class="text-muted fw-400">(Optional)</span></label>
+          {% if product and product.image3 %}
+          <img src="{{ product.image3.url }}" class="img-preview mb-2" style="height:100px;" alt="">
+          {% endif %}
+          <div class="upload-zone" style="padding:16px;" onclick="document.getElementById('id_image3').click()">
+            <i class="bi bi-plus-circle text-muted"></i> <span class="small text-muted">Add image 3</span>
+          </div>
+          <div style="display:none;">{{ form.image3 }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Card -->
+    <div class="card-modern mt-3">
+      <div class="card-header" style="background:#4c1d95;"><i class="bi bi-eye me-2"></i>Preview</div>
+      <div class="p-4">
+        <div style="border:1.5px solid var(--border);border-radius:14px;overflow:hidden;">
+          <div style="height:100px;background:linear-gradient(135deg,var(--ink3),var(--ink2));display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--muted);">
+            <i class="bi bi-box-seam" id="previewIcon"></i>
+          </div>
+          <div style="padding:12px;">
+            <div class="fw-700 small" id="previewName">Product Name</div>
+            <div style="color:#7c3aed;font-weight:800;font-size:1rem;" id="previewPrice">₹0.00</div>
+          </div>
+        </div>
+        <div class="text-muted small text-center mt-2">Live preview on your landing page</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Extended Information -->
+<div class="row g-4 mt-0">
+  <div class="col-lg-8">
+    <div class="card-modern">
+      <div class="card-header" style="background:#4c1d95;"><i class="bi bi-film me-2"></i>Media & Marketing</div>
+      <div class="p-4">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-600">YouTube Demo Link</label>
+            {{ form.youtube_url }}
+            <div class="text-muted small">e.g. https://youtu.be/...</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-600">Instagram Post Link</label>
+            {{ form.instagram_url }}
+            <div class="text-muted small">e.g. https://instagram.com/p/...</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-600">PDF Catalog / Brochure</label>
+            {% if product and product.pdf_catalog %}
+            <div class="alert alert-info small mb-2">
+              <i class="bi bi-file-pdf me-1"></i>Current: <a href="{{ product.pdf_catalog.url }}" target="_blank">Download</a>
+            </div>
+            {% endif %}
+            {{ form.pdf_catalog }}
+            <div class="text-muted small">Upload PDF brochure or catalog (optional)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card-modern">
+      <div class="card-header" style="background:#4c1d95;"><i class="bi bi-sliders me-2"></i>Specifications</div>
+      <div class="p-4">
+        <label class="form-label fw-600 mb-2">Product Specs (JSON)</label>
+        {{ form.specs_json }}
+        <div class="text-muted small mt-2">
+          Enter as JSON:<br/>
+          <code style="font-size:0.7rem;background:var(--ink3);color:#d1fae5;padding:4px 6px;border-radius:4px;display:block;margin-top:4px;">{"color": "red", "size": "L"}</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-3 mt-4">
+  <button type="submit" class="btn btn-primary px-5 py-2" style="border-radius:12px;background:#7c3aed;border:none;font-weight:700;">
+    <i class="bi bi-check2-circle me-2"></i>{{ action }} Product
+  </button>
+  <a href="{% url 'manage_products' %}" class="btn btn-outline-secondary px-4" style="border-radius:12px;">Cancel</a>
+  {% if product %}
+  <a href="{% url 'delete_product' product.pk %}" onclick="return confirm('Delete this product permanently?')" class="btn btn-outline-danger ms-auto px-4" style="border-radius:12px;">
+    <i class="bi bi-trash me-1"></i>Delete Product
+  </a>
+  {% endif %}
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live preview
+const nameInput = document.querySelector('[name="name"]');
+const priceInput = document.querySelector('[name="price"]');
+const iconInput = document.querySelector('[name="icon"]');
+if (nameInput) nameInput.addEventListener('input', e => {
+  document.getElementById('previewName').textContent = e.target.value || 'Product Name';
+});
+if (priceInput) priceInput.addEventListener('input', e => {
+  document.getElementById('previewPrice').textContent = '₹' + (parseFloat(e.target.value) || 0).toFixed(2);
+});
+if (iconInput) iconInput.addEventListener('input', e => {
+  document.getElementById('previewIcon').className = 'bi bi-' + (e.target.value || 'box-seam');
+});
+// Init preview from existing values
+if (nameInput && nameInput.value) document.getElementById('previewName').textContent = nameInput.value;
+if (priceInput && priceInput.value) document.getElementById('previewPrice').textContent = '₹' + parseFloat(priceInput.value).toFixed(2);
+if (iconInput && iconInput.value) document.getElementById('previewIcon').className = 'bi bi-' + iconInput.value;
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+
+{% extends 'base.html' %}
+{% block title %}Application Not Approved — Portal{% endblock %}
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background:#f8fafc;">
+  <div class="card shadow-sm text-center" style="max-width:480px;width:100%;border-radius:16px;padding:48px 32px;">
+ 
+    <div style="width:72px;height:72px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+      <i class="bi bi-x-circle" style="font-size:2rem;color:#dc2626;"></i>
+    </div>
+ 
+    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin-bottom:12px;">
+      Application Not Approved
+    </h2>
+    <p class="text-muted mb-4">
+      Unfortunately we could not approve this application.
+    </p>
+ 
+    {% if reason %}
+    <div style="background:#fff7f7;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;text-align:left;margin-bottom:24px;">
+      <div class="small fw-600 text-danger mb-1">Reason provided:</div>
+      <div class="small text-muted">{{ reason }}</div>
+    </div>
+    {% endif %}
+ 
+    <p class="small text-muted">
+      If you believe this is an error, please contact
+      <a href="mailto:support@portal.com">support@portal.com</a>.
+    </p>
+  </div>
+</div>
+{% endblock %}

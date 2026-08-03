@@ -1,0 +1,194 @@
+{% load app_filters %}
+
+<div class="results-toolbar">
+  <div>
+    <p class="section-kicker mb-1">
+      {% if q or city or cat_id or verified %}Search results{% else %}Recommended businesses{% endif %}
+    </p>
+    <h2 class="results-title">
+      {% if q %}Results for “{{ q }}”
+      {% elif city %}Businesses in {{ city }}
+      {% else %}Businesses ready to help{% endif %}
+    </h2>
+    <p class="results-summary mb-0">
+      {{ total }} approved business{{ total|pluralize:"es" }} found
+      {% if city and q %} in {{ city }}{% endif %}
+    </p>
+  </div>
+
+  <div class="results-actions">
+    {% if q or city or cat_id or verified %}
+    <a class="clear-filter" href="{% url 'discovery_home' %}" data-ajax-link>
+      <i class="bi bi-x-lg"></i>
+      Clear
+    </a>
+    {% endif %}
+    <label class="sort-field">
+      <span class="visually-hidden">Sort businesses</span>
+      <i class="bi bi-sort-down"></i>
+      <select name="sort" form="discoveryForm" id="sortControl">
+        <option value="recommended" {% if sort == 'recommended' %}selected{% endif %}>Recommended</option>
+        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+      </select>
+    </label>
+  </div>
+</div>
+
+{% if page_obj.object_list %}
+<div class="business-grid">
+  {% for org in page_obj %}
+  <article class="business-card reveal-card">
+    <div class="business-card-top">
+      {% if org.logo %}
+      <img
+        class="business-logo"
+        src="{{ org.logo_url }}"
+        alt="{{ org.name }} logo"
+        width="64"
+        height="64"
+        loading="lazy"
+        decoding="async">
+      {% else %}
+      <div class="business-logo business-logo-fallback" aria-hidden="true">
+        {{ org.name|initials }}
+      </div>
+      {% endif %}
+
+      <div class="business-identity">
+        <div class="business-badges">
+          {% if org.is_verified %}
+          <span class="verified-pill">
+            <i class="bi bi-patch-check-fill"></i>
+            Verified
+          </span>
+          {% endif %}
+          {% if org.home_service_available %}
+          <span class="service-pill">
+            <i class="bi bi-house-check"></i>
+            Home service
+          </span>
+          {% endif %}
+        </div>
+        <h3 class="business-name">
+          <a href="{% url 'public_landing' org.slug %}">{{ org.name }}</a>
+        </h3>
+        <p class="business-category">
+          {% if org.category %}
+          <a href="{% url 'discovery_category' org.category.slug %}">
+            <i class="bi bi-{{ org.category.icon }}"></i>
+            {{ org.category.name }}
+          </a>
+          {% endif %}
+          {% if org.sub_category %}<span>• {{ org.sub_category.name }}</span>{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <div class="business-card-body">
+      {% if org.tagline %}
+      <p class="business-tagline">{{ org.tagline }}</p>
+      {% elif org.description %}
+      <p class="business-tagline">{{ org.description|truncatechars:125 }}</p>
+      {% else %}
+      <p class="business-tagline">
+        Explore services, products and direct contact details from this approved business.
+      </p>
+      {% endif %}
+
+      <div class="business-meta">
+        <span>
+          <i class="bi bi-geo-alt-fill"></i>
+          {{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}
+        </span>
+        {% if org.working_hours %}
+        <span>
+          <i class="bi bi-clock-fill"></i>
+          {{ org.working_hours|truncatechars:28 }}
+        </span>
+        {% endif %}
+      </div>
+
+      {% if org.discovery_services %}
+      <div class="service-tags" aria-label="Popular services">
+        {% for service in org.discovery_services|slice:":3" %}
+        <span>{{ service.name }}</span>
+        {% endfor %}
+        {% if org.discovery_services|length > 3 %}
+        <span>+{{ org.discovery_services|length|add:"-3" }} more</span>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="business-card-actions">
+      <a class="card-action card-action-secondary" href="tel:{{ org.phone }}">
+        <i class="bi bi-telephone-fill"></i>
+        Call
+      </a>
+      {% with wa=org.whatsapp|default:org.phone %}
+      {% if wa %}
+      <a
+        class="card-action card-action-whatsapp"
+        href="https://wa.me/91{{ wa|cut:'+'|cut:' ' }}"
+        target="_blank"
+        rel="noopener"
+        data-wa-track
+        data-track-url="{% url 'log_whatsapp_click' org.slug %}">
+        <i class="bi bi-whatsapp"></i>
+        WhatsApp
+      </a>
+      {% endif %}
+      {% endwith %}
+      <a class="card-action card-action-primary" href="{% url 'public_landing' org.slug %}">
+        View profile
+        <i class="bi bi-arrow-up-right"></i>
+      </a>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="results-pagination" aria-label="Business result pages">
+  {% if page_obj.has_previous %}
+  <a
+    class="pagination-button"
+    href="?{% query_string request page=page_obj.previous_page_number %}"
+    data-ajax-link
+    aria-label="Previous page">
+    <i class="bi bi-chevron-left"></i>
+  </a>
+  {% endif %}
+
+  <span class="pagination-status">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+  </span>
+
+  {% if page_obj.has_next %}
+  <a
+    class="pagination-button"
+    href="?{% query_string request page=page_obj.next_page_number %}"
+    data-ajax-link
+    aria-label="Next page">
+    <i class="bi bi-chevron-right"></i>
+  </a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-results">
+  <div class="empty-results-icon"><i class="bi bi-search"></i></div>
+  <h3>No matching businesses yet</h3>
+  <p>Try removing a filter, searching a nearby city or browsing another category.</p>
+  <div class="empty-actions">
+    <a class="button button-secondary" href="{% url 'discovery_home' %}" data-ajax-link>
+      Clear filters
+    </a>
+    <a class="button button-primary" href="{% url 'signup' %}">
+      List your business
+    </a>
+  </div>
+</div>
+{% endif %}

@@ -1,0 +1,277 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Page CMS — {{ org.name }}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-window-stack me-2"></i>Page CMS</h1>
+    <div class="text-muted small">Manage the single-page content for {{ org.name }}</div>
+  </div>
+  <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-outline-dark">
+    <i class="bi bi-box-arrow-up-right me-1"></i>Preview Page
+  </a>
+</div>
+
+<style>
+.cms-panel{background:var(--ink2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px}
+.cms-panel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid var(--border)}
+.cms-panel-head h2{font-size:1rem;margin:0;font-weight:750;color:var(--white)}
+.cms-list{display:grid;gap:0}
+.cms-row{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.cms-row:last-child{border-bottom:0}
+.cms-thumb{width:72px;height:54px;object-fit:cover;border-radius:9px;background:var(--ink3);border:1px solid var(--border)}
+.cms-thumb-empty{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.42)}
+.cms-title{font-weight:700;color:var(--white);font-size:.9rem}
+.cms-copy{color:rgba(255,255,255,.58);font-size:.76rem;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:720px}
+.cms-meta{display:flex;gap:7px;margin-top:7px;flex-wrap:wrap}
+.cms-badge{border:1px solid var(--border);border-radius:999px;padding:2px 8px;font-size:.68rem;color:rgba(255,255,255,.65)}
+.cms-badge.live{color:#74c69d;border-color:rgba(116,198,157,.35);background:rgba(116,198,157,.08)}
+.cms-actions{display:flex;gap:7px;align-items:center}
+.cms-empty{padding:34px 20px;text-align:center;color:rgba(255,255,255,.58)}
+.cms-hub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:24px}
+.cms-hub-card{display:flex;align-items:center;gap:12px;padding:15px 16px;border:1px solid var(--border);border-radius:13px;background:var(--ink2);color:var(--white);transition:.2s ease}
+.cms-hub-card:hover{border-color:rgba(245,158,11,.46);color:var(--white);transform:translateY(-1px)}
+.cms-hub-icon{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:10px;background:rgba(245,158,11,.1);color:#f59e0b}
+.cms-hub-title{font-size:.83rem;font-weight:800}
+.cms-hub-copy{font-size:.7rem;color:rgba(255,255,255,.52);margin-top:2px}
+.cms-panel-note{padding:11px 20px;border-bottom:1px solid var(--border);font-size:.75rem;color:rgba(255,255,255,.55)}
+.cms-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px;padding:16px 20px}
+.cms-plan{position:relative;padding:16px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.025);overflow:hidden}
+.cms-plan:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--plan-color,#f59e0b)}
+.cms-plan-name{font-weight:800;color:var(--white)}
+.cms-plan-price{font-size:1.25rem;font-weight:850;color:#f59e0b;margin-top:5px}
+.cms-plan-meta{font-size:.72rem;color:rgba(255,255,255,.52)}
+.cms-settings{padding:18px 20px}
+.cms-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cms-settings .form-label{display:block;color:rgba(255,255,255,.76);font-size:.73rem;margin-bottom:6px}
+.cms-settings .form-control{width:100%;min-height:44px;background:rgba(255,255,255,.055)!important;border:1px solid rgba(255,255,255,.14)!important;color:#fff!important;border-radius:10px}
+.cms-settings .form-control:focus{border-color:rgba(245,158,11,.65)!important;box-shadow:0 0 0 3px rgba(245,158,11,.12)!important}
+.cms-settings .form-text{color:rgba(255,255,255,.46)}
+.cms-settings-map{grid-column:1/-1}
+.cms-section-icon{display:inline-grid;place-items:center;width:28px;height:28px;margin-right:8px;border-radius:8px;background:rgba(245,158,11,.1);color:#f59e0b}
+@media(max-width:820px){.cms-hub{grid-template-columns:1fr}.cms-settings-grid{grid-template-columns:1fr}.cms-settings-map{grid-column:auto}}
+@media(max-width:700px){.cms-row{grid-template-columns:54px 1fr;padding:14px}.cms-thumb{width:54px;height:46px}.cms-actions{grid-column:1/-1;justify-content:flex-end}.cms-panel-head{align-items:flex-start;padding:16px}.cms-panel-note,.cms-plan-grid,.cms-settings{padding-left:16px;padding-right:16px}}
+</style>
+
+<div class="cms-hub">
+  <a href="{% url 'manage_services' %}" class="cms-hub-card">
+    <span class="cms-hub-icon"><i class="bi bi-briefcase"></i></span>
+    <span><span class="cms-hub-title d-block">Services</span><span class="cms-hub-copy">Manage service cards and pricing</span></span>
+  </a>
+  <a href="{% url 'manage_products' %}" class="cms-hub-card">
+    <span class="cms-hub-icon"><i class="bi bi-box-seam"></i></span>
+    <span><span class="cms-hub-title d-block">Products</span><span class="cms-hub-copy">Manage products, media and stock</span></span>
+  </a>
+  <a href="{% url 'manage_testimonials' %}" class="cms-hub-card">
+    <span class="cms-hub-icon"><i class="bi bi-chat-quote"></i></span>
+    <span><span class="cms-hub-title d-block">Feedback</span><span class="cms-hub-copy">Publish genuine customer reviews</span></span>
+  </a>
+</div>
+
+<section class="cms-panel">
+  <div class="cms-panel-head">
+    <div>
+      <h2>Hero Slides</h2>
+      <div class="text-muted small mt-1">{{ hero_slides.count }} of {{ hero_limit }} used</div>
+    </div>
+    {% if hero_slides.count < hero_limit %}
+    <a href="{% url 'hero_create' %}" class="btn btn-dark btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Add Hero
+    </a>
+    {% endif %}
+  </div>
+  <div class="cms-list">
+    {% for item in hero_slides %}
+    <article class="cms-row">
+      {% if item.image %}
+      <img src="{{ item.image.url }}" alt="" class="cms-thumb">
+      {% else %}
+      <div class="cms-thumb cms-thumb-empty"><i class="bi bi-image"></i></div>
+      {% endif %}
+      <div>
+        <div class="cms-title">{{ item.title }}</div>
+        <div class="cms-copy">{{ item.subtitle|default:"No subtitle" }}</div>
+        <div class="cms-meta">
+          <span class="cms-badge {% if item.is_active %}live{% endif %}">
+            {% if item.is_active %}Live{% else %}Hidden{% endif %}
+          </span>
+          <span class="cms-badge">Order {{ item.order }}</span>
+        </div>
+      </div>
+      <div class="cms-actions">
+        <a href="{% url 'hero_edit' item.pk %}" class="btn btn-outline-dark btn-sm">Edit</a>
+        <form method="post" action="{% url 'hero_delete' item.pk %}" onsubmit="return confirm('Delete this hero slide?')">
+          {% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+        </form>
+      </div>
+    </article>
+    {% empty %}
+    <div class="cms-empty">
+      <i class="bi bi-window fs-3 d-block mb-2"></i>
+      Add a hero slide to replace the default business heading and logo.
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="cms-panel">
+  <div class="cms-panel-head">
+    <div>
+      <h2>Promotional Banners</h2>
+      <div class="text-muted small mt-1">{{ promo_banners.count }} of {{ promo_limit }} used</div>
+    </div>
+    {% if promo_banners.count < promo_limit %}
+    <a href="{% url 'promo_create' %}" class="btn btn-dark btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Add Promotion
+    </a>
+    {% endif %}
+  </div>
+  {% if not promos_visible %}
+  <div class="alert alert-warning rounded-0 border-start-0 border-end-0 mb-0">
+    <i class="bi bi-eye-slash me-2"></i>
+    The promotion section is hidden in the page customizer. Saving an active
+    promotion will turn it on automatically.
+  </div>
+  {% endif %}
+  <div class="cms-list">
+    {% for item in promo_banners %}
+    <article class="cms-row">
+      {% if item.image %}
+      <img src="{{ item.image.url }}" alt="" class="cms-thumb">
+      {% else %}
+      <div class="cms-thumb cms-thumb-empty"><i class="bi bi-megaphone"></i></div>
+      {% endif %}
+      <div>
+        <div class="cms-title">{{ item.title }}</div>
+        <div class="cms-copy">{{ item.description|default:"No description" }}</div>
+        <div class="cms-meta">
+          <span class="cms-badge {% if item.is_current %}live{% endif %}">
+            {% if item.is_current %}Live now{% elif item.is_active %}Scheduled{% else %}Hidden{% endif %}
+          </span>
+          <span class="cms-badge">Order {{ item.order }}</span>
+        </div>
+      </div>
+      <div class="cms-actions">
+        <a href="{% url 'promo_edit' item.pk %}" class="btn btn-outline-dark btn-sm">Edit</a>
+        <form method="post" action="{% url 'promo_delete' item.pk %}" onsubmit="return confirm('Delete this promotion?')">
+          {% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
+        </form>
+      </div>
+    </article>
+    {% empty %}
+    <div class="cms-empty">
+      <i class="bi bi-megaphone fs-3 d-block mb-2"></i>
+      Promotions can be scheduled with a start and end time.
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% for collection in cms_collections %}
+<section class="cms-panel" id="cms-{{ collection.kind }}">
+  <div class="cms-panel-head">
+    <div>
+      <h2><span class="cms-section-icon"><i class="bi bi-{{ collection.icon }}"></i></span>{{ collection.title }}</h2>
+      <div class="text-muted small mt-1">{{ collection.rows|length }} item{{ collection.rows|length|pluralize }}</div>
+    </div>
+    <a href="{% url 'cms_content_create' collection.kind %}" class="btn btn-dark btn-sm">
+      <i class="bi bi-plus-lg me-1"></i>Add
+    </a>
+  </div>
+  <div class="cms-panel-note">
+    {{ collection.description }}
+    {% if not collection.is_visible %}
+    <span class="text-warning ms-1">This section is hidden in Customize Page; saving an active item turns it on.</span>
+    {% endif %}
+  </div>
+  <div class="cms-list">
+    {% for row in collection.rows %}
+    <article class="cms-row">
+      {% if row.image %}
+      <img src="{{ row.image.url }}" alt="" class="cms-thumb">
+      {% else %}
+      <div class="cms-thumb cms-thumb-empty"><i class="bi bi-{{ collection.icon }}"></i></div>
+      {% endif %}
+      <div>
+        <div class="cms-title">{{ row.title }}</div>
+        <div class="cms-copy">{{ row.copy|default:"No description" }}</div>
+        <div class="cms-meta">
+          <span class="cms-badge {% if row.item.is_active %}live{% endif %}">
+            {% if row.item.is_active %}Live{% else %}Hidden{% endif %}
+          </span>
+          <span class="cms-badge">Order {{ row.item.order }}</span>
+        </div>
+      </div>
+      <div class="cms-actions">
+        <a href="{% url 'cms_content_edit' collection.kind row.item.pk %}" class="btn btn-outline-dark btn-sm">Edit</a>
+        <form method="post" action="{% url 'cms_content_delete' collection.kind row.item.pk %}" onsubmit="return confirm('Delete this CMS item?')">
+          {% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm" type="submit" aria-label="Delete"><i class="bi bi-trash"></i></button>
+        </form>
+      </div>
+    </article>
+    {% empty %}
+    <div class="cms-empty">
+      <i class="bi bi-{{ collection.icon }} fs-3 d-block mb-2"></i>
+      Nothing is invented on the public page. Add your first real item here.
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+<section class="cms-panel" id="cms-plans">
+  <div class="cms-panel-head">
+    <div>
+      <h2><span class="cms-section-icon"><i class="bi bi-tags"></i></span>Plans</h2>
+      <div class="text-muted small mt-1">{{ plans|length }} active plan{{ plans|length|pluralize }}</div>
+    </div>
+  </div>
+  <div class="cms-panel-note">
+    Plans are platform-wide content managed by the super admin and automatically update every business page.
+  </div>
+  {% if plans %}
+  <div class="cms-plan-grid">
+    {% for plan in plans %}
+    <article class="cms-plan" style="--plan-color:{{ plan.color }};">
+      <div class="cms-plan-name">{{ plan.name }}</div>
+      <div class="cms-plan-price">₹{{ plan.price }}</div>
+      <div class="cms-plan-meta">{{ plan.duration_days }} days · {{ plan.features|length }} feature{{ plan.features|length|pluralize }}</div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="cms-empty">No active plans are published by the super admin.</div>
+  {% endif %}
+</section>
+
+<section class="cms-panel" id="cms-footer">
+  <div class="cms-panel-head">
+    <div>
+      <h2><span class="cms-section-icon"><i class="bi bi-layout-text-window-reverse"></i></span>Footer, Social Media &amp; Google Map</h2>
+      <div class="text-muted small mt-1">Links are shown only when you provide them</div>
+    </div>
+  </div>
+  <form class="cms-settings" method="post" action="{% url 'footer_settings_update' %}" novalidate>
+    {% csrf_token %}
+    {% if footer_form.non_field_errors %}
+    <div class="alert alert-danger">{{ footer_form.non_field_errors }}</div>
+    {% endif %}
+    <div class="cms-settings-grid">
+      {% for field in footer_form %}
+      <div class="{% if field.name == 'google_maps_embed_url' %}cms-settings-map{% endif %}">
+        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+        {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="d-flex justify-content-end mt-3 pt-3 border-top">
+      <button class="btn btn-dark" type="submit"><i class="bi bi-check2 me-1"></i>Save Footer</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

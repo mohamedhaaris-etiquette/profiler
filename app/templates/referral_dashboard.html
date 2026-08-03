@@ -1,0 +1,499 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Invite & Earn — {{ org.name }}{% endblock %}
+{% block dash_css %}
+<style>
+/* ── REFERRAL PAGE TOKENS ────────────────────── */
+.ref-page { --gold: #d97706; --gold-lt: #fef3c7; --gold-bd: #fde68a; }
+
+/* Banner */
+.ref-banner {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+  border-radius: 20px;
+  padding: 40px 48px;
+  position: relative; overflow: hidden; margin-bottom: 28px;
+}
+.ref-banner::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,119,6,0.18) 0%, transparent 70%);
+}
+.ref-banner::after {
+  content: '';
+  position: absolute; bottom: -80px; left: 20%;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,119,6,0.08) 0%, transparent 70%);
+}
+.ref-banner-title {
+  font-family: var(--font-display); font-size: 1.9rem; font-weight: 800;
+  color: #fff; line-height: 1.2; margin-bottom: 8px;
+}
+.ref-banner-title span { color: #fbbf24; }
+.ref-banner-sub { color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+.points-pill {
+  background: rgba(251,191,36,0.12); border: 1.5px solid rgba(251,191,36,0.3);
+  border-radius: 14px; padding: 18px 28px; text-align: center;
+  backdrop-filter: blur(10px);
+}
+.points-pill .pts-num {
+  font-family: var(--font-display); font-size: 2.6rem; font-weight: 800; color: #fbbf24; line-height: 1;
+}
+.points-pill .pts-lbl { color: rgba(255,255,255,0.5); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+/* How it works steps */
+.how-step {
+  background: var(--ink2); border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px 20px; text-align: center; height: 100%;
+  position: relative;
+}
+.how-step .step-num {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #111827; color: #fbbf24;
+  font-family: var(--font-display); font-size: 1rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+}
+.how-step .step-icon { font-size: 1.8rem; display: block; margin-bottom: 12px; color: #d97706; }
+.how-step h6 { font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; }
+.how-step p { color: var(--muted); font-size: 0.8rem; margin: 0; line-height: 1.5; }
+.step-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 1.4rem; padding-top: 20px;
+}
+
+/* Invite link box */
+.invite-box {
+  background: var(--fog2); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 20px 24px;
+}
+.invite-url-row {
+  display: flex; gap: 10px; align-items: center; margin-top: 10px;
+}
+.invite-url-input {
+  flex: 1; background: rgba(255,255,255,.055); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; font-size: 0.82rem;
+  color: var(--gold); font-family: monospace; cursor: text;
+}
+.btn-copy {
+  background: #111827; color: #fff; border: none;
+  padding: 10px 18px; border-radius: 10px; font-weight: 600;
+  font-size: 0.82rem; cursor: pointer; white-space: nowrap;
+  transition: all .2s; display: flex; align-items: center; gap: 6px;
+}
+.btn-copy:hover { background: #374151; }
+.btn-copy.copied { background: #059669; }
+.btn-whatsapp {
+  background: #25d366; color: #fff; border: none;
+  padding: 10px 20px; border-radius: 10px; font-weight: 700;
+  font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  text-decoration: none; transition: all .2s; white-space: nowrap;
+}
+.btn-whatsapp:hover { background: #1ebe5d; color: #fff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,0.3); }
+.share-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+/* Code badge */
+.code-badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(245,158,11,.08); border: 1.5px dashed rgba(245,158,11,.45);
+  border-radius: 12px; padding: 10px 18px;
+  font-family: monospace; font-size: 1.3rem; font-weight: 800;
+  color: var(--gold); letter-spacing: 3px;
+}
+
+/* Stats row */
+.ref-stat {
+  background: var(--ink2); border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px; text-align: center;
+}
+.ref-stat .val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; }
+.ref-stat .lbl { color: var(--muted); font-size: 0.78rem; font-weight: 600; margin-top: 2px; }
+
+/* Referral table */
+.ref-table-wrap { background: var(--ink2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+
+/* Transactions */
+.txn-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+}
+.txn-row:last-child { border-bottom: none; }
+.txn-earn { color: #059669; font-weight: 800; font-size: 1rem; }
+.txn-redeem { color: #ef4444; font-weight: 800; font-size: 1rem; }
+
+/* Tier badges */
+.tier-bronze { background: #fef3c7; color: #92400e; border-radius: 50px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; }
+.tier-silver { background: #f1f5f9; color: #475569; border-radius: 50px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; }
+.tier-gold   { background: #fef9c3; color: #a16207; border-radius: 50px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; }
+.tier-platinum { background: #ede9fe; color: #5b21b6; border-radius: 50px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; }
+
+/* Progress bar */
+.pts-progress { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.pts-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #fbbf24); border-radius: 4px; transition: width .8s ease; }
+
+/* Empty state */
+.empty-ref { text-align: center; padding: 48px 20px; }
+.empty-ref i { font-size: 3rem; color: var(--border); display: block; margin-bottom: 16px; }
+</style>
+{% endblock %}
+
+{% block dash_content %}
+<div class="ref-page">
+
+<!-- ── PAGE HEADER ─────────────────────────── -->
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-gift me-2" style="color:#f59e0b;"></i>Invite & Earn</h1>
+    <div class="text-muted small">Share your invite link — earn OrgPoints for every business that joins</div>
+  </div>
+  {% if program %}
+  <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:8px 16px;font-size:0.82rem;font-weight:600;color:#92400e;">
+    <i class="bi bi-stars me-1"></i>{{ program.points_per_referral }} pts per successful referral
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── HERO BANNER ─────────────────────────── -->
+<div class="ref-banner">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-8">
+      <div style="color:rgba(251,191,36,0.8);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">
+        <i class="bi bi-lightning-charge me-1"></i> Referral Program
+      </div>
+      <h2 class="ref-banner-title">Invite businesses.<br><span>Earn OrgPoints.</span></h2>
+      <p class="ref-banner-sub mt-2">
+        Every time a business registers using your invite link, you earn
+        <strong style="color:#fbbf24;">{{ program.points_per_referral|default:100 }} OrgPoints</strong>
+        instantly. Use points for platform benefits, featured listings, and more.
+      </p>
+      <div class="d-flex gap-3 flex-wrap mt-4">
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:0.82rem;">
+          <i class="bi bi-check-circle-fill text-success"></i> Instant reward on signup
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:0.82rem;">
+          <i class="bi bi-check-circle-fill text-success"></i> No limit on referrals
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.7);font-size:0.82rem;">
+          <i class="bi bi-check-circle-fill text-success"></i> Points never expire
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+      <div class="points-pill d-inline-block">
+        <div class="pts-num">{{ total_points }}</div>
+        <div class="pts-lbl">Your OrgPoints Balance</div>
+        <div style="margin-top:12px;">
+          {% if total_points >= 500 %}
+          <span class="tier-platinum"><i class="bi bi-gem me-1"></i>Platinum</span>
+          {% elif total_points >= 300 %}
+          <span class="tier-gold"><i class="bi bi-star-fill me-1"></i>Gold</span>
+          {% elif total_points >= 100 %}
+          <span class="tier-silver"><i class="bi bi-award me-1"></i>Silver</span>
+          {% else %}
+          <span class="tier-bronze"><i class="bi bi-shield me-1"></i>Bronze</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STATS ROW ───────────────────────────── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="ref-stat">
+      <div class="val" style="color:#f59e0b;">{{ total_referrals }}</div>
+      <div class="lbl">Total Invites Sent</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="ref-stat">
+      <div class="val" style="color:#059669;">{{ rewarded_referrals }}</div>
+      <div class="lbl">Successful Signups</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="ref-stat">
+      <div class="val" style="color:#6366f1;">{{ ref_code.total_clicks }}</div>
+      <div class="lbl">Link Clicks</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="ref-stat">
+      <div class="val" style="color:#0ea5e9;">{{ total_points }}</div>
+      <div class="lbl">OrgPoints Earned</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- ── LEFT: INVITE LINK ─────────────────── -->
+  <div class="col-lg-7">
+
+    <!-- Invite Link Box -->
+    <div class="card-modern mb-4">
+      <div class="card-header" style="background:#111827;">
+        <i class="bi bi-link-45deg me-2"></i>Your Invite Link
+      </div>
+      <div class="p-4">
+        <p class="text-muted small mb-3">Share this link with other business owners. When they register, you earn points automatically.</p>
+
+        <!-- URL copy -->
+        <label style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Invite URL</label>
+        <div class="invite-url-row">
+          <input type="text" class="invite-url-input" id="inviteUrl" value="{{ invite_url }}" readonly>
+          <button class="btn-copy" id="copyBtn" onclick="copyLink()">
+            <i class="bi bi-clipboard" id="copyIcon"></i> Copy
+          </button>
+        </div>
+
+        <!-- Referral code -->
+        <div class="mt-4">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Referral Code</label>
+          <div class="mt-2">
+            <span class="code-badge">
+              <i class="bi bi-qr-code" style="color:#f59e0b;"></i>
+              {{ ref_code.code }}
+            </span>
+          </div>
+          <p class="text-muted small mt-2">Friends can also enter this code manually during signup.</p>
+        </div>
+
+        <!-- Share buttons -->
+        <div class="share-row mt-3">
+          <a href="{{ whatsapp_url }}" target="_blank" class="btn-whatsapp">
+            <i class="bi bi-whatsapp"></i> Share on WhatsApp
+          </a>
+          <button class="btn-copy" onclick="copyLink()" style="background:#1d4ed8;">
+            <i class="bi bi-link"></i> Copy Link
+          </button>
+          <button class="btn-copy" onclick="shareNative()" style="background:#7c3aed;">
+            <i class="bi bi-share"></i> Share
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="card-modern">
+      <div class="card-header" style="background:#111827;"><i class="bi bi-info-circle me-2"></i>How It Works</div>
+      <div class="p-4">
+        <div class="row g-3 align-items-center">
+          <div class="col">
+            <div class="how-step">
+              <div class="step-num">1</div>
+              <i class="bi bi-share-fill step-icon"></i>
+              <h6>Share Your Link</h6>
+              <p>Send your unique invite link via WhatsApp, SMS, or any platform.</p>
+            </div>
+          </div>
+          <div class="col-auto step-arrow d-none d-md-flex">
+            <i class="bi bi-arrow-right"></i>
+          </div>
+          <div class="col">
+            <div class="how-step">
+              <div class="step-num">2</div>
+              <i class="bi bi-building-add step-icon"></i>
+              <h6>They Register</h6>
+              <p>Your friend registers their business using your link or referral code.</p>
+            </div>
+          </div>
+          <div class="col-auto step-arrow d-none d-md-flex">
+            <i class="bi bi-arrow-right"></i>
+          </div>
+          <div class="col">
+            <div class="how-step">
+              <div class="step-num">3</div>
+              <i class="bi bi-stars step-icon"></i>
+              <h6>You Earn Points</h6>
+              <p>{{ program.points_per_referral|default:100 }} OrgPoints land in your wallet instantly.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT: LEADERBOARD & REWARDS ──────── -->
+  <div class="col-lg-5">
+
+    <!-- Points Progress to next tier -->
+    <div class="card-modern mb-4">
+      <div class="card-header" style="background:#111827;"><i class="bi bi-trophy me-2" style="color:#fbbf24;"></i>Points & Tiers</div>
+      <div class="p-4">
+        {% if total_points >= 500 %}
+        <div style="text-align:center;padding:12px 0;">
+          <i class="bi bi-gem fs-2" style="color:#7c3aed;"></i>
+          <div style="font-weight:800;color:#5b21b6;margin-top:8px;">Platinum — Max Tier!</div>
+          <div class="text-muted small">You've reached the highest tier. Congratulations!</div>
+        </div>
+        {% else %}
+        {% with next_pts=500 %}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div>
+            <span class="fw-700">{{ total_points }} pts</span>
+            <span class="text-muted small"> / {{ next_pts }} for Platinum</span>
+          </div>
+          <span class="tier-platinum">Platinum</span>
+        </div>
+        <div class="pts-progress">
+          <div class="pts-fill" style="width: {% widthratio total_points next_pts 100 %}%;"></div>
+        </div>
+        {% endwith %}
+        {% endif %}
+
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--fog2);border-radius:10px;">
+            <div><span class="tier-bronze">Bronze</span><span class="text-muted small ms-2">0 pts</span></div>
+            <i class="bi bi-check-circle-fill {% if total_points >= 0 %}text-success{% else %}text-muted{% endif %}"></i>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--fog2);border-radius:10px;">
+            <div><span class="tier-silver">Silver</span><span class="text-muted small ms-2">100 pts</span></div>
+            <i class="bi bi-check-circle-fill {% if total_points >= 100 %}text-success{% else %}text-muted{% endif %}"></i>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--fog2);border-radius:10px;">
+            <div><span class="tier-gold">Gold</span><span class="text-muted small ms-2">300 pts</span></div>
+            <i class="bi bi-check-circle-fill {% if total_points >= 300 %}text-success{% else %}text-muted{% endif %}"></i>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--fog2);border-radius:10px;">
+            <div><span class="tier-platinum">Platinum</span><span class="text-muted small ms-2">500 pts</span></div>
+            <i class="bi bi-check-circle-fill {% if total_points >= 500 %}text-success{% else %}text-muted{% endif %}"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bonus Wallet Transactions -->
+    <div class="card-modern">
+      <div class="card-header" style="background:#111827;"><i class="bi bi-wallet2 me-2"></i>Points History</div>
+      <div>
+        {% if bonus_transactions %}
+        {% for txn in bonus_transactions|slice:":8" %}
+        <div class="txn-row">
+          <div>
+            <div style="font-size:0.85rem;font-weight:600;">
+              {% if txn.referral and txn.referral.referred %}
+                <i class="bi bi-building me-1 text-muted"></i>{{ txn.referral.referred.name|truncatechars:28 }}
+              {% else %}
+                {{ txn.note|truncatechars:36 }}
+              {% endif %}
+            </div>
+            <div class="text-muted" style="font-size:0.72rem;">{{ txn.created_at|date:"d M Y, g:i A" }}</div>
+          </div>
+          <div class="{% if txn.points > 0 %}txn-earn{% else %}txn-redeem{% endif %}">
+            {% if txn.points > 0 %}+{% endif %}{{ txn.points }} pts
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-ref">
+          <i class="bi bi-wallet2"></i>
+          <h6 class="text-muted">No transactions yet</h6>
+          <p class="text-muted small">Share your invite link to start earning points!</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── REFERRALS TABLE ───────────────────────── -->
+<div class="card-modern mt-4">
+  <div class="card-header" style="background:#111827;">
+    <i class="bi bi-people me-2"></i>Businesses You Referred
+    <span style="background:rgba(255,255,255,0.15);border-radius:50px;padding:2px 10px;font-size:0.75rem;margin-left:8px;">{{ total_referrals }}</span>
+  </div>
+  <div class="p-0">
+    {% if referrals %}
+    <table class="table table-modern mb-0">
+      <thead>
+        <tr>
+          <th>Business</th>
+          <th>Category</th>
+          <th>Location</th>
+          <th>Status</th>
+          <th>Points</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for ref in referrals %}
+      <tr>
+        <td>
+          <div class="fw-600">{{ ref.referred.name|default:"—" }}</div>
+        </td>
+        <td class="small text-muted">
+          {% if ref.referred.category %}{{ ref.referred.category.name }}{% else %}—{% endif %}
+        </td>
+        <td class="small text-muted">
+          {% if ref.referred %}{{ ref.referred.city }}{% endif %}
+        </td>
+        <td>
+          {% if ref.status == 'rewarded' %}
+          <span style="background:#dcfce7;color:#166534;border-radius:50px;padding:3px 12px;font-size:0.75rem;font-weight:700;">
+            <i class="bi bi-check-circle me-1"></i>Rewarded
+          </span>
+          {% elif ref.status == 'confirmed' %}
+          <span style="background:#dbeafe;color:#1d4ed8;border-radius:50px;padding:3px 12px;font-size:0.75rem;font-weight:700;">Confirmed</span>
+          {% else %}
+          <span style="background:#fef3c7;color:#92400e;border-radius:50px;padding:3px 12px;font-size:0.75rem;font-weight:700;">Pending</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if ref.points_awarded %}
+          <span style="color:#f59e0b;font-weight:800;">+{{ ref.points_awarded }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td class="small text-muted">{{ ref.created_at|date:"d M Y" }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-ref">
+      <i class="bi bi-people"></i>
+      <h5 class="text-muted">No referrals yet</h5>
+      <p class="text-muted small mb-3">Share your invite link via WhatsApp to get started!</p>
+      <a href="{{ whatsapp_url }}" target="_blank" class="btn btn-success btn-sm" style="border-radius:10px;background:#25d366;border:none;">
+        <i class="bi bi-whatsapp me-2"></i>Share on WhatsApp
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+</div><!-- /ref-page -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyLink() {
+  const url = document.getElementById('inviteUrl').value;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const icon = document.getElementById('copyIcon');
+    btn.classList.add('copied');
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<i class="bi bi-clipboard" id="copyIcon"></i> Copy';
+    }, 2500);
+  });
+}
+
+function shareNative() {
+  const url = document.getElementById('inviteUrl').value;
+  if (navigator.share) {
+    navigator.share({
+      title: '{{ org.name }} — Join Portal',
+      text: 'Register your business on Portal using my invite link!',
+      url: url,
+    });
+  } else {
+    copyLink();
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Pending Approvals — Portal{% endblock %}
+{% block dash_content %}
+ 
+<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1><i class="bi bi-person-check me-2"></i>Pending Approvals</h1>
+    <div class="text-muted small">Review and activate new member submissions</div>
+  </div>
+  <span class="badge" style="background:#fef3c7;color:#d97706;border-radius:50px;padding:6px 16px;font-size:0.85rem;">
+    {{ total }} awaiting review
+  </span>
+</div>
+ 
+{% if page_obj %}
+<div class="card-modern">
+  <div class="p-0">
+    <div class="table-responsive">
+      <table class="table table-modern mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Business</th>
+            <th>Plan / Category</th>
+            <th>Contact</th>
+            <th>Location</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for invite in page_obj %}
+          {% with org=invite.organization %}
+          <tr>
+            <td class="text-muted small">{{ forloop.counter }}</td>
+ 
+            {# Business name + logo #}
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                {% if org.logo %}
+                  <img src="{{ org.logo_url }}"
+                       style="width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0;">
+                {% else %}
+                  <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0f172a,#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0;">
+                    <i class="bi bi-building"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <div class="fw-600" style="font-size:0.88rem;">{{ org.name }}</div>
+                  <div class="text-muted" style="font-size:0.73rem;">
+                    {% if invite.email %}{{ invite.email }}{% elif invite.phone %}+{{ invite.phone }}{% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+ 
+            {# Plan + Category #}
+            <td>
+              {% if invite.plan %}
+                <span class="badge" style="background:#ede9fe;color:#7c3aed;border-radius:50px;padding:3px 9px;font-size:0.72rem;">
+                  {{ invite.plan.name }}
+                </span>
+              {% endif %}
+              {% if invite.main_category %}
+                <div style="font-size:0.72rem;color:#2563eb;margin-top:3px;">
+                  <i class="bi bi-tag me-1"></i>{{ invite.main_category.name }}
+                </div>
+              {% endif %}
+            </td>
+ 
+            {# Contact #}
+            <td class="small">
+              <div>{{ org.phone }}</div>
+              {% if org.whatsapp %}
+                <div style="color:#16a34a;font-size:0.72rem;">
+                  <i class="bi bi-whatsapp me-1"></i>{{ org.whatsapp }}
+                </div>
+              {% endif %}
+            </td>
+ 
+            {# Location #}
+            <td class="small text-muted">
+              {{ org.city }}{% if org.district %}, {{ org.district }}{% endif %}<br>
+              <span style="font-size:0.72rem;">{{ org.state }} — {{ org.pincode }}</span>
+            </td>
+ 
+            {# Submitted date #}
+            <td class="small text-muted" style="white-space:nowrap;">
+              {{ invite.accepted_at|date:"d M Y" }}<br>
+              <span style="font-size:0.7rem;">{{ invite.accepted_at|date:"H:i" }}</span>
+            </td>
+ 
+            {# Actions #}
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {# View full details #}
+                <a href="{% url 'edit_member' org.pk %}"
+                   class="btn btn-sm btn-outline-secondary" style="border-radius:8px;" title="View Details">
+                  <i class="bi bi-eye"></i>
+                </a>
+ 
+                {# Approve #}
+                <button type="button"
+                        class="btn btn-sm btn-success" style="border-radius:8px;"
+                        data-bs-toggle="modal"
+                        data-bs-target="#approveModal{{ invite.pk }}">
+                  <i class="bi bi-check-lg me-1"></i>Approve
+                </button>
+ 
+                {# Reject #}
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger" style="border-radius:8px;"
+                        data-bs-toggle="modal"
+                        data-bs-target="#rejectModal{{ invite.pk }}">
+                  <i class="bi bi-x-lg me-1"></i>Reject
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+ 
+    {# Pagination #}
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3" style="border-top:1px solid var(--border);">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-secondary me-2">← Prev</a>
+      {% endif %}
+      <span class="small text-muted align-self-center">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-secondary ms-2">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+ 
+{# ── APPROVE MODALS ── #}
+{% for invite in page_obj %}
+{% with org=invite.organization %}
+<div class="modal fade" id="approveModal{{ invite.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="background:var(--ink2);color:#fff;border-radius:12px;">
+      <div class="modal-header" style="border-bottom:1px solid var(--border);padding:16px 20px;">
+        <h5 class="modal-title" style="font-weight:700;">
+          <i class="bi bi-check-circle-fill text-success me-2"></i>Approve Member
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:20px;">
+        <p style="margin-bottom:8px;">
+          Approving <strong>{{ org.name }}</strong> will activate their account and send them a welcome email.
+        </p>
+        <div style="background:var(--fog2);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:0.83rem;">
+          <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted">Contact</span>
+            <span>{% if invite.email %}{{ invite.email }}{% elif invite.phone %}+{{ invite.phone }}{% else %}—{% endif %}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted">Plan</span><span>{{ invite.plan.name|default:"—" }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted">Phone</span><span>{{ org.phone }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Location</span>
+            <span>{{ org.city }}, {{ org.state }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-top:1px solid var(--border);padding:12px 20px;">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"
+                style="background:var(--fog2);color:#fff;border:1px solid var(--border);border-radius:8px;padding:6px 16px;">
+          Cancel
+        </button>
+        <form method="POST" action="{% url 'approve_member' invite.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-success"
+                  style="border-radius:8px;padding:6px 20px;">
+            <i class="bi bi-check-lg me-1"></i>Yes, Approve
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+{# ── REJECT MODALS ── #}
+<div class="modal fade" id="rejectModal{{ invite.pk }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="background:var(--ink2);color:#fff;border-radius:12px;">
+      <div class="modal-header" style="border-bottom:1px solid var(--border);padding:16px 20px;">
+        <h5 class="modal-title" style="font-weight:700;">
+          <i class="bi bi-x-circle-fill text-danger me-2"></i>Reject Submission
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'reject_member' invite.pk %}">
+        {% csrf_token %}
+        <div class="modal-body" style="padding:20px;">
+          <p style="margin-bottom:14px;">
+            Rejecting <strong>{{ org.name }}</strong>'s application.
+            They will be notified by email.
+          </p>
+          <label class="small fw-600 mb-1 d-block" style="color:rgba(255,255,255,.82);">
+            Reason <span class="text-muted fw-400">(optional — sent to applicant)</span>
+          </label>
+          <textarea name="rejection_reason" rows="4"
+            class="form-control" style="border-radius:8px;font-size:0.85rem;"
+            placeholder="e.g. Incomplete documents, duplicate registration, outside service area…"></textarea>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid var(--border);padding:12px 20px;">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"
+                  style="background:var(--fog2);color:#fff;border:1px solid var(--border);border-radius:8px;padding:6px 16px;">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-sm btn-danger"
+                  style="border-radius:8px;padding:6px 20px;">
+            <i class="bi bi-x-lg me-1"></i>Confirm Reject
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endfor %}
+ 
+{% else %}
+<div class="card-modern text-center py-5">
+  <i class="bi bi-check2-all" style="font-size:3rem;color:#22c55e;opacity:0.5;"></i>
+  <p class="mt-3 text-muted">No pending submissions — you're all caught up!</p>
+</div>
+{% endif %}
+ 
+{% endblock %}

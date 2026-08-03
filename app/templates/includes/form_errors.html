@@ -1,0 +1,19 @@
+{% if form.errors %}
+<div class="form-error-summary" role="alert" aria-live="polite">
+  <div class="form-error-title">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    Nothing was saved yet
+  </div>
+  <p>Correct the following fields and submit again:</p>
+  <ul>
+    {% for field in form %}
+      {% for error in field.errors %}
+      <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+      {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}

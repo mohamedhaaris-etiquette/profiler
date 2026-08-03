@@ -1,0 +1,215 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Edit Staff — {{ member.get_full_name|default:member.username }}{% endblock %}
+
+{% block dash_content %}
+<div class="container py-4" style="max-width: 720px;">
+
+  {# ── Breadcrumb ───────────────────────────────────────────────────────── #}
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{% url 'staff_list' %}" class="btn btn-sm btn-outline-secondary" title="Back to staff">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h4 class="fw-semibold mb-0">Edit Staff Member</h4>
+      <p class="text-muted small mb-0">{{ member.get_full_name|default:member.username }} &middot; {{ member.email }}</p>
+    </div>
+  </div>
+
+  {# ── Flash Messages ───────────────────────────────────────────────────── #}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+      {{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {# ── Profile Details ──────────────────────────────────────────────── #}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+        <h6 class="fw-semibold mb-0">Profile Details</h6>
+      </div>
+      <div class="card-body px-4 pb-4">
+        <div class="row g-3">
+
+          <div class="col-sm-6">
+            <label class="form-label">First name</label>
+            <input type="text" name="first_name" class="form-control" value="{{ member.first_name }}" maxlength="150">
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Last name</label>
+            <input type="text" name="last_name" class="form-control" value="{{ member.last_name }}" maxlength="150">
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Mobile</label>
+            <input type="text" name="phone" class="form-control" value="{{ member.phone }}" maxlength="15">
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Landline</label>
+            <input type="text" name="landline" class="form-control" value="{{ member.landline }}" maxlength="20">
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Gender</label>
+            <select name="gender" class="form-select">
+              {% for val, label in gender_choices %}
+                <option value="{{ val }}" {% if member.gender == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Date of birth</label>
+            <input type="date" name="date_of_birth" class="form-control"
+              value="{{ member.date_of_birth|date:'Y-m-d'|default:'' }}">
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select">
+              {% for val, label in role_choices %}
+                {# Super admin role should not be assignable via this form #}
+                {% if val != 'super_admin' %}
+                  <option value="{{ val }}" {% if member.role == val %}selected{% endif %}>{{ label }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Custom Team Role</label>
+            <select name="team_role" class="form-select">
+              <option value="">No custom role</option>
+              {% for team_role in team_roles %}
+              <option value="{{ team_role.pk }}" {% if member.team_role_id == team_role.pk %}selected{% endif %}>
+                {{ team_role.name }}
+              </option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Create unlimited organization roles from Django Admin.</div>
+          </div>
+
+          <div class="col-sm-6">
+            <label class="form-label">Profile photo</label>
+            <input type="file" name="profile_pic" class="form-control" accept="image/*">
+            {% if member.profile_pic %}
+              <div class="mt-2 d-flex align-items-center gap-2">
+                <img src="{{ member.profile_pic.url }}" class="rounded-circle" width="44" height="44" style="object-fit:cover;">
+                <small class="text-muted">Upload new to replace.</small>
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {# ── Change Password ───────────────────────────────────────────────── #}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4 d-flex align-items-center justify-content-between">
+        <h6 class="fw-semibold mb-0">Change Password</h6>
+        <span class="text-muted small">Leave blank to keep current password.</span>
+      </div>
+      <div class="card-body px-4 pb-4">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label">New password</label>
+            <input type="password" name="new_password" class="form-control" autocomplete="new-password"
+              minlength="8" placeholder="Min 8 characters">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Confirm password</label>
+            <input type="password" name="confirm_password" class="form-control" autocomplete="new-password">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ── Save / Cancel ─────────────────────────────────────────────────── #}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check2 me-1"></i>Save Changes
+      </button>
+      <a href="{% url 'staff_list' %}" class="btn btn-light">Cancel</a>
+    </div>
+
+  </form>
+
+  {# ── Danger Zone ──────────────────────────────────────────────────────── #}
+  {% if member.pk != request.user.pk and member.role != 'super_admin' %}
+    <div class="card border-0 shadow-sm mt-4" style="border-left: 3px solid #dc3545 !important;">
+      <div class="card-body d-flex align-items-center justify-content-between py-3">
+        <div>
+          <p class="fw-semibold mb-0 text-danger small">Delete this staff member</p>
+          <p class="text-muted mb-0" style="font-size:12px;">All their data will be permanently removed.</p>
+        </div>
+        <button
+          class="btn btn-sm btn-outline-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#deleteStaffModal"
+          data-action="{% url 'delete_staff' member.pk %}"
+          data-name="{{ member.get_full_name|default:member.username }}"
+        >
+          <i class="bi bi-trash3 me-1"></i>Delete
+        </button>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+
+{# ══════════════════════════════════════════════════════════════════════════
+   DELETE CONFIRM MODAL
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="deleteStaffModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>Delete Staff Member
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-1 text-secondary">Delete <strong id="deleteStaffName"></strong>?</p>
+        <p class="mb-0 small text-muted">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" id="deleteStaffForm">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3 me-1"></i>Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('deleteStaffModal').addEventListener('show.bs.modal', function (e) {
+  const btn = e.relatedTarget;
+  document.getElementById('deleteStaffForm').action      = btn.dataset.action;
+  document.getElementById('deleteStaffName').textContent = btn.dataset.name;
+});
+
+/* ── Password match indicator ───────────────────────────────────────────── */
+const pw1 = document.querySelector('[name=new_password]');
+const pw2 = document.querySelector('[name=confirm_password]');
+function checkMatch() {
+  if (!pw2.value) { pw2.setCustomValidity(''); return; }
+  pw2.setCustomValidity(pw1.value === pw2.value ? '' : 'Passwords do not match.');
+}
+pw1.addEventListener('input', checkMatch);
+pw2.addEventListener('input', checkMatch);
+</script>
+{% endblock %}

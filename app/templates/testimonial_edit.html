@@ -1,0 +1,166 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Edit Testimonial — {{ testimonial.client_name }}{% endblock %}
+
+{% block dash_content %}
+<div class="container py-4" style="max-width: 640px;">
+
+  {# ── Breadcrumb ───────────────────────────────────────────────────────── #}
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{% url 'manage_testimonials' %}" class="btn btn-sm btn-outline-secondary" title="Back">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h4 class="fw-semibold mb-0">Edit Testimonial</h4>
+      <p class="text-muted small mb-0">{{ testimonial.client_name }}</p>
+    </div>
+  </div>
+
+  {# ── Flash Messages ───────────────────────────────────────────────────── #}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+      {{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+
+  {# ── Form Card ────────────────────────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">Client name <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            name="client_name"
+            class="form-control"
+            value="{{ testimonial.client_name }}"
+            required
+            maxlength="100"
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Role / Company</label>
+          <input
+            type="text"
+            name="client_role"
+            class="form-control"
+            value="{{ testimonial.client_role }}"
+            maxlength="100"
+            placeholder="e.g. Owner, ABC Pvt Ltd"
+          >
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Message</label>
+          <textarea name="message" class="form-control" rows="4">{{ testimonial.message }}</textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label d-block">Rating</label>
+          <div class="d-flex gap-2">
+            {% for v in "12345" %}
+              <input
+                type="radio"
+                class="btn-check"
+                name="rating"
+                id="editStar{{ v }}"
+                value="{{ v }}"
+                {% if testimonial.rating == v|add:0 %}checked{% endif %}
+              >
+              <label class="btn btn-sm btn-outline-warning" for="editStar{{ v }}">
+                <i class="bi bi-star-fill"></i> {{ v }}
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="form-check mb-4">
+          <input
+            type="checkbox"
+            name="is_active"
+            id="isActiveEdit"
+            class="form-check-input"
+            {% if testimonial.is_active %}checked{% endif %}
+          >
+          <label class="form-check-label" for="isActiveEdit">
+            Visible on landing page
+          </label>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2 me-1"></i>Save Changes
+          </button>
+          <a href="{% url 'manage_testimonials' %}" class="btn btn-light">Cancel</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  {# ── Danger Zone ──────────────────────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm mt-3" style="border-left: 3px solid #dc3545 !important;">
+    <div class="card-body d-flex align-items-center justify-content-between py-3">
+      <div>
+        <p class="fw-semibold mb-0 text-danger small">Delete this testimonial</p>
+        <p class="text-muted mb-0" style="font-size:12px">This action cannot be undone.</p>
+      </div>
+      <button
+        class="btn btn-sm btn-outline-danger"
+        data-bs-toggle="modal"
+        data-bs-target="#deleteTestimonialModal"
+        data-action="{% url 'delete_testimonial' testimonial.pk %}"
+        data-name="{{ testimonial.client_name }}"
+      >
+        <i class="bi bi-trash3 me-1"></i>Delete
+      </button>
+    </div>
+  </div>
+
+</div>
+
+
+{# ══════════════════════════════════════════════════════════════════════════
+   DELETE CONFIRM MODAL
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="deleteTestimonialModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>Delete Testimonial
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-0 text-secondary">
+          Delete the testimonial from <strong id="deleteTestimonialName"></strong>?
+          This action cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" id="deleteTestimonialForm">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3 me-1"></i>Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('deleteTestimonialModal').addEventListener('show.bs.modal', function (e) {
+  const btn = e.relatedTarget;
+  document.getElementById('deleteTestimonialForm').action      = btn.dataset.action;
+  document.getElementById('deleteTestimonialName').textContent = btn.dataset.name;
+});
+</script>
+{% endblock %}

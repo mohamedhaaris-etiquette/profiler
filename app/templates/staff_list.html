@@ -1,0 +1,192 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Staff Members{% endblock %}
+
+{% block dash_content %}
+<div class="container-fluid py-4">
+
+  {# ── Page Header ──────────────────────────────────────────────────────── #}
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-semibold mb-0">Staff Members</h4>
+      {% if org %}
+        <p class="text-muted small mb-0">{{ org.name }}</p>
+      {% else %}
+        <p class="text-muted small mb-0">All organisations</p>
+      {% endif %}
+    </div>
+    <a href="{% url 'add_member' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i> Add Staff
+    </a>
+  </div>
+
+  {# ── Flash Messages ───────────────────────────────────────────────────── #}
+  {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+      {{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+
+  {# ── Table Card ───────────────────────────────────────────────────────── #}
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Member</th>
+            <th>Role</th>
+            <th>Phone</th>
+            <th>Gender</th>
+            <th>Status</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in members %}
+            <tr>
+              {# Avatar + name #}
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  {% if m.profile_pic %}
+                    <img
+                      src="{{ m.profile_pic.url }}"
+                      class="rounded-circle flex-shrink-0"
+                      width="40" height="40"
+                      style="object-fit:cover;"
+                      alt="{{ m.get_full_name }}"
+                    >
+                  {% else %}
+                    <div
+                      class="rounded-circle bg-primary bg-opacity-10 text-primary fw-semibold d-flex align-items-center justify-content-center flex-shrink-0"
+                      style="width:40px;height:40px;font-size:14px;"
+                    >
+                      {{ m.first_name|first|default:m.username|first|upper }}
+                    </div>
+                  {% endif %}
+                  <div>
+                    <p class="fw-semibold mb-0 small">{{ m.get_full_name|default:m.username }}</p>
+                    <p class="text-muted mb-0" style="font-size:12px;">{{ m.email }}</p>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary fw-normal">
+                  {{ m.get_role_display }}
+                </span>
+              </td>
+
+              <td class="small text-muted">{{ m.phone|default:'—' }}</td>
+
+              <td class="small text-muted text-capitalize">{{ m.gender|default:'—' }}</td>
+
+              <td>
+                {% if m.is_active %}
+                  <span class="badge bg-success bg-opacity-10 text-success">Active</span>
+                {% else %}
+                  <span class="badge bg-danger bg-opacity-10 text-danger">Inactive</span>
+                {% endif %}
+              </td>
+
+              {# Actions #}
+              <td class="text-end pe-4">
+                <div class="d-flex justify-content-end gap-1">
+
+                  {# Edit #}
+                  <a href="{% url 'edit_staff' m.pk %}"
+                     class="btn btn-sm btn-outline-secondary"
+                     title="Edit staff">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+
+                  {# Toggle active — cannot toggle self #}
+                  {% if m.pk != request.user.pk %}
+                    <form method="post" action="{% url 'toggle_staff_active' m.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button
+                        type="submit"
+                        class="btn btn-sm {% if m.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                        title="{% if m.is_active %}Deactivate{% else %}Activate{% endif %}"
+                      >
+                        <i class="bi bi-{% if m.is_active %}slash-circle{% else %}check-circle{% endif %}"></i>
+                      </button>
+                    </form>
+                  {% endif %}
+
+                  {# Delete — cannot delete self or super admins #}
+                  {% if m.pk != request.user.pk and m.role != 'super_admin' %}
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      data-bs-toggle="modal"
+                      data-bs-target="#deleteStaffModal"
+                      data-action="{% url 'delete_staff' m.pk %}"
+                      data-name="{{ m.get_full_name|default:m.username }}"
+                      title="Delete staff"
+                    >
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  {% endif %}
+
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                <i class="bi bi-people fs-2 d-block mb-2 opacity-25"></i>
+                No staff members found.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+
+{# ══════════════════════════════════════════════════════════════════════════
+   DELETE CONFIRM MODAL
+══════════════════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="deleteStaffModal" tabindex="-1" aria-labelledby="deleteStaffModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger" id="deleteStaffModalLabel">
+          <i class="bi bi-exclamation-triangle me-2"></i>Delete Staff Member
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-1 text-secondary">
+          Delete <strong id="deleteStaffName"></strong>?
+        </p>
+        <p class="mb-0 small text-muted">
+          Their account and all associated data will be permanently removed.
+        </p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" id="deleteStaffForm">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash3 me-1"></i>Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+document.getElementById('deleteStaffModal').addEventListener('show.bs.modal', function (e) {
+  const btn = e.relatedTarget;
+  document.getElementById('deleteStaffForm').action      = btn.dataset.action;
+  document.getElementById('deleteStaffName').textContent = btn.dataset.name;
+});
+</script>
+{% endblock %}

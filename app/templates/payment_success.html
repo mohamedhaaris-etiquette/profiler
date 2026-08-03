@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Success</title>
+    <style>
+        body {
+            background: #0a0f0d;
+            color: #fff;
+            font-family: Inter, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .box { text-align: center; padding: 40px; }
+        .icon {
+            width: 80px; height: 80px;
+            background: rgba(34,197,94,0.1);
+            border: 2px solid rgba(34,197,94,0.3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 2.5rem;
+            color: #22c55e;
+        }
+        h1 { font-size: 2rem; margin-bottom: 12px; }
+        p { color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+        .txn { color: #f59e0b; font-family: monospace; font-size: 1.1rem; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            background: #f59e0b;
+            color: #0a0f0d;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 800;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="icon">✓</div>
+
+        <h1>Payment Successful!</h1>
+
+        <p>Transaction ID:</p>
+        <p class="txn">{{ transaction_id|default:"N/A" }}</p>
+
+        <p>Amount Paid: ₹{{ amount|default:"0.00" }}</p>
+
+        <a href="{% url 'payment_page' %}" class="btn">← Back to Home</a>
+    </div>
+</body>
+</html>

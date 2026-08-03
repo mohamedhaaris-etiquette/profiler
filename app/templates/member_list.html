@@ -1,0 +1,224 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Members — Portal{% endblock %}
+{% block dash_content %}
+
+<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1><i class="bi bi-people-fill me-2"></i>Members</h1>
+    <div class="text-muted small">All registered organisations on the platform</div>
+  </div>
+  <a href="{% url 'add_member' %}" class="btn btn-primary" style="border-radius:10px;">
+    <i class="bi bi-plus-lg me-1"></i> Add Member
+  </a>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-building-fill"></i></div>
+      <div class="value">{{ total }}</div>
+      <div class="label">Total Members</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="value">{{ page_obj.paginator.object_list|length }}</div>
+      <div class="label">Showing</div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card-modern mb-4">
+  <div class="card-header"><i class="bi bi-funnel me-2"></i>Filter Members</div>
+  <div class="p-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-12 col-md-4">
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by name...">
+      </div>
+      <div class="col-6 col-md-3">
+        <select name="plan" class="form-select">
+          <option value="">All Plans</option>
+          {% for p in plans %}
+          <option value="{{ p.level }}" {% if plan == p.level %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <select name="status" class="form-select">
+          <option value="">All Status</option>
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-fill" style="border-radius:8px;">
+          <i class="bi bi-search"></i> Filter
+        </button>
+        <a href="{% url 'member_list' %}" class="btn btn-outline-secondary" style="border-radius:8px;">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card-modern">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-list-ul me-2"></i>Member List</span>
+    <span class="badge bg-secondary">{{ total }} total</span>
+  </div>
+  <div class="p-0">
+    {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table table-modern mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Organisation</th>
+            <th>Category</th>
+            <th>Plan</th>
+            <th>Plan Expiry</th>
+            <th>Status</th>
+            <th>Registered</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for org in page_obj %}
+          <tr>
+            <td class="text-muted small">{{ forloop.counter }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                {% if org.logo %}
+                  <img src="{{ org.logo_url }}" style="width:38px;height:38px;border-radius:10px;object-fit:cover;">
+                {% else %}
+                  <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#0f172a,var(--accent, #f97316));display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.9rem;">
+                    <i class="bi bi-building"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <div class="fw-600">{{ org.name }}</div>
+                  <div class="text-muted small">{{ org.email }}</div>
+                  {% if org.subdomain %}
+                  <div class="text-muted" style="font-size:0.72rem;">
+                    <i class="bi bi-link-45deg"></i> {{ org.subdomain }}.yourportal.com
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if org.category %}
+                <span class="badge" style="background:#dbeafe;color:#1d4ed8;border-radius:50px;">
+                  {{ org.category.name }}
+                </span>
+              {% endif %}
+              {% if org.sub_category %}
+                <div class="text-muted" style="font-size:0.72rem;margin-top:3px;">{{ org.sub_category.name }}</div>
+              {% endif %}
+            </td>
+            <td>
+              {% if org.plan %}
+                {% with level=org.plan.level %}
+                {% if level == 'trial' %}
+                  <span class="badge" style="background:#f3f4f6;color:#6b7280;border-radius:50px;">Trial</span>
+                {% elif level == 'silver' %}
+                  <span class="badge" style="background:#e2e8f0;color:#475569;border-radius:50px;">Silver</span>
+                {% elif level == 'gold' %}
+                  <span class="badge" style="background:#fef3c7;color:#d97706;border-radius:50px;">Gold</span>
+                {% elif level == 'platinum' %}
+                  <span class="badge" style="background:#ede9fe;color:#7c3aed;border-radius:50px;">Platinum</span>
+                {% endif %}
+                {% endwith %}
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            <td class="small">
+              {% if org.plan_end_date %}
+                {% if org.is_plan_active %}
+                  <span class="text-success">{{ org.plan_end_date|date:"d M Y" }}</span>
+                {% else %}
+                  <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ org.plan_end_date|date:"d M Y" }}</span>
+                {% endif %}
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if org.status == 'active' %}
+                <span class="badge" style="background:#dcfce7;color:#166534;border-radius:50px;">Active</span>
+              {% elif org.status == 'inactive' %}
+                <span class="badge" style="background:#f3f4f6;color:#6b7280;border-radius:50px;">Inactive</span>
+              {% elif org.status == 'suspended' %}
+                <span class="badge" style="background:#fee2e2;color:#991b1b;border-radius:50px;">Suspended</span>
+              {% elif org.status == 'pending' %}
+                <span class="badge" style="background:#fef9c3;color:#92400e;border-radius:50px;">Pending</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">{{ org.created_at|date:"d M Y" }}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{% url 'public_landing' org.slug %}" target="_blank"
+                   class="btn btn-sm btn-outline-primary" style="border-radius:8px;" title="View Site">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'edit_member' org.pk %}"
+                   class="btn btn-sm btn-outline-secondary" style="border-radius:8px;" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+      <nav>
+        <ul class="pagination mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&plan={{ plan }}&status={{ status }}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}&q={{ q }}&plan={{ plan }}&status={{ status }}">{{ num }}</a>
+          </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&plan={{ plan }}&status={{ status }}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-people fs-1 d-block opacity-25 mb-3"></i>
+      <p class="mb-3">No members found.</p>
+      <a href="{% url 'add_member' %}" class="btn btn-primary" style="border-radius:10px;">
+        <i class="bi bi-plus-lg me-1"></i> Add First Member
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

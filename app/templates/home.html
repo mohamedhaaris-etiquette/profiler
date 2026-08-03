@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}Portal — Register & Manage Your Business{% endblock %}
+{% block extra_css %}
+<style>
+.hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  padding: 100px 0 80px; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(249,115,22,0.15) 0%, transparent 65%);
+}
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;
+  color: #fff; line-height: 1.1; letter-spacing: -1px;
+}
+.hero-title span { color: var(--accent); }
+.hero-sub { color: rgba(255,255,255,0.7); font-size: 1.15rem; max-width: 520px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.3);
+  color: var(--accent); border-radius: 50px; padding: 6px 16px;
+  font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;
+}
+.hero-cta .btn {
+  padding: 14px 32px; font-size: 1rem; font-weight: 700; border-radius: 12px;
+}
+.hero-card {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 30px; backdrop-filter: blur(10px);
+}
+.hero-card .stat { text-align: center; }
+.hero-card .stat-num { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; color: var(--accent); }
+.hero-card .stat-lbl { color: rgba(255,255,255,0.6); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.categories-section { padding: 80px 0; }
+.section-tag { color: var(--accent); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+.section-title { font-size: 2.2rem; font-weight: 800; margin-top: 8px; }
+
+.cat-card {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 20px;
+  padding: 28px 20px; text-align: center; cursor: pointer;
+  transition: all .3s; text-decoration: none; display: block; color: var(--brand);
+}
+.cat-card:hover {
+  border-color: var(--accent); transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(249,115,22,0.15); color: var(--brand);
+}
+.cat-card .icon-wrap {
+  width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+  background: linear-gradient(135deg, var(--accent), #fbbf24);
+  color: #fff; box-shadow: 0 8px 24px rgba(249,115,22,0.3);
+}
+.cat-card h5 { font-weight: 700; margin-bottom: 6px; }
+.cat-card p { color: var(--muted); font-size: 0.85rem; margin: 0; }
+
+.how-section { background: var(--brand); padding: 80px 0; }
+.how-step { text-align: center; color: #fff; }
+.how-step .num {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: #fff; font-family: var(--font-display);
+  font-size: 1.4rem; font-weight: 800; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 20px;
+}
+.how-step h5 { font-weight: 700; color: #fff; }
+.how-step p { color: rgba(255,255,255,0.65); font-size: 0.9rem; }
+.step-connector {
+  position: absolute; top: 28px; left: calc(50% + 36px); right: calc(-50% + 36px);
+  height: 2px; background: rgba(249,115,22,0.3);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="container position-relative">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="hero-badge"><i class="bi bi-lightning-charge-fill"></i> Business Management Platform</div>
+        <h1 class="hero-title">Your Business,<br><span>Beautifully</span><br>Managed Online</h1>
+        <p class="hero-sub mt-4">Register your organization, get a dynamic landing page, manage services, track enquiries — all in one place. Like Justdial, but yours.</p>
+        <div class="hero-cta mt-5 d-flex gap-3 flex-wrap">
+          <a href="{% url 'signup' %}" class="btn btn-primary"><i class="bi bi-rocket-takeoff me-2"></i>Register Your Business</a>
+          <a href="{% url 'login' %}" class="btn btn-outline-light">Login <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-5 offset-lg-1">
+        <div class="hero-card">
+          <div class="row g-4">
+            <div class="col-6 stat"><div class="stat-num">500+</div><div class="stat-lbl">Businesses</div></div>
+            <div class="col-6 stat"><div class="stat-num">20+</div><div class="stat-lbl">Categories</div></div>
+            <div class="col-6 stat"><div class="stat-num">10K+</div><div class="stat-lbl">Enquiries</div></div>
+            <div class="col-6 stat"><div class="stat-num">4.8★</div><div class="stat-lbl">Avg Rating</div></div>
+          </div>
+          <hr style="border-color:rgba(255,255,255,0.1); margin: 24px 0;">
+          <div class="d-flex align-items-center gap-3">
+            <div style="background:rgba(249,115,22,0.2); border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+              <i class="bi bi-shield-check text-warning fs-5"></i>
+            </div>
+            <div>
+              <div style="color:#fff; font-weight:600; font-size:0.9rem;">Verified & Trusted</div>
+              <div style="color:rgba(255,255,255,0.5); font-size:0.78rem;">All businesses go through verification</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-tag">Business Types</div>
+      <h2 class="section-title">Choose Your Category</h2>
+      <p class="text-muted">Pre-configured templates for each business type — get started instantly.</p>
+    </div>
+    <div class="row g-4">
+      {% for cat in categories %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="{% url 'signup' %}?category={{ cat.id }}" class="cat-card">
+          <div class="icon-wrap"><i class="bi bi-{{ cat.icon }}"></i></div>
+          <h5>{{ cat.name }}</h5>
+          <p>{{ cat.description|truncatechars:60 }}</p>
+        </a>
+      </div>
+      {% empty %}
+      {% for name,icon in default_cats %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="cat-card">
+          <div class="icon-wrap"><i class="bi bi-{{ icon }}"></i></div>
+          <h5>{{ name }}</h5>
+          <p>Register as {{ name }}</p>
+        </div>
+      </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-tag">Simple Process</div>
+      <h2 class="section-title" style="color:#fff;">How It Works</h2>
+    </div>
+    <div class="row g-4">
+      {% for step in steps %}
+      <div class="col-md-3 position-relative how-step">
+        <div class="num">{{ forloop.counter }}</div>
+        <h5>{{ step.0 }}</h5>
+        <p>{{ step.1 }}</p>
+      </div>
+      {% endfor %}
+      <div class="col-md-3 position-relative how-step">
+        <div class="num">1</div><h5>Register Business</h5><p>Sign up with your organization details and choose your category.</p>
+      </div>
+      <div class="col-md-3 position-relative how-step">
+        <div class="num">2</div><h5>Get Your Page</h5><p>Your dynamic landing page is instantly created with pre-filled services.</p>
+      </div>
+      <div class="col-md-3 position-relative how-step">
+        <div class="num">3</div><h5>Manage Enquiries</h5><p>Customers find you, send enquiries — you manage them from your dashboard.</p>
+      </div>
+      <div class="col-md-3 position-relative how-step">
+        <div class="num">4</div><h5>Grow Your Business</h5><p>Track stats, update services, respond to customers — all in one place.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding: 80px 0; background: var(--surface);">
+  <div class="container text-center">
+    <h2 style="font-size:2.5rem; font-weight:800;">Ready to go digital?</h2>
+    <p class="text-muted mt-3 mb-5" style="font-size:1.1rem;">Join hundreds of businesses already managing their presence on Portal.</p>
+    <a href="{% url 'signup' %}" class="btn btn-primary btn-lg px-5 py-3" style="border-radius:14px; font-size:1.1rem;">
+      <i class="bi bi-lightning-charge me-2"></i>Get Started — It's Free
+    </a>
+  </div>
+</section>
+{% endblock %}

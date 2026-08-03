@@ -1,0 +1,204 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Invitations — Portal{% endblock %}
+{% block dash_content %}
+
+<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1><i class="bi bi-send me-2"></i>Invitations</h1>
+    <div class="text-muted small">Manage pending and sent invitation links.</div>
+  </div>
+  <a href="{% url 'invite_member' %}" class="btn btn-primary" style="border-radius:10px;">
+    <i class="bi bi-plus-lg me-1"></i> Invite Member
+  </a>
+</div>
+
+<div class="card-modern mb-4">
+  <div class="card-header"><i class="bi bi-funnel me-2"></i>Filter Invitations</div>
+  <div class="p-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-12 col-md-4">
+        <select name="status" class="form-select">
+          <option value="">All Statuses</option>
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-2">
+        <button type="submit" class="btn btn-primary w-100" style="border-radius:8px;">
+          <i class="bi bi-search"></i> Filter
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card-modern">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span><i class="bi bi-list-ul me-2"></i>Invitations</span>
+    <span class="badge bg-secondary">{{ page_obj.paginator.count }} total</span>
+  </div>
+  <div class="p-0">
+    {% if page_obj.object_list %}
+    <div class="table-responsive">
+      <table class="table table-modern mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Invitee</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>Sent</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for invite in page_obj %}
+          <tr>
+            <td class="text-muted small">{{ forloop.counter }}</td>
+            <td>{{ invite.email }}</td>
+            <td class="small">
+              {% if invite.invited_by %}
+              {{ invite.invited_by.get_full_name|default:invite.invited_by.username }}<br>
+              <span class="text-muted">Sent by</span>
+              {% else %}
+              <span class="text-muted">Unknown sender</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if invite.status == 'pending' %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% elif invite.status == 'accepted' %}
+                <span class="badge bg-success">Accepted</span>
+              {% elif invite.status == 'expired' %}
+                <span class="badge bg-secondary">Expired</span>
+              {% elif invite.status == 'revoked' %}
+                <span class="badge bg-danger">Revoked</span>
+              {% else %}
+                <span class="badge bg-light text-dark">{{ invite.status }}</span>
+              {% endif %}
+            </td>
+            <td class="small">{{ invite.expires_at|date:"d M Y" }}</td>
+            <td class="small text-muted">{{ invite.created_at|date:"d M Y" }}</td>
+            <td>
+              <div class="d-flex flex-wrap gap-2">
+                {% if invite.status == 'pending' %}
+                <a href="{% url 'resend_invitation' invite.pk %}" class="btn btn-sm btn-outline-primary" style="border-radius:8px;">
+                  <i class="bi bi-arrow-clockwise"></i> Resend
+                </a>
+                <a href="{% url 'revoke_invitation' invite.pk %}" class="btn btn-sm btn-outline-danger" style="border-radius:8px;">
+                  <i class="bi bi-x-lg"></i> Revoke
+                </a>
+                {% endif %}
+
+                <!-- Delete button — available for ALL statuses -->
+                <button type="button"
+                  class="btn btn-sm btn-danger"
+                  style="border-radius:8px;"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                  data-invite-id="{{ invite.pk }}"
+                  data-invite-email="{{ invite.email }}">
+                  <i class="bi bi-trash"></i> Delete
+                </button>
+
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-center py-3">
+      <nav>
+        <ul class="pagination mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}">
+              <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}&status={{ status_filter }}">{{ num }}</a>
+          </li>
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}">
+              <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-envelope-check fs-1 d-block opacity-25 mb-3"></i>
+      <p class="mb-3">No invitations found.</p>
+      <a href="{% url 'invite_member' %}" class="btn btn-primary" style="border-radius:10px;">
+        <i class="bi bi-plus-lg me-1"></i> Invite someone
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+
+<!-- ── Delete Confirmation Modal ── -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px; overflow:hidden;">
+
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger" id="deleteModalLabel">
+          <i class="bi bi-exclamation-triangle me-2"></i>Delete Invitation
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body pt-2">
+        <p class="mb-1">Are you sure you want to permanently delete the invitation sent to:</p>
+        <p class="fw-semibold fs-6 mb-0" id="deleteModalEmail">—</p>
+        <div class="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-0 py-2 px-3 small">
+          <i class="bi bi-info-circle-fill"></i>
+          This action cannot be undone.
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" style="border-radius:8px;" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <form id="deleteForm" method="post" action="" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger" style="border-radius:8px;">
+            <i class="bi bi-trash me-1"></i> Yes, Delete
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Populate modal with the correct invite data before it opens
+  document.getElementById('deleteModal').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    const inviteId = btn.getAttribute('data-invite-id');
+    const inviteEmail = btn.getAttribute('data-invite-email');
+
+    document.getElementById('deleteModalEmail').textContent = inviteEmail;
+    document.getElementById('deleteForm').action = `/invitations/${inviteId}/delete/`;
+  });
+</script>
+
+{% endblock %}

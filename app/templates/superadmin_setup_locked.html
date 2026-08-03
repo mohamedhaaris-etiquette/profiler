@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Super Admin Setup Completed{% endblock %}
+
+{% block extra_css %}
+<style>
+.setup-locked-page {
+  min-height: calc(100vh - 130px);
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(245,158,11,.10), transparent 28%),
+    linear-gradient(145deg, var(--ink), var(--ink2));
+}
+.setup-locked-card {
+  width: min(100%, 560px);
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--ink2);
+  box-shadow: 0 22px 55px rgba(0,0,0,.34);
+  text-align: center;
+}
+.setup-lock-icon {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 18px;
+  border-radius: 17px;
+  background: rgba(245,158,11,.10);
+  border: 1px solid rgba(245,158,11,.28);
+  color: var(--gold);
+  font-size: 27px;
+}
+.setup-locked-card h1 {
+  color: var(--white);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+}
+.setup-locked-card p {
+  max-width: 440px;
+  margin: 10px auto 22px;
+  color: rgba(255,255,255,.65);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.setup-security-note {
+  margin: 0 0 22px;
+  padding: 12px 14px;
+  border: 1px solid rgba(116,198,157,.24);
+  border-radius: 10px;
+  background: rgba(116,198,157,.06);
+  color: rgba(255,255,255,.72);
+  font-size: 12px;
+  text-align: left;
+}
+.setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+}
+.setup-actions .btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+@media (max-width: 520px) {
+  .setup-locked-card { padding: 25px 18px; }
+  .setup-actions .btn { width: 100%; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="setup-locked-page">
+  <section class="setup-locked-card">
+    <div class="setup-lock-icon"><i class="bi bi-shield-lock-fill"></i></div>
+    <h1>Super Admin setup is complete</h1>
+    <p>
+      An active Super Admin already exists. For security, a Business or
+      Organization Admin cannot create a platform-level administrator.
+    </p>
+    <div class="setup-security-note">
+      <i class="bi bi-info-circle me-2 text-warning"></i>
+      Additional Super Admin accounts can be created only after signing in with
+      an existing Super Admin account.
+    </div>
+    <div class="setup-actions">
+      {% if signed_in_as_other_role %}
+      <a href="{% url 'logout' %}" class="btn btn-primary">
+        <i class="bi bi-arrow-repeat"></i>Sign Out &amp; Switch Account
+      </a>
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-grid"></i>Back to Dashboard
+      </a>
+      {% else %}
+      <a href="{% url 'login' %}" class="btn btn-primary">
+        <i class="bi bi-box-arrow-in-right"></i>Login as Super Admin
+      </a>
+      {% endif %}
+      <a href="{% url 'password_reset' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-key"></i>Reset Password
+      </a>
+    </div>
+  </section>
+</main>
+{% endblock %}

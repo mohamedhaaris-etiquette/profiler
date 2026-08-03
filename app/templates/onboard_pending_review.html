@@ -1,0 +1,44 @@
+
+{% extends 'base.html' %}
+{% block title %}Application Submitted — Portal{% endblock %}
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background:#f8fafc;">
+  <div class="card shadow-sm text-center" style="max-width:480px;width:100%;border-radius:16px;padding:48px 32px;">
+ 
+    <div style="width:72px;height:72px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+      <i class="bi bi-hourglass-split" style="font-size:2rem;color:#d97706;"></i>
+    </div>
+ 
+    <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin-bottom:12px;">
+      Application Under Review
+    </h2>
+    <p class="text-muted mb-4" style="line-height:1.7;">
+      Thank you for submitting your business details.<br>
+      Our team will verify your information and activate your account.
+      <strong>You'll receive an email at <span style="color:#2563eb;">{{ invite.email }}</span> once approved.</strong>
+    </p>
+ 
+    <div style="background:#f1f5f9;border-radius:10px;padding:16px;text-align:left;margin-bottom:24px;">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted small">Business</span>
+        <span class="fw-600 small">{{ invite.organization.name }}</span>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted small">Plan</span>
+        <span class="fw-600 small">{{ invite.plan.name|default:"—" }}</span>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted small">Submitted</span>
+        <span class="fw-600 small">{{ invite.accepted_at|date:"d M Y, H:i" }}</span>
+      </div>
+    </div>
+ 
+    <div class="d-flex align-items-center gap-2 justify-content-center"
+         style="background:#dcfce7;border-radius:8px;padding:10px 16px;font-size:0.83rem;color:#166534;">
+      <i class="bi bi-envelope-check"></i>
+      A notification has been sent to our admin team.
+    </div>
+ 
+  </div>
+</div>
+{% endblock %}

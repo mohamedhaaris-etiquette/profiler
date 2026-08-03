@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family:Arial,sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:#dc2626;padding:24px 32px;">
+    <h2 style="color:#fff;margin:0;font-size:1.1rem;">Update on your Portal application</h2>
+  </div>
+  <div style="padding:28px 32px;">
+    <p style="color:#374151;">Hello,</p>
+    <p style="color:#374151;line-height:1.7;">
+      Thank you for your interest in Portal. After reviewing your submission,
+      we are unable to approve your account at this time.
+    </p>
+    {% if reason %}
+    <div style="background:#fff7f7;border:1px solid #fecaca;border-radius:8px;padding:14px;margin:16px 0;">
+      <p style="color:#991b1b;font-size:0.85rem;font-weight:600;margin:0 0 6px;">Reason:</p>
+      <p style="color:#374151;font-size:0.85rem;margin:0;">{{ reason }}</p>
+    </div>
+    {% endif %}
+    <p style="color:#6b7280;font-size:0.85rem;margin-top:20px;">
+      If you believe this is an error, please contact us at
+      <a href="mailto:support@portal.com" style="color:#2563eb;">support@portal.com</a>.
+    </p>
+  </div>
+  <div style="background:#f1f5f9;padding:14px 32px;text-align:center;">
+    <p style="color:#6b7280;font-size:0.78rem;margin:0;">Portal Team</p>
+  </div>
+</div>
+</body>
+</html>

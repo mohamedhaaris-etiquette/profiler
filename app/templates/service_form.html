@@ -1,0 +1,430 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}{{ action }} Service — {{ org.name }}{% endblock %}
+
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-briefcase me-2"></i>{{ action }} Service</h1>
+    <div class="text-muted small">{{ org.name }}</div>
+  </div>
+  <a href="{% url 'manage_services' %}" class="btn btn-outline-secondary" style="border-radius:10px;">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+</div>
+
+<style>
+.img-upload-box {
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  background: rgba(255,255,255,.035);
+  position: relative;
+}
+.img-upload-box:hover { border-color: var(--gold); background: rgba(245,158,11,.06); }
+.img-upload-box input[type=file] { display: none; }
+.img-preview {
+  width: 100%; height: 140px; object-fit: cover;
+  border-radius: 10px; display: none; margin-bottom: 8px;
+}
+.img-preview.visible { display: block; }
+.img-upload-icon { font-size: 2rem; color: #94a3b8; margin-bottom: 6px; }
+.img-upload-label { font-size: 0.82rem; color: #64748b; font-weight: 500; }
+.img-upload-hint  { font-size: 0.72rem; color: #94a3b8; margin-top: 3px; }
+.img-upload-box .remove-img {
+  position: absolute; top: 8px; right: 8px;
+  background: #ef4444; color: white; border: none;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: none; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.75rem;
+}
+.img-upload-box .remove-img.visible { display: flex; }
+
+.before-after-wrap {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+@media(max-width: 640px) { .before-after-wrap { grid-template-columns: 1fr; } }
+
+.section-divider {
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: #94a3b8;
+  display: flex; align-items: center; gap: 10px; margin: 24px 0 16px;
+}
+.section-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,.055); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 0.75rem; color: rgba(255,255,255,.78); font-weight: 500;
+}
+.tag-chip .rm { cursor: pointer; color: #94a3b8; font-size: 0.7rem; }
+.tag-chip .rm:hover { color: #ef4444; }
+</style>
+
+<div class="row justify-content-center">
+  <div class="col-xl-9 col-lg-10">
+    <form method="post" enctype="multipart/form-data" id="serviceForm">
+      {% csrf_token %}
+      {{ form.order }}
+      {% include 'includes/form_errors.html' %}
+
+      <div class="row g-4">
+
+        <!-- ── LEFT: Core Info ── -->
+        <div class="col-lg-7">
+
+          <div class="card-modern p-4">
+            <div class="section-divider">Basic Information</div>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label fw-semibold">Service Name <span class="text-danger">*</span></label>
+                {{ form.name }}
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Description</label>
+                {{ form.description }}
+                <div class="form-text" style="font-size: 0.82rem; color: #64748b;">
+                  Briefly explain what this service includes. Shown on your public page.
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Price (₹)</label>
+                {{ form.price }}
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Price Unit</label>
+                {{ form.price_unit }}
+                <div class="form-text" style="font-size: 0.82rem; color: #64748b;">
+                  e.g. per hour, per visit, per sqft
+                </div>
+              </div>
+
+              <div class="section-divider">Icon &amp; Display</div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">Bootstrap Icon</label>
+                <div class="input-group">
+                  <span class="input-group-text" id="iconPreviewSpan">
+                    <i class="bi bi-tools" id="iconPreviewI"></i>
+                  </span>
+                  {{ form.icon }}
+                </div>
+               
+              </div>
+
+              <div class="col-sm-6">
+                <label class="form-label fw-semibold">YouTube Video URL</label>
+                {{ form.video_url }}
+                <div class="form-text" style="font-size: 0.82rem; color: #64748b;">
+                  Demo or explainer video for this service.
+                </div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-semibold">Tags</label>
+                <div id="tagDisplay" class="d-flex flex-wrap gap-2 mb-2"></div>
+                <div class="input-group">
+                  <input type="text" id="tagInput" class="form-control" placeholder="Type a tag and press Enter">
+                  <button type="button" class="btn btn-outline-secondary" onclick="addTagFromInput()">
+                    <i class="bi bi-plus"></i> Add
+                  </button>
+                </div>
+                {{ form.tags }}
+                <div class="form-text" style="font-size: 0.82rem; color: #64748b;">e.g. wiring, residential, emergency</div>
+              </div>
+
+              <div class="col-sm-6 d-flex align-items-center gap-3 pt-2">
+                <div class="form-check form-switch">
+                  {{ form.is_featured }}
+                  <label class="form-check-label fw-semibold" for="{{ form.is_featured.id_for_label }}">
+                    ⭐ Featured Service
+                  </label>
+                </div>
+              </div>
+              <div class="col-sm-6 d-flex align-items-center gap-3 pt-2">
+                <div class="form-check form-switch">
+                  {{ form.is_active }}
+                  <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">
+                    Active / Visible
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── RIGHT: Images ── -->
+        <div class="col-lg-5">
+
+          <div class="card-modern p-4">
+            <div class="section-divider">Service Images</div>
+
+            <!-- Main image -->
+            <label class="form-label fw-semibold mb-2">
+              <i class="bi bi-image me-1 text-primary"></i>Primary Image
+            </label>
+            <label class="img-upload-box d-block" for="id_image">
+              {% if form.instance.image %}
+              <img src="{{ form.instance.image.url }}" class="img-preview visible" id="prev_image">
+              <button type="button" class="remove-img visible" onclick="clearImg(event,'id_image','prev_image','clr_image')">
+                <i class="bi bi-x"></i>
+              </button>
+              {% else %}
+              <img src="" class="img-preview" id="prev_image">
+              <button type="button" class="remove-img" onclick="clearImg(event,'id_image','prev_image','clr_image')">
+                <i class="bi bi-x"></i>
+              </button>
+              {% endif %}
+              <div id="ph_image">
+                <div class="img-upload-icon"><i class="bi bi-card-image"></i></div>
+                <div class="img-upload-label">Click to upload main image</div>
+                <div class="img-upload-hint">JPG / PNG / WebP — max 5 MB</div>
+              </div>
+              {{ form.image }}
+            </label>
+            <input type="hidden" name="clear_image" id="clr_image" value="">
+
+            <!-- Second image -->
+            <label class="form-label fw-semibold mb-2 mt-4">
+              <i class="bi bi-images me-1 text-primary"></i>Gallery / Secondary Image
+              <span class="badge bg-secondary ms-1" style="font-size:0.65rem;">Optional</span>
+            </label>
+            <label class="img-upload-box d-block" for="id_image2">
+              {% if form.instance.image2 %}
+              <img src="{{ form.instance.image2.url }}" class="img-preview visible" id="prev_image2">
+              <button type="button" class="remove-img visible" onclick="clearImg(event,'id_image2','prev_image2','clr_image2')">
+                <i class="bi bi-x"></i>
+              </button>
+              {% else %}
+              <img src="" class="img-preview" id="prev_image2">
+              <button type="button" class="remove-img" onclick="clearImg(event,'id_image2','prev_image2','clr_image2')">
+                <i class="bi bi-x"></i>
+              </button>
+              {% endif %}
+              <div id="ph_image2">
+                <div class="img-upload-icon"><i class="bi bi-image-fill"></i></div>
+                <div class="img-upload-label">Click to upload second image</div>
+                <div class="img-upload-hint">Used in the service detail gallery</div>
+              </div>
+              {{ form.image2 }}
+            </label>
+            <input type="hidden" name="clear_image2" id="clr_image2" value="">
+
+            <!-- Banner image -->
+            <label class="form-label fw-semibold mb-2 mt-4">
+              <i class="bi bi-panorama me-1 text-primary"></i>Banner / Hero Image
+              <span class="badge bg-secondary ms-1" style="font-size:0.65rem;">Optional</span>
+            </label>
+            <label class="img-upload-box d-block" for="id_banner_image">
+              {% if form.instance.banner_image %}
+              <img src="{{ form.instance.banner_image.url }}" class="img-preview visible" id="prev_banner">
+              <button type="button" class="remove-img visible" onclick="clearImg(event,'id_banner_image','prev_banner','clr_banner')">
+                <i class="bi bi-x"></i>
+              </button>
+              {% else %}
+              <img src="" class="img-preview" id="prev_banner">
+              <button type="button" class="remove-img" onclick="clearImg(event,'id_banner_image','prev_banner','clr_banner')">
+                <i class="bi bi-x"></i>
+              </button>
+              {% endif %}
+              <div id="ph_banner">
+                <div class="img-upload-icon"><i class="bi bi-layout-text-sidebar-reverse"></i></div>
+                <div class="img-upload-label">Upload a wide banner / hero image</div>
+                <div class="img-upload-hint">Recommended: 1200 × 500 px or wider</div>
+              </div>
+              {{ form.banner_image }}
+            </label>
+            <input type="hidden" name="clear_banner_image" id="clr_banner" value="">
+
+            <!-- Before / After -->
+            <div class="section-divider mt-4">Before &amp; After Photos</div>
+            <div class="form-text mb-3">Show customers the quality of your work with a visual transformation.</div>
+            <div class="before-after-wrap">
+              <!-- Before -->
+              <div>
+                <label class="form-label fw-semibold mb-2" style="font-size:0.8rem;">
+                  <i class="bi bi-circle me-1 text-warning"></i>BEFORE
+                </label>
+                <label class="img-upload-box d-block" for="id_before_image" style="padding:14px;">
+                  {% if form.instance.before_image %}
+                  <img src="{{ form.instance.before_image.url }}" class="img-preview visible" id="prev_before" style="height:100px;">
+                  <button type="button" class="remove-img visible" onclick="clearImg(event,'id_before_image','prev_before','clr_before')"><i class="bi bi-x"></i></button>
+                  {% else %}
+                  <img src="" class="img-preview" id="prev_before" style="height:100px;">
+                  <button type="button" class="remove-img" onclick="clearImg(event,'id_before_image','prev_before','clr_before')"><i class="bi bi-x"></i></button>
+                  {% endif %}
+                  <div id="ph_before">
+                    <div class="img-upload-icon" style="font-size:1.4rem;"><i class="bi bi-camera"></i></div>
+                    <div class="img-upload-label" style="font-size:0.75rem;">Before photo</div>
+                  </div>
+                  {{ form.before_image }}
+                </label>
+                <input type="hidden" name="clear_before_image" id="clr_before" value="">
+              </div>
+              <!-- After -->
+              <div>
+                <label class="form-label fw-semibold mb-2" style="font-size:0.8rem;">
+                  <i class="bi bi-check-circle me-1 text-success"></i>AFTER
+                </label>
+                <label class="img-upload-box d-block" for="id_after_image" style="padding:14px;">
+                  {% if form.instance.after_image %}
+                  <img src="{{ form.instance.after_image.url }}" class="img-preview visible" id="prev_after" style="height:100px;">
+                  <button type="button" class="remove-img visible" onclick="clearImg(event,'id_after_image','prev_after','clr_after')"><i class="bi bi-x"></i></button>
+                  {% else %}
+                  <img src="" class="img-preview" id="prev_after" style="height:100px;">
+                  <button type="button" class="remove-img" onclick="clearImg(event,'id_after_image','prev_after','clr_after')"><i class="bi bi-x"></i></button>
+                  {% endif %}
+                  <div id="ph_after">
+                    <div class="img-upload-icon" style="font-size:1.4rem;"><i class="bi bi-camera-fill"></i></div>
+                    <div class="img-upload-label" style="font-size:0.75rem;">After photo</div>
+                  </div>
+                  {{ form.after_image }}
+                </label>
+                <input type="hidden" name="clear_after_image" id="clr_after" value="">
+              </div>
+            </div>
+
+          </div><!-- /card -->
+
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="d-flex gap-3 mt-4 mb-5">
+        <button type="submit" class="btn btn-primary px-5 fw-bold" style="border-radius:12px;">
+          <i class="bi bi-check2 me-2"></i>Save Service
+        </button>
+        <a href="{% url 'manage_services' %}" class="btn btn-outline-secondary" style="border-radius:12px;">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+// ── Image upload previews ──────────────────────────────────────────────────────
+function setupPreview(inputId, previewId, placeholderId) {
+  const input   = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  const ph      = document.getElementById(placeholderId);
+  const clearMap = {
+    id_image: 'clr_image',
+    id_image2: 'clr_image2',
+    id_banner_image: 'clr_banner',
+    id_before_image: 'clr_before',
+    id_after_image: 'clr_after'
+  };
+  if (!input || !preview) return;
+
+  input.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const clearInput = document.getElementById(clearMap[inputId]);
+    if (clearInput) clearInput.value = '';
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.classList.add('visible');
+      if (ph) ph.style.display = 'none';
+      // Show remove button
+      const rmBtn = input.closest('.img-upload-box').querySelector('.remove-img');
+      if (rmBtn) rmBtn.classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function clearImg(e, inputId, previewId, clearHiddenId) {
+  e.preventDefault(); e.stopPropagation();
+  const input   = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  const rmBtn   = e.currentTarget;
+  const ph      = input.closest('.img-upload-box').querySelector('[id^="ph_"]');
+
+  if (input) input.value = '';
+  if (preview) { preview.src = ''; preview.classList.remove('visible'); }
+  if (rmBtn)   rmBtn.classList.remove('visible');
+  if (ph)      ph.style.display = '';
+  document.getElementById(clearHiddenId).value = '1';
+}
+
+// Set up all preview handlers
+['id_image','id_image2','id_banner_image','id_before_image','id_after_image'].forEach(id => {
+  const preview_map = {
+    'id_image':        'prev_image',
+    'id_image2':       'prev_image2',
+    'id_banner_image': 'prev_banner',
+    'id_before_image': 'prev_before',
+    'id_after_image':  'prev_after',
+  };
+  const ph_map = {
+    'id_image':        'ph_image',
+    'id_image2':       'ph_image2',
+    'id_banner_image': 'ph_banner',
+    'id_before_image': 'ph_before',
+    'id_after_image':  'ph_after',
+  };
+  setupPreview(id, preview_map[id], ph_map[id]);
+});
+
+// Hide placeholder for already-uploaded images
+['prev_image','prev_image2','prev_banner','prev_before','prev_after'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el && el.classList.contains('visible')) {
+    const ph_id = id.replace('prev_', 'ph_').replace('image', 'image').replace('banner','banner').replace('before','before').replace('after','after');
+    const ph = document.getElementById(ph_id);
+    if (ph) ph.style.display = 'none';
+  }
+});
+
+// ── Icon live preview ──────────────────────────────────────────────────────────
+const iconInput = document.querySelector('[name="icon"]');
+const iconPreviewI = document.getElementById('iconPreviewI');
+if (iconInput && iconPreviewI) {
+  iconInput.addEventListener('input', function() {
+    iconPreviewI.className = `bi bi-${this.value.trim() || 'tools'}`;
+  });
+  // init
+  iconPreviewI.className = `bi bi-${iconInput.value.trim() || 'tools'}`;
+}
+
+// ── Tags ──────────────────────────────────────────────────────────────────────
+let tags = "{{ form.instance.tags|default:''|escapejs }}"
+  .split(',')
+  .map(t => t.trim())
+  .filter(Boolean);
+
+function renderTags() {
+  const display = document.getElementById('tagDisplay');
+  display.innerHTML = tags.map(t =>
+    `<span class="tag-chip">${t}<span class="rm" onclick="removeTag('${t}')"> &times;</span></span>`
+  ).join('');
+  document.getElementById('tagsHidden').value = tags.join(',');
+}
+
+function addTagFromInput() {
+  const input = document.getElementById('tagInput');
+  const val   = input.value.trim().toLowerCase();
+  if (val && !tags.includes(val)) tags.push(val);
+  input.value = '';
+  renderTags();
+}
+
+function removeTag(t) {
+  tags = tags.filter(x => x !== t);
+  renderTags();
+}
+
+document.getElementById('tagInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); addTagFromInput(); }
+  if (e.key === ',' || e.key === ' ') { e.preventDefault(); addTagFromInput(); }
+});
+
+renderTags();
+</script>
+{% endblock %}

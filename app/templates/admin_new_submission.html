@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family:Arial,sans-serif;background:#f8fafc;padding:32px;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+  <div style="background:#0f172a;padding:24px 32px;">
+    <h2 style="color:#fff;margin:0;font-size:1.1rem;">🔔 New Member Submission</h2>
+  </div>
+  <div style="padding:28px 32px;">
+    <p style="color:#374151;">A new business has completed the onboarding form and requires your review:</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:0.85rem;">Business</td><td style="padding:6px 0;font-weight:600;">{{ org.name }}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:0.85rem;">Email</td><td style="padding:6px 0;">{{ invite.email }}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:0.85rem;">Plan</td><td style="padding:6px 0;">{{ invite.plan.name|default:"—" }}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:0.85rem;">Category</td><td style="padding:6px 0;">{{ invite.main_category.name|default:"—" }}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:0.85rem;">Phone</td><td style="padding:6px 0;">{{ org.phone }}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:0.85rem;">Location</td><td style="padding:6px 0;">{{ org.city }}, {{ org.state }}</td></tr>
+    </table>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="{{ review_url }}" style="display:inline-block;background:#16a34a;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-right:12px;">✓ Approve</a>
+      <a href="{{ reject_url }}" style="display:inline-block;background:#dc2626;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;">✗ Reject</a>
+    </div>
+  </div>
+  <div style="background:#f1f5f9;padding:14px 32px;text-align:center;">
+    <p style="color:#6b7280;font-size:0.78rem;margin:0;">Portal Admin Notification</p>
+  </div>
+</div>
+</body>
+</html>

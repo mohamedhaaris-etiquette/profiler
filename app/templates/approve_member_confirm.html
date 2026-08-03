@@ -1,0 +1,25 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Approve {{ org.name }}{% endblock %}
+{% block dash_content %}
+<div class="card border-0 shadow-sm" style="max-width:680px;margin:auto;">
+  <div class="card-body p-4 p-md-5">
+    <div class="text-success fs-2 mb-3"><i class="bi bi-patch-check"></i></div>
+    <h1 class="h4 fw-bold">Approve {{ org.name }}?</h1>
+    <p class="text-muted">
+      This activates the business page and its owner account. If this is an
+      eligible WhatsApp referral, the inviter's reward will be released exactly once.
+    </p>
+    <dl class="row small mt-4">
+      <dt class="col-4 text-muted">Owner</dt><dd class="col-8">{{ user.get_full_name|default:user.username }}</dd>
+      <dt class="col-4 text-muted">Email</dt><dd class="col-8">{{ invite.email|default:"—" }}</dd>
+      <dt class="col-4 text-muted">Mobile</dt><dd class="col-8">{% if invite.phone %}+{{ invite.phone }}{% else %}—{% endif %}</dd>
+      <dt class="col-4 text-muted">Category</dt><dd class="col-8">{{ invite.main_category.name|default:"—" }}</dd>
+    </dl>
+    <form method="post" class="d-flex gap-2 justify-content-end mt-4">
+      {% csrf_token %}
+      <a href="{% url 'pending_approvals' %}" class="btn btn-outline-secondary">Cancel</a>
+      <button class="btn btn-success" type="submit"><i class="bi bi-check2 me-1"></i>Approve Business</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

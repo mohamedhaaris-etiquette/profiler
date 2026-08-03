@@ -1,0 +1,304 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Edit Member — {{ org.name }}{% endblock %}
+{% block dash_content %}
+
+<!-- ── Page Header ────────────────────────────────────────────── -->
+<div class="page-header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div>
+    <h1><i class="bi bi-pencil-square me-2"></i>Edit Member</h1>
+    <div class="text-muted small">Updating profile for <strong>{{ org.name }}</strong></div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'member_list' %}" class="btn btn-outline-secondary" style="border-radius:10px;">
+      <i class="bi bi-arrow-left me-1"></i> Back to Members
+    </a>
+    <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-outline-primary" style="border-radius:10px;">
+      <i class="bi bi-eye me-1"></i> View Site
+    </a>
+  </div>
+</div>
+
+<!-- ── Org Info Strip ─────────────────────────────────────────── -->
+<div class="card-modern mb-4">
+  <div class="p-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      {% if org.logo %}
+        <img src="{{ org.logo_url }}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;">
+      {% else %}
+        <div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#0f172a,var(--accent,#f97316));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;flex-shrink:0;">
+          <i class="bi bi-building"></i>
+        </div>
+      {% endif %}
+      <div class="flex-grow-1">
+        <div style="font-weight:800;font-size:1rem;">{{ org.name }}</div>
+        <div class="text-muted small">{{ org.email }} &bull; {{ org.phone }}</div>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        {% if org.plan %}
+          {% with lvl=org.plan.level %}
+            {% if lvl == 'trial' %}
+              <span class="badge" style="background:#f3f4f6;color:#6b7280;border-radius:50px;padding:5px 14px;">Trial</span>
+            {% elif lvl == 'silver' %}
+              <span class="badge" style="background:#e2e8f0;color:#334155;border-radius:50px;padding:5px 14px;">Silver</span>
+            {% elif lvl == 'gold' %}
+              <span class="badge" style="background:#fef3c7;color:#d97706;border-radius:50px;padding:5px 14px;">Gold</span>
+            {% elif lvl == 'platinum' %}
+              <span class="badge" style="background:#ede9fe;color:#7c3aed;border-radius:50px;padding:5px 14px;">Platinum</span>
+            {% endif %}
+          {% endwith %}
+        {% endif %}
+        {% if org.status == 'active' %}
+          <span class="badge" style="background:#dcfce7;color:#166534;border-radius:50px;padding:5px 14px;">Active</span>
+        {% elif org.status == 'suspended' %}
+          <span class="badge" style="background:#fee2e2;color:#991b1b;border-radius:50px;padding:5px 14px;">Suspended</span>
+        {% elif org.status == 'pending' %}
+          <span class="badge" style="background:#fef9c3;color:#92400e;border-radius:50px;padding:5px 14px;">Pending</span>
+        {% else %}
+          <span class="badge" style="background:#f1f5f9;color:#64748b;border-radius:50px;padding:5px 14px;">{{ org.get_status_display }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Form ───────────────────────────────────────────────────── -->
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger" style="border-radius:12px;">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- ── Left Column ──────────────────────────────────────────── -->
+    <div class="col-lg-8">
+
+      <!-- Basic Info -->
+      <div class="card-modern mb-4">
+        <div class="card-header"><i class="bi bi-info-circle me-2"></i>Basic Information</div>
+        <div class="p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-600">Business Name *</label>
+              {{ form.name }}
+              {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600">Tagline</label>
+              {{ form.tagline }}
+              {% if form.tagline.errors %}<div class="text-danger small mt-1">{{ form.tagline.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-600">Description</label>
+              {{ form.description }}
+              {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600">Logo</label>
+              {% if org.logo %}
+              <div class="mb-2">
+                <img src="{{ org.logo_url }}" style="height:48px;border-radius:8px;object-fit:cover;">
+                <span class="text-muted small ms-2">Current logo</span>
+              </div>
+              {% endif %}
+              {{ form.logo }}
+              {% if form.logo.errors %}<div class="text-danger small mt-1">{{ form.logo.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600">Status</label>
+              {{ form.status }}
+              {% if form.status.errors %}<div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="card-modern mb-4">
+        <div class="card-header"><i class="bi bi-telephone me-2"></i>Contact Information</div>
+        <div class="p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-600">Email *</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600">Mobile *</label>
+              {{ form.phone }}
+              {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600">WhatsApp</label>
+              {{ form.whatsapp }}
+              {% if form.whatsapp.errors %}<div class="text-danger small mt-1">{{ form.whatsapp.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600">Landline</label>
+              {{ form.landline }}
+              {% if form.landline.errors %}<div class="text-danger small mt-1">{{ form.landline.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-600">Website</label>
+              {{ form.website }}
+              {% if form.website.errors %}<div class="text-danger small mt-1">{{ form.website.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div class="card-modern mb-4">
+        <div class="card-header"><i class="bi bi-geo-alt me-2"></i>Address</div>
+        <div class="p-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-600">Address Line 1 *</label>
+              {{ form.address_line1 }}
+              {% if form.address_line1.errors %}<div class="text-danger small mt-1">{{ form.address_line1.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-600">Address Line 2</label>
+              {{ form.address_line2 }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-600">City *</label>
+              {{ form.city }}
+              {% if form.city.errors %}<div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-600">District</label>
+              {{ form.district }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-600">State *</label>
+              {{ form.state }}
+              {% if form.state.errors %}<div class="text-danger small mt-1">{{ form.state.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-600">Pincode *</label>
+              {{ form.pincode }}
+              {% if form.pincode.errors %}<div class="text-danger small mt-1">{{ form.pincode.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Media -->
+      <div class="card-modern mb-4">
+        <div class="card-header"><i class="bi bi-share me-2"></i>Social Media</div>
+        <div class="p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-600"><i class="bi bi-facebook text-primary me-1"></i>Facebook</label>
+              {{ form.facebook_url }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600"><i class="bi bi-instagram text-danger me-1"></i>Instagram</label>
+              {{ form.instagram_url }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600"><i class="bi bi-linkedin text-primary me-1"></i>LinkedIn</label>
+              {{ form.linkedin_url }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-600"><i class="bi bi-twitter-x me-1"></i>Twitter / X</label>
+              {{ form.twitter_url }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Right Column ─────────────────────────────────────────── -->
+    <div class="col-lg-4">
+
+      <!-- Business Settings -->
+      <div class="card-modern mb-4">
+        <div class="card-header"><i class="bi bi-gear me-2"></i>Business Settings</div>
+        <div class="p-4">
+          <div class="d-flex flex-column gap-3">
+            <div>
+              <label class="form-label fw-600">Working Hours</label>
+              {{ form.working_hours }}
+            </div>
+            <div class="d-flex flex-column gap-2 mt-1">
+              <div class="form-check">
+                {{ form.is_open_sunday }}
+                <label class="form-check-label small" for="{{ form.is_open_sunday.id_for_label }}">
+                  Open on Sundays
+                </label>
+              </div>
+              <div class="form-check">
+                {{ form.accepts_online_payment }}
+                <label class="form-check-label small" for="{{ form.accepts_online_payment.id_for_label }}">
+                  Accepts Online Payment
+                </label>
+              </div>
+              <div class="form-check">
+                {{ form.home_service_available }}
+                <label class="form-check-label small" for="{{ form.home_service_available.id_for_label }}">
+                  Home Service Available
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Info -->
+      <div class="card-modern mb-4">
+        <div class="card-header"><i class="bi bi-clock-history me-2"></i>Record Info</div>
+        <div class="p-3 d-flex flex-column gap-2" style="font-size:0.82rem;">
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Created</span>
+            <span class="fw-600">{{ org.created_at|date:"d M Y" }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Last Updated</span>
+            <span class="fw-600">{{ org.updated_at|date:"d M Y" }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Slug</span>
+            <span class="fw-600 text-muted">{{ org.slug }}</span>
+          </div>
+          {% if org.subdomain %}
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Subdomain</span>
+            <span class="fw-600" style="color:#0369a1;">{{ org.subdomain }}</span>
+          </div>
+          {% endif %}
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Verified</span>
+            <span class="fw-600">
+              {% if org.is_verified %}
+                <span style="color:#16a34a;"><i class="bi bi-check-circle-fill me-1"></i>Yes</span>
+              {% else %}
+                <span style="color:#94a3b8;"><i class="bi bi-x-circle me-1"></i>No</span>
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="card-modern">
+        <div class="p-4 d-flex flex-column gap-2">
+          <button type="submit" class="btn btn-primary w-100" style="border-radius:10px;padding:12px;">
+            <i class="bi bi-check-lg me-2"></i>Save Changes
+          </button>
+          <a href="{% url 'member_list' %}" class="btn btn-outline-secondary w-100" style="border-radius:10px;">
+            <i class="bi bi-x-lg me-1"></i> Cancel
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</form>
+
+{% endblock %}

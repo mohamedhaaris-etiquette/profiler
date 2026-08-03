@@ -1,0 +1,262 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}Enquiries — {{ org_name }}{% endblock %}
+{% block dash_content %}
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-chat-left-dots me-2"></i>Enquiries</h1>
+    <div class="text-muted small">Manage customer enquiries for {{ org_name }}</div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    {% for status, label in enquiry_statuses %}
+    <a href="?status={{ status }}" class="btn btn-sm {% if status_filter == status %}btn-primary{% else %}btn-outline-secondary{% endif %}" style="border-radius:8px;">{{ label }}</a>
+    {% endfor %}
+    <a href="?" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}" style="border-radius:8px;">All</a>
+  </div>
+</div>
+
+<div class="card-modern">
+  <div class="p-0">
+    {% if enquiries %}
+    <table class="table table-modern mb-0">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          {% if show_org_column %}<th>Organization</th>{% endif %}
+          <th>Subject / Service</th>
+          <th>Message</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for enq in enquiries %}
+      <tr id="row-{{ enq.pk }}">
+        <td>
+          <div class="fw-600">{{ enq.name }}</div>
+          <div class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ enq.phone }}</div>
+          <div class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ enq.email }}</div>
+        </td>
+        {% if show_org_column %}
+        <td>
+          <div class="fw-500">{{ enq.organization.name }}</div>
+          <div class="text-muted small">{{ enq.organization.city }}, {{ enq.organization.state }}</div>
+        </td>
+        {% endif %}
+        <td>
+          <div class="fw-500">{{ enq.subject }}</div>
+          {% if enq.service %}<div class="text-muted small"><i class="bi bi-briefcase me-1"></i>{{ enq.service.name }}</div>{% endif %}
+        </td>
+        <td style="max-width:200px;">
+          <span class="small text-muted">{{ enq.message|truncatechars:80 }}</span>
+        </td>
+        <td>
+          <span class="badge badge-{{ enq.status }} status-badge-{{ enq.pk }}" style="padding:5px 12px;border-radius:50px;font-size:0.78rem;">{{ enq.get_status_display }}</span>
+        </td>
+        <td class="text-muted small">{{ enq.created_at|date:"d M, Y" }}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" style="border-radius:8px;"
+            onclick="openEnquiryModal({
+              pk: '{{ enq.pk }}',
+              name: '{{ enq.name|escapejs }}',
+              phone: '{{ enq.phone|escapejs }}',
+              email: '{{ enq.email|escapejs }}',
+              subject: '{{ enq.subject|escapejs }}',
+              message: '{{ enq.message|escapejs }}',
+              status: '{{ enq.status }}',
+              notes: '{{ enq.notes|escapejs }}',
+              date: '{{ enq.created_at|date:"d M, Y" }}',
+             updateUrl: '{% url "update_enquiry_status" enq.pk %}'
+            })">
+            Update
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i>
+      <h5 class="text-muted">No enquiries yet</h5>
+      {% if show_org_column %}
+      <p class="text-muted small">There are currently no enquiries across any organization.</p>
+      {% else %}
+      <p class="text-muted small">Share your public page to start receiving enquiries!</p>
+      <a href="{% url 'public_landing' org.slug %}" target="_blank" class="btn btn-primary btn-sm">
+        <i class="bi bi-box-arrow-up-right me-1"></i>View Public Page
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Single shared modal -->
+<div class="modal fade" id="enquiryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:20px;overflow:hidden;background:var(--ink2);border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.45);">
+
+      <!-- Header -->
+      <div class="modal-header" style="background:var(--brand,#e07b00);color:#fff;border:none;padding:1rem 1.5rem;">
+        <div>
+          <h5 class="modal-title mb-0" id="modalEnqName">
+            <i class="bi bi-person-circle me-2"></i>Enquiry from ...
+          </h5>
+          <div style="font-size:0.78rem;opacity:0.85;margin-top:2px;" id="modalEnqMeta"></div>
+        </div>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" style="background:var(--ink2);color:#fff;padding:1.5rem;">
+
+        <!-- Customer Info -->
+        <div style="background:var(--fog2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:16px;">
+          <div style="font-size:0.75rem;font-weight:600;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Customer Info</div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;">
+            <span style="color:rgba(255,255,255,.85);font-size:0.875rem;"><i class="bi bi-telephone me-1" style="color:var(--gold);"></i><span id="modalPhone"></span></span>
+            <span style="color:rgba(255,255,255,.85);font-size:0.875rem;"><i class="bi bi-envelope me-1" style="color:var(--gold);"></i><span id="modalEmail"></span></span>
+          </div>
+          <div style="margin-top:6px;color:rgba(255,255,255,.85);font-size:0.875rem;" id="modalSubjectRow"></div>
+        </div>
+
+        <!-- Message -->
+        <div style="background:var(--fog2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:16px;">
+          <div style="font-size:0.75rem;font-weight:600;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Message</div>
+          <p style="margin:0;color:rgba(255,255,255,.85);font-size:0.9rem;line-height:1.6;" id="modalMessage"></p>
+        </div>
+
+        <!-- Success/Error alert -->
+        <div id="modalAlert" style="display:none;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:0.875rem;"></div>
+
+        <!-- Status -->
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-weight:600;font-size:0.85rem;color:rgba(255,255,255,.85);margin-bottom:6px;">Update Status</label>
+          <select id="modalStatus"
+            style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--ink3);color:#fff;font-size:0.9rem;outline:none;cursor:pointer;">
+            {% for val, label in enquiry_statuses %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Notes -->
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-weight:600;font-size:0.85rem;color:rgba(255,255,255,.85);margin-bottom:6px;">Internal Notes</label>
+          <textarea id="modalNotes" rows="3" placeholder="Add internal notes..."
+            style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--ink3);color:#fff;font-size:0.9rem;outline:none;resize:vertical;font-family:inherit;"></textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex;gap:8px;">
+          <button id="modalSaveBtn" onclick="saveEnquiry()"
+            style="flex:1;padding:10px 16px;background:var(--brand,#e07b00);color:#fff;border:none;border-radius:10px;font-weight:600;font-size:0.9rem;cursor:pointer;">
+            <i class="bi bi-check2 me-1"></i>Save Changes
+          </button>
+          <a id="modalCallBtn" href="#"
+            style="padding:10px 14px;border:1.5px solid #22c55e;border-radius:10px;color:#22c55e;text-decoration:none;display:flex;align-items:center;">
+            <i class="bi bi-telephone"></i>
+          </a>
+          <a id="modalMailBtn" href="#"
+            style="padding:10px 14px;border:1.5px solid #f59e0b;border-radius:10px;color:#f59e0b;text-decoration:none;display:flex;align-items:center;">
+            <i class="bi bi-envelope"></i>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var _currentEnqPk = null;
+  var _currentUpdateUrl = null;
+  var _csrfToken = '{{ csrf_token }}';
+
+  function openEnquiryModal(data) {
+    _currentEnqPk = data.pk;
+    _currentUpdateUrl = data.updateUrl;
+
+    document.getElementById('modalEnqName').innerHTML = '<i class="bi bi-person-circle me-2"></i>Enquiry from ' + data.name;
+    document.getElementById('modalEnqMeta').innerHTML = data.date + ' &nbsp;·&nbsp; <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:20px;">' + data.status + '</span>';
+    document.getElementById('modalPhone').textContent = data.phone;
+    document.getElementById('modalEmail').textContent = data.email;
+    document.getElementById('modalMessage').textContent = data.message;
+
+    var subjectRow = document.getElementById('modalSubjectRow');
+    if (data.subject) {
+      subjectRow.innerHTML = '<i class="bi bi-tag me-1" style="color:#e07b00;"></i>' + data.subject;
+      subjectRow.style.display = 'block';
+    } else {
+      subjectRow.style.display = 'none';
+    }
+
+    document.getElementById('modalCallBtn').href = 'tel:' + data.phone;
+    document.getElementById('modalMailBtn').href = 'mailto:' + data.email;
+
+    var sel = document.getElementById('modalStatus');
+    for (var i = 0; i < sel.options.length; i++) {
+      sel.options[i].selected = (sel.options[i].value === data.status);
+    }
+
+    document.getElementById('modalNotes').value = data.notes || '';
+    document.getElementById('modalAlert').style.display = 'none';
+
+    var modal = new bootstrap.Modal(document.getElementById('enquiryModal'));
+    modal.show();
+  }
+
+  function saveEnquiry() {
+    var btn = document.getElementById('modalSaveBtn');
+    var alert = document.getElementById('modalAlert');
+    var status = document.getElementById('modalStatus').value;
+    var notes = document.getElementById('modalNotes').value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass me-1"></i>Saving...';
+    alert.style.display = 'none';
+
+    var formData = new FormData();
+    formData.append('status', status);
+    formData.append('notes', notes);
+    formData.append('csrfmiddlewaretoken', _csrfToken);
+
+    fetch(_currentUpdateUrl, {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(response) {
+      if (response.ok || response.redirected) {
+        // Update the badge in the table row
+        var badge = document.querySelector('.status-badge-' + _currentEnqPk);
+        if (badge) {
+          badge.textContent = status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ');
+          badge.className = 'badge badge-' + status + ' status-badge-' + _currentEnqPk;
+          badge.style.cssText = 'padding:5px 12px;border-radius:50px;font-size:0.78rem;';
+        }
+
+        alert.style.cssText = 'display:block;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:0.875rem;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;';
+        alert.textContent = '✓ Enquiry updated successfully!';
+
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Save Changes';
+
+        setTimeout(function() {
+          bootstrap.Modal.getInstance(document.getElementById('enquiryModal')).hide();
+        }, 1000);
+      } else {
+        throw new Error('Server error: ' + response.status);
+      }
+    })
+    .catch(function(err) {
+      alert.style.cssText = 'display:block;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:0.875rem;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;';
+      alert.textContent = '✗ Failed to save. Please try again.';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Save Changes';
+    });
+  }
+</script>
+
+{% endblock %}
